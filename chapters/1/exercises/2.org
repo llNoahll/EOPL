@@ -1,0 +1,4 @@
+1. (n m) that m = n * 7 + 1
+2. (n m) that m = 2^n
+3. (l n m) that n = fib(l), m = fib(l) + fib(l+1)   # fib(0) = 0, fib(1) = 1
+4. (n i j) that i = 2 * n + 1, j = n^2

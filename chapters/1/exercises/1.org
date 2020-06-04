@@ -1,0 +1,15 @@
+* top-down
+  1. (or 2∈S n-3∈S)
+  2. (or 1∈S (belong (- n 3) S) (belong (- n 2) S))
+  3. (or '(0 1)∈S (belong `(,(- n 1) ,(- m 2)) S))
+  4. (or '(0 0)∈S (belong `(,(- n 1) ,(+ m (* -2 n) 1)) S))
+* down-top
+  1. (or 2∈S (if n∈S n+3∈S))
+  2. (or 1∈S (if n∈S n+3∈S n+2∈S))
+  3. (or '(0 1)∈S (if `(,n ,m)∈S `(,n+1 2n+1)∈S))
+  4. (or '(0 0)∈S (if `(,n ,m)∈S `(,n+1 ,m+2n+1)∈S))
+* rules of inference
+  1. /2∈S  n∈S/n+3∈S
+  2. /1∈S  n∈S/n+2∈S n+3∈S
+  3. /(0 1)∈S  (n m)∈S/(n+1, m+2)∈S
+  4. /(0 0)∈S  (n m)∈S/(n+1, m+2n+1)∈S
