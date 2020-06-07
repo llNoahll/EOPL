@@ -1,81 +1,9 @@
 #lang typed/racket
 
 
-(require/typed "lambda-expression-sig.rkt"
-  [#:signature lambda-expression^
-   (
-    ;; constructors
-    [var-exp    : [-> Variable Lc-Exp]]
-    [lambda-exp : [-> Variable Lc-Exp Lc-Exp]]
-    [app-exp    : [-> Lc-Exp Lc-Exp Lc-Exp]]
+(require "lambda-expression-sig.rkt")
 
-    ;; predicates
-    [var-exp?    : [-> Lc-Exp Boolean]]
-    [lambda-exp? : [-> Lc-Exp Boolean]]
-    [app-exp?    : [-> Lc-Exp Boolean]]
-
-    ;; extractors
-    [var-exp->var          : [-> Lc-Exp Variable]]
-    [lambda-exp->bound-var : [-> Lc-Exp Variable]]
-    [lambda-exp->body      : [-> Lc-Exp Lc-Exp]]
-    [app-exp->rator        : [-> Lc-Exp Lc-Exp]]
-    [app-exp->rand         : [-> Lc-Exp Lc-Exp]]
-    )])
-
-(provide lambda-expression@ Variable variable variable* Lc-Exp)
-
-
-(define-new-subtype Variable (make-variable Symbol))
-(define-type Lambda (U 'lambda 'λ))
-(define-type Lc-Exp (U Variable
-                       (List Lambda
-                             (List Variable)
-                             Lc-Exp)
-                       (List Lc-Exp Lc-Exp)))
-
-
-(: variable [-> Symbol Variable])
-(define variable
-  (λ (sym)
-    (if (or (eqv? sym 'lambda)
-            (eqv? sym 'λ))
-        (raise-argument-error 'variable "variable?" sym)
-        (make-variable sym))))
-
-(: variable* [-> (U Symbol (Listof Symbol))
-                 (U Variable (Listof Variable))])
-(define variable*
-  (λ (arg)
-    (if (symbol? arg)
-        (variable arg)
-        (map (λ ([sym : Symbol]) : Variable
-                 (variable sym))
-             arg))))
-
-
-(: variable? [-> Any Boolean])
-(define variable?
-  (λ (arg)
-    (and (symbol? arg)
-         (not (lambda? arg)))))
-
-
-(: lc-exp? [-> Any Boolean])
-(define lc-exp?
-  (λ (arg)
-    (match arg
-      [(? lambda?) #f]
-      [(? symbol?) #t]
-      [(list (? lambda?)
-             (list (? variable?))
-             (? lc-exp?))
-       #t]
-      [(list (? lc-exp?) (? lc-exp?)) #t]
-      [_ #f])))
-
-
-(: lambda? [-> Any Boolean : Lambda])
-(define-predicate lambda? Lambda)
+(provide lambda-expression@)
 
 
 (define-unit lambda-expression@
@@ -93,8 +21,8 @@
 
   (: app-exp [-> Lc-Exp Lc-Exp Lc-Exp])
   (define app-exp
-    (λ (exp-1 exp-2)
-      `(,exp-1 ,exp-2)))
+    (λ (rator rand)
+      `(,rator ,rand)))
 
 
   ;; predicates
@@ -102,8 +30,7 @@
   (define var-exp?
     (λ (exp)
       (match exp
-        [(? lambda?) #f]
-        [(? symbol?) #t]
+        [(? variable?) #t]
         [_ #f])))
 
   (: lambda-exp? [-> Lc-Exp Boolean])
@@ -120,6 +47,19 @@
   (define app-exp?
     (λ (exp)
       (match exp
+        [(list (? lc-exp?) (? lc-exp?)) #t]
+        [_ #f])))
+
+  (: lc-exp? [-> Any Boolean])
+  (define lc-exp?
+    (λ (arg)
+      (match arg
+        [(? lambda?) #f]
+        [(? symbol?) #t]
+        [(list (? lambda?)
+               (list (? variable?))
+               (? lc-exp?))
+         #t]
         [(list (? lc-exp?) (? lc-exp?)) #t]
         [_ #f])))
 

@@ -1,5 +1,7 @@
 #lang racket
 
+(provide lambda-expression^)
+
 
 (define-signature lambda-expression^
   (
@@ -12,6 +14,7 @@
    var-exp?
    lambda-exp?
    app-exp?
+   lc-exp?
 
    ;; extractors
    var-exp->var
@@ -20,5 +23,3 @@
    app-exp->rator
    app-exp->rand
    ))
-
-(provide lambda-expression^)
