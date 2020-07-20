@@ -21,6 +21,7 @@
   (export exp^))
 
 
+(: init-env [-> Env])
 (define init-env
   (λ ()
     ;; (extend-env 'i (num-val 1)
@@ -34,4 +35,22 @@
 (displayln (value-of (const-exp -9) (init-env)))
 (displayln (value-of (var-exp 'i) (init-env)))
 (displayln (value-of (var-exp 'x) (init-env)))
-(displayln (value-of (var-exp 'y) (init-env)))
+;; (displayln (value-of (var-exp 'y) (init-env)))
+
+(displayln (value-of (unary-exp 'minus (const-exp -9)) (init-env)))
+(displayln (value-of (unary-exp 'minus (var-exp 'i))   (init-env)))
+(displayln (value-of (unary-exp 'minus (var-exp 'x))   (init-env)))
+
+(displayln (value-of (binary-exp 'greater? (var-exp 'i) (var-exp 'x)) (init-env)))
+(displayln (value-of (binary-exp 'less?    (var-exp 'i) (var-exp 'x)) (init-env)))
+(displayln (value-of (binary-exp 'equal?   (var-exp 'i) (var-exp 'x)) (init-env)))
+(displayln (value-of (binary-exp 'equal?   (var-exp 'i) (var-exp 'i)) (init-env)))
+
+
+(displayln (value-of (binary-exp 'cons (var-exp 'i) (var-exp 'i)) (init-env)))
+(displayln (value-of (nullary-exp 'empty-list) (init-env)))
+(displayln (value-of (unary-exp 'car (binary-exp 'cons (var-exp 'i) (var-exp 'x))) (init-env)))
+(displayln (value-of (unary-exp 'cdr (binary-exp 'cons (var-exp 'i) (var-exp 'x))) (init-env)))
+(displayln (value-of (unary-exp 'null? (binary-exp 'cons (var-exp 'i) (var-exp 'x))) (init-env)))
+(displayln (value-of (unary-exp 'null? (nullary-exp 'empty-list)) (init-env)))
+(displayln (value-of (n-ary-exp 'list (var-exp 'x) (var-exp 'i) (var-exp 'i)) (init-env)))

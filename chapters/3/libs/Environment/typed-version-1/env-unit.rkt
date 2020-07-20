@@ -24,10 +24,10 @@
 
   (: empty-env [-> Env])
   (define empty-env
-    (letrec ([empty-environment
-              (make-env 'empty-env
-                       (λ ([search-var : Symbol]) : Boolean #f)
-                       (λ ([search-var : Symbol]) : Nothing (report-no-binding-found search-var)))])
+    (let ([empty-environment
+           (make-env 'empty-env
+                     (λ ([search-var : Symbol]) : Boolean #f)
+                     (λ ([search-var : Symbol]) : Nothing (report-no-binding-found search-var)))])
       (λ ()
         empty-environment)))
 
@@ -39,14 +39,14 @@
   (define extend-env
     (λ (var val env)
       (make-env 'extend-env
-           (λ ([search-var : Symbol]) : Boolean
-               (if (eqv? var search-var)
-                   #t
-                   (has-binding? env search-var)))
-           (λ ([search-var : Symbol]) : Any
-               (if (eqv? search-var var)
-                   val
-                   (apply-env env search-var))))))
+                (λ ([search-var : Symbol]) : Boolean
+                    (if (eqv? var search-var)
+                        #t
+                        (has-binding? env search-var)))
+                (λ ([search-var : Symbol]) : Any
+                    (if (eqv? search-var var)
+                        val
+                        (apply-env env search-var))))))
 
   (: extend-env* [-> (Pair Symbol (Listof Symbol))
                      (Pair Any (Listof Any))
@@ -56,26 +56,26 @@
     (λ (vars vals env)
       (cond [(= (length vars) (length vals))
              (make-env 'extend-env
-                  (λ ([search-var : Symbol]) : Boolean
-                      (: exist-var? [-> (Listof Symbol) (Listof Any) Boolean])
-                      (define exist-var?
-                        (λ (vars vals)
-                          (cond [(or (null? vars) (null? vals)) #f]
-                                [(eqv? search-var (car vars)) #t]
-                                [else (exist-var? (cdr vars) (cdr vals))])))
+                       (λ ([search-var : Symbol]) : Boolean
+                           (: exist-var? [-> (Listof Symbol) (Listof Any) Boolean])
+                           (define exist-var?
+                             (λ (vars vals)
+                               (cond [(or (null? vars) (null? vals)) #f]
+                                     [(eqv? search-var (car vars)) #t]
+                                     [else (exist-var? (cdr vars) (cdr vals))])))
 
-                      (if (exist-var? vars vals)
-                          #t
-                          (has-binding? env search-var)))
-                  (λ ([search-var : Symbol]) : Any
-                      (: look-for-val [-> (Listof Symbol) (Listof Any) Any])
-                      (define look-for-val
-                        (λ (vars vals)
-                          (cond [(null? vars) (apply-env env search-var)]
-                                [(eqv? search-var (car vars)) (car vals)]
-                                [else (look-for-val (cdr vars) (cdr vals))])))
+                           (if (exist-var? vars vals)
+                               #t
+                               (has-binding? env search-var)))
+                       (λ ([search-var : Symbol]) : Any
+                           (: look-for-val [-> (Listof Symbol) (Listof Any) Any])
+                           (define look-for-val
+                             (λ (vars vals)
+                               (cond [(null? vars) (apply-env env search-var)]
+                                     [(eqv? search-var (car vars)) (car vals)]
+                                     [else (look-for-val (cdr vars) (cdr vals))])))
 
-                      (look-for-val vars vals)))]
+                           (look-for-val vars vals)))]
             [else (error 'extend-env* "Bad input! vars: ~s, vals: ~s" vars vals)])))
 
 

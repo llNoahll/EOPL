@@ -6,9 +6,13 @@
 (define-signature exp^
   (
    const-exp
-   zero?-exp
+
+   nullary-exp
+   unary-exp
+   binary-exp
+   n-ary-exp
+
    if-exp
-   diff-exp
    var-exp
    let-exp
 

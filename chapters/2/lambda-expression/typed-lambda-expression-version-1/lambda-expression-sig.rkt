@@ -56,7 +56,10 @@
              arg))))
 
 
-(: variable? [-> Any Boolean])
+(: variable? [-> Any Boolean :
+                 #:+ (and Symbol (! Lambda))
+                 #:- (or  (! Symbol) Lambda)
+                 ])
 (define variable?
   (λ (arg)
     (and (symbol? arg)

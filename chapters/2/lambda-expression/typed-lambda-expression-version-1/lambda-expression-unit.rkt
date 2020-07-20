@@ -54,8 +54,7 @@
   (define lc-exp?
     (λ (arg)
       (match arg
-        [(? lambda?) #f]
-        [(? symbol?) #t]
+        [(? variable?) #f]
         [(list (? lambda?)
                (list (? variable?))
                (? lc-exp?))
@@ -69,7 +68,7 @@
   (define var-exp->var
     (λ (exp)
       (match exp
-        [(? symbol? var) (variable var)]
+        [(? variable? var) (variable var)]
         [_ (raise-argument-error 'var-exp->var "var-exp?" exp)])))
 
   (: lambda-exp->bound-var [-> Lc-Exp Variable])
