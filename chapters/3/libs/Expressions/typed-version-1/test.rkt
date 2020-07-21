@@ -1,6 +1,7 @@
 #lang typed/racket
 
-(require "../../types/version-1.rkt"
+(require "../../Parse/parser.rkt"
+         "../../types/version-1.rkt"
          "../../ExpValues/typed-version-1/values-sig.rkt"
          "../../ExpValues/typed-version-1/values-unit.rkt"
          "../../Environment/typed-version-1/env-sig.rkt"
@@ -31,6 +32,7 @@
     (extend-env* '(i v x)
                  (list (num-val 1) (num-val 5) (num-val 10))
                  (empty-env))))
+
 
 (displayln (value-of (const-exp -9) (init-env)))
 (displayln (value-of (var-exp 'i) (init-env)))

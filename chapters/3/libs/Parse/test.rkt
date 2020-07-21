@@ -1,0 +1,24 @@
+#lang typed/racket
+
+(require "parser.rkt")
+
+
+(pretty-print (parser '2))
+(pretty-print (parser '-9))
+(pretty-print (parser 'x))
+(pretty-print (parser 'i))
+
+(pretty-print (parser '(minus -9)))
+(pretty-print (parser '(minus i)))
+(pretty-print (parser '(minus x)))
+
+(pretty-print (parser '(greater? i x)))
+(pretty-print (parser '(less? i x)))
+
+(pretty-print (parser '(cons i i)))
+(pretty-print (parser '(car (cons i x))))
+(pretty-print (parser '(list x i i)))
+(pretty-print (parser '(null? (empty-list))))
+
+(pretty-print (parser '(let ([x 1])
+                         (cons x x))))
