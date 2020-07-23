@@ -5,6 +5,7 @@
 
 (define-signature values^
   (
+   symbol-val
    num-val
    bool-val
    pair-val

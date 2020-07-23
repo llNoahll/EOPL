@@ -3,7 +3,7 @@
 (provide (all-defined-out))
 
 
-(define-type DenVal (U Integer Boolean (Pair DenVal DenVal) Null))
+(define-type DenVal (U Symbol Integer Boolean (Pair DenVal DenVal) Null))
 (define-type ExpVal (U DenVal Void Nothing))
 
 (define-struct env
@@ -14,21 +14,34 @@
   #:type-name Env)
 
 
-(define-type Exp (U Const-Exp If-Exp
+(define-type Exp (U Symbol-Exp Const-Exp Bool-Exp If-Exp Cond-Exp
                     Nullary-Exp Unary-Exp Binary-Exp N-ary-Exp
                     Var-Exp Let-Exp))
 (define-predicate exp? Exp)
 
 
+(define-struct symbol-exp ([symbol : Symbol])
+  #:transparent
+  #:type-name Symbol-Exp)
+
 (define-struct const-exp ([num : Integer])
   #:transparent
   #:type-name Const-Exp)
+
+(define-struct bool-exp ([bool : Boolean])
+  #:transparent
+  #:type-name Bool-Exp)
 
 (define-struct if-exp ([pred-exp : Exp]
                        [true-exp : Exp]
                        [false-exp : Exp])
   #:transparent
   #:type-name If-Exp)
+
+(define-struct cond-exp ([exps : (Listof (Pair Exp (Listof Exp)))])
+  #:transparent
+  #:type-name Cond-Exp)
+
 
 (define-struct var-exp ([var : Symbol])
   #:transparent

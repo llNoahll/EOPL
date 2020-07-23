@@ -10,6 +10,9 @@
   (import)
   (export values^)
 
+  (: symbol-val [-> Symbol ExpVal])
+  (define symbol-val (λ (symbol) symbol))
+
   (: num-val [-> Integer ExpVal])
   (define num-val (λ (num) num))
 

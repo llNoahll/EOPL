@@ -12,8 +12,14 @@
   (import values^ env^)
   (export exp^)
 
+  (: symbol-exp [-> Symbol Exp])
+  (define symbol-exp (λ (symbol) (make-symbol-exp symbol)))
+
   (: const-exp [-> Integer Exp])
   (define const-exp (λ (num) (make-const-exp num)))
+
+  (: bool-exp [-> Boolean Exp])
+  (define bool-exp (λ (bool) (make-bool-exp bool)))
 
 
   (: nullary-exp [-> Symbol Exp])
@@ -34,6 +40,11 @@
     (λ (pred-exp true-exp false-exp)
       (make-if-exp pred-exp true-exp false-exp)))
 
+  (: cond-exp [-> (Listof (Pair Exp (Listof Exp))) Exp])
+  (define cond-exp
+    (λ (exps)
+      (make-cond-exp (ann exps (Listof (Pair Exp (Listof Exp)))))))
+
   (: var-exp [-> Symbol Exp])
   (define var-exp (λ (var) (make-var-exp var)))
 
@@ -46,7 +57,31 @@
   (: value-of [-> Exp Env ExpVal])
   (define value-of
     (λ (exp env)
-      (cond [(const-exp? exp) (num-val (const-exp-num exp))]
+      (cond [(symbol-exp? exp) (symbol-val (symbol-exp-symbol exp))]
+            [(const-exp? exp) (num-val (const-exp-num exp))]
+            [(bool-exp?  exp) (bool-val (bool-exp-bool exp))]
+
+            [(if-exp? exp)
+             (let ([pred-val (value-of (if-exp-pred-exp exp) env)])
+               (if (expval->bool pred-val)
+                   (value-of (if-exp-true-exp exp) env)
+                   (value-of (if-exp-false-exp exp) env)))]
+            [(cond-exp? exp)
+             (let* ([exps (cond-exp-exps exp)]
+                    [branch-exp
+                     (assf (λ ([pred-exp : Exp])
+                             (not (false? (value-of pred-exp env))))
+                           exps)])
+               (if (false? branch-exp)
+                   (error 'value-of "cond-exp miss true banch!")
+                   (value-of (cadr branch-exp) env)))]
+            [(var-exp? exp) (cast (apply-env env (var-exp-var exp)) ExpVal)]
+            [(let-exp? exp)
+             (let ([val (value-of (let-exp-bound-exp exp) env)])
+               (value-of (let-exp-body exp)
+                         (extend-env (let-exp-bound-var exp)
+                                     val
+                                     env)))]
 
             [(nullary-exp? exp)
              ((hash-ref nullary-table (nullary-exp-op exp)))]
@@ -63,19 +98,6 @@
                                   (cast (value-of exp env) DenVal))
                               (n-ary-exp-exps exp))])
                (hash-ref n-ary-table (n-ary-exp-op exp)) vals)]
-
-            [(if-exp? exp)
-             (let ([pred-val (value-of (if-exp-pred-exp exp) env)])
-               (if (expval->bool pred-val)
-                   (value-of (if-exp-true-exp exp) env)
-                   (value-of (if-exp-false-exp exp) env)))]
-            [(var-exp? exp) (cast (apply-env env (var-exp-var exp)) ExpVal)]
-            [(let-exp? exp)
-             (let ([val (value-of (let-exp-bound-exp exp) env)])
-               (value-of (let-exp-body exp)
-                         (extend-env (let-exp-bound-var exp)
-                                     val
-                                     env)))]
 
             [else (raise-argument-error 'value-of "exp?" exp)])))
 

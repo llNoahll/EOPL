@@ -29,7 +29,7 @@
 (define eval-ns (namespace-anchor->namespace ns-anchor))
 
 
-(: *eval* [-> S-Expr Env ExpVal])
+(: *eval* [-> S-Exp Env ExpVal])
 (define *eval*
   (λ (code env)
     (: exp Exp)
@@ -46,7 +46,7 @@
 (define *repl*
   (λ (env)
     (display "]=> ")
-    (let ([code : S-Expr (cast (read) S-Expr)])
+    (let ([code : S-Exp (cast (read) S-Exp)])
       (cond [(equal? code '(exit))
              (void)]
             [else

@@ -7,10 +7,11 @@
 
 (define-signature values^
   (
-   [num-val  : [-> Integer ExpVal]]
-   [bool-val : [-> Boolean ExpVal]]
-   [pair-val : [-> (Pair DenVal DenVal) ExpVal]]
-   [list-val : [-> (Listof DenVal) ExpVal]]
+   [symbol-val : [-> Symbol ExpVal]]
+   [num-val    : [-> Integer ExpVal]]
+   [bool-val   : [-> Boolean ExpVal]]
+   [pair-val   : [-> (Pair DenVal DenVal) ExpVal]]
+   [list-val   : [-> (Listof DenVal) ExpVal]]
 
    [expval->num  : [-> ExpVal Integer]]
    [expval->bool : [-> ExpVal Boolean]]

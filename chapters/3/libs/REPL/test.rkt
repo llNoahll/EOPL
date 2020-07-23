@@ -44,4 +44,14 @@
 (displayln (*eval* '(car (cons i x)) (init-env)))
 (displayln (*eval* '(list x i i) (init-env)))
 (displayln (*eval* '(null? (empty-list)) (init-env)))
+(displayln (*eval* '(cond [(null? (list 1 2 3)) 'cond-1]
+                          [(null? (list 9 0 8)) 'cond-2]
+                          [else 'else-cons])
+                   (empty-env)))
+(displayln (*eval* '(cond [(null? (list 1 2 3)) 'cond-1]
+                          [(null? (empty-list)) 'cond-2]
+                          [else 'else-cons])
+                   (empty-env)))
+
+
 ;; (*repl* (empty-env))

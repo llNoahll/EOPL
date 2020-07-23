@@ -22,3 +22,9 @@
 
 (pretty-print (parser '(let ([x 1])
                          (cons x x))))
+
+(pretty-print (parser '(if (greater? 2 1) 'true 'false)))
+
+(pretty-print (parser '(cond [(null? (list 1 2 3)) 'cond-1]
+                             [(null? (list 9 0 8)) 'cond-2]
+                             [else 'else-cons])))

@@ -5,7 +5,9 @@
 
 (define-signature exp^
   (
+   symbol-exp
    const-exp
+   bool-exp
 
    nullary-exp
    unary-exp
@@ -13,6 +15,7 @@
    n-ary-exp
 
    if-exp
+   cond-exp
    var-exp
    let-exp
 
