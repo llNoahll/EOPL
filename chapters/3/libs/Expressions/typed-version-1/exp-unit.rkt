@@ -48,10 +48,10 @@
   (: var-exp [-> Symbol Exp])
   (define var-exp (λ (var) (make-var-exp var)))
 
-  (: let-exp [-> Symbol Exp Exp Exp])
+  (: let-exp [-> (Listof Symbol) (Listof Exp) Exp Exp])
   (define let-exp
-    (λ (bound-var bound-exp body)
-      (make-let-exp bound-var bound-exp body)))
+    (λ (bound-vars bound-exps body)
+      (make-let-exp bound-vars bound-exps body)))
 
 
   (: value-of [-> Exp Env ExpVal])
@@ -77,11 +77,13 @@
                    (value-of (cadr branch-exp) env)))]
             [(var-exp? exp) (cast (apply-env env (var-exp-var exp)) ExpVal)]
             [(let-exp? exp)
-             (let ([val (value-of (let-exp-bound-exp exp) env)])
+             (let ([vals (map (λ ([bound-exp : Exp]) : ExpVal
+                                  (value-of bound-exp env))
+                              (let-exp-bound-exps exp))])
                (value-of (let-exp-body exp)
-                         (extend-env (let-exp-bound-var exp)
-                                     val
-                                     env)))]
+                         (extend-env* (let-exp-bound-vars exp)
+                                      vals
+                                      env)))]
 
             [(nullary-exp? exp)
              ((hash-ref nullary-table (nullary-exp-op exp)))]
@@ -128,6 +130,12 @@
       (λ (val)
         (num-val (func (expval->num val))))))
 
+  (: unary-IO-func [-> [-> Any Void] [-> DenVal ExpVal]])
+  (define unary-IO-func
+    (λ (func)
+      (λ (val)
+        (func (expval->s-expval val)))))
+
 
   (: binary-arithmetic-func [-> [-> Integer Integer Integer] [-> DenVal DenVal ExpVal]])
   (define binary-arithmetic-func
@@ -153,9 +161,18 @@
               ;; 'car   (unary-pair-func car)
               ;; 'cdr   (unary-pair-func cdr)
               ;; 'null? (unary-list-pred null?)
-              'car (λ ([val : ExpVal]) : ExpVal (car (expval->pair val)))
-              'cdr (λ ([val : ExpVal]) : ExpVal (car (expval->pair val)))
-              'null? (λ ([val : ExpVal]) : ExpVal (bool-val (null? val)))
+              'car (λ ([val : DenVal]) : ExpVal (car (expval->pair val)))
+              'cdr (λ ([val : DenVal]) : ExpVal (car (expval->pair val)))
+              'null? (λ ([val : DenVal]) : ExpVal (bool-val (null? val)))
+
+
+              'display (unary-IO-func display)
+              'print (unary-IO-func print)
+              'write (unary-IO-func write)
+
+              'displayln (unary-IO-func displayln)
+              'println (unary-IO-func println)
+              'writeln (unary-IO-func writeln)
               )
 
   (hash-set*! binary-table

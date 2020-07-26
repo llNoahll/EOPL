@@ -48,13 +48,14 @@
                         val
                         (apply-env env search-var))))))
 
-  (: extend-env* [-> (Pair Symbol (Listof Symbol))
-                     (Pair Any (Listof Any))
+  (: extend-env* [-> (Listof Symbol)
+                     (Listof Any)
                      Env
                      Env])
   (define extend-env*
     (λ (vars vals env)
-      (cond [(= (length vars) (length vals))
+      (cond [(and (null? vars) (null? vals)) env]
+            [(= (length vars) (length vals))
              (make-env 'extend-env
                        (λ ([search-var : Symbol]) : Boolean
                            (: exist-var? [-> (Listof Symbol) (Listof Any) Boolean])

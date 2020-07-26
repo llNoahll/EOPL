@@ -1,16 +1,9 @@
 #lang typed/racket
 
+(require "../types/version-1.rkt")
+
 (provide (all-defined-out))
 
-
-(define-type S-List (Listof S-Exp))
-(define-type S-Exp (U Boolean Integer Symbol S-List))
-
-(: s-exp? [-> Any Boolean : S-Exp])
-(define-predicate s-exp?  S-Exp)
-
-(: s-list? [-> Any Boolean : S-List])
-(define-predicate s-list? S-List)
 
 (: parser [-> S-Exp S-Exp])
 (define parser
@@ -39,11 +32,26 @@
                                ,(parser body-exp)))
                       pred-exps
                       body-exps)))]
-      [`(let ([,(? symbol? bound-var)
-               ,(? s-exp? bound-exp)])
+      [`(let ([,(? symbol? #{bound-vars : (Listof Symbol)})
+               ,(? s-exp?  #{bound-exps : S-List})]
+              ...)
           ,(? s-exp? body-exp))
-       `(let-exp ',bound-var ,(parser bound-exp)
+       `(let-exp ',bound-vars
+                 (list ,@(map parser bound-exps))
                  ,(parser body-exp))]
+      [`(let* ([,(? symbol? #{bound-vars : (Listof Symbol)})
+                ,(? s-exp?  #{bound-exps : S-List})]
+               ...)
+          ,(? s-exp? body-exp))
+       (if (and (null? bound-vars) (null? bound-exps))
+           `(let-exp '() '() ,(parser body-exp))
+           (parser
+            `(let ([,(car bound-vars) ,(car bound-exps)])
+               (let* (,@(map (λ ([var : Symbol] [exp : S-Exp]) : (List Symbol S-Exp)
+                                 (list var exp))
+                             (cdr bound-vars)
+                             (cdr bound-exps)))
+                 ,body-exp))))]
 
       [`(,(? s-exp? op))
        `(nullary-exp ',op)]

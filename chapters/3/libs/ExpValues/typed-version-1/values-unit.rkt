@@ -31,27 +31,45 @@
     (λ (val)
       (if (integer? val)
           val
-          (raise-argument-error 'expval-num "integer?" val))))
+          (raise-argument-error 'expval->num "integer?" val))))
 
   (: expval->bool [-> ExpVal Boolean])
   (define expval->bool
     (λ (val)
       (if (boolean? val)
           val
-          (raise-argument-error 'expval-bool "boolean?" val))))
+          (raise-argument-error 'expval->bool "boolean?" val))))
 
   (: expval->pair [-> ExpVal (Pair DenVal DenVal)])
   (define expval->pair
     (λ (val)
       (if (pair? val)
           val
-          (raise-argument-error 'expval-pair "pair?" val))))
+          (raise-argument-error 'expval->pair "pair?" val))))
 
   (: expval->list [-> ExpVal (Listof DenVal)])
   (define expval->list
     (λ (val)
       (if (list? val)
           val
-          (raise-argument-error 'expval-list "list?" val))))
+          (raise-argument-error 'expval->list "list?" val))))
+
+
+  (: expval->s-expval [-> ExpVal Any])
+  (define expval->s-expval
+    (λ (val)
+      (cond [(integer? val) val]
+            [(boolean? val) val]
+            [(symbol? val) val]
+            [(null? val) val]
+            [(list? val)
+             (map (λ (arg)
+                    (expval->s-expval arg))
+                  val)]
+            [(pair? val)
+             (cons (expval->s-expval (car val))
+                   (expval->s-expval (cdr val)))]
+            [else
+             (raise-argument-error 'expval->s-expval "s-expval?" val)])))
 
   )

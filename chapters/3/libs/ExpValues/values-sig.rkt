@@ -11,8 +11,10 @@
    pair-val
    list-val
 
-   expvel-num
-   expval-bool
-   expval-pair
-   expval-list
+   expval->num
+   expval->bool
+   expval->pair
+   expval->list
+
+   expval->s-exp
    ))

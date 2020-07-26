@@ -56,3 +56,9 @@
 (displayln (value-of (unary-exp 'null? (binary-exp 'cons (var-exp 'i) (var-exp 'x))) (init-env)))
 (displayln (value-of (unary-exp 'null? (nullary-exp 'empty-list)) (init-env)))
 (displayln (value-of (n-ary-exp 'list (var-exp 'x) (var-exp 'i) (var-exp 'i)) (init-env)))
+
+(displayln (value-of (let-exp
+                      '(x)
+                      (list (const-exp 1))
+                      (binary-exp 'cons (var-exp 'x) (var-exp 'x)))
+                     (init-env)))

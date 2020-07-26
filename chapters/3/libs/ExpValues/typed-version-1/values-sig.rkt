@@ -17,4 +17,6 @@
    [expval->bool : [-> ExpVal Boolean]]
    [expval->pair : [-> ExpVal (Pair DenVal DenVal)]]
    [expval->list : [-> ExpVal (Listof DenVal)]]
+
+   [expval->s-expval : [-> ExpVal Any]]
    ))

@@ -10,8 +10,8 @@
    [empty-env?   : [-> Env Boolean]]
 
    [extend-env   : [-> Symbol Any Env Env]]
-   [extend-env*  : [-> (Pair Symbol (Listof Symbol))
-                       (Pair Any (Listof Any))
+   [extend-env*  : [-> (Listof Symbol)
+                       (Listof Any)
                        Env
                        Env]]
    [extend-env?  : [-> Env Boolean]]

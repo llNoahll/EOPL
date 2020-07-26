@@ -50,5 +50,5 @@
       (cond [(equal? code '(exit))
              (void)]
             [else
-             (displayln (*eval* code env))
+             (writeln (*eval* code env))
              (*repl* env)]))))

@@ -19,7 +19,7 @@
    [if-exp   : [-> Exp Exp Exp Exp]]
    [cond-exp : [-> (Listof (Pair Exp (Listof Exp))) Exp]]
    [var-exp  : [-> Symbol Exp]]
-   [let-exp  : [-> Symbol Exp Exp Exp]]
+   [let-exp  : [-> (Listof Symbol) (Listof Exp) Exp Exp]]
 
    [value-of : [-> Exp Env ExpVal]]
    ))

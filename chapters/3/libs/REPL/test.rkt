@@ -53,5 +53,30 @@
                           [else 'else-cons])
                    (empty-env)))
 
+(displayln (*eval* '(displayln (cond [(null? (list 1 2 3)) 'cond-1]
+                                     [(null? (empty-list)) 'cond-2]
+                                     [else 'else-cons]))
+                   (empty-env)))
+
+
+(displayln (*eval* '(let ([x 1])
+                      (cons x x))
+                   (init-env)))
+(displayln (*eval* '(let ([a 1]
+                          [b 2]
+                          [c 3])
+                      (list a b c))
+                   (init-env)))
+
+(displayln (*eval* '(let ([x 30])
+                      (let ([x (- x 1)]
+                            [y (- x 2)])
+                        (- x y)))
+                   (init-env)))
+(displayln (*eval* '(let ([x 30])
+                      (let* ([x (- x 1)]
+                             [y (- x 2)])
+                        (- x y)))
+                   (init-env)))
 
 ;; (*repl* (empty-env))

@@ -23,8 +23,30 @@
 (pretty-print (parser '(let ([x 1])
                          (cons x x))))
 
+(pretty-print (parser '(let ([a 'a]
+                             [b 'b]
+                             [c 'c])
+                         (list a b c))))
+
+
 (pretty-print (parser '(if (greater? 2 1) 'true 'false)))
 
 (pretty-print (parser '(cond [(null? (list 1 2 3)) 'cond-1]
                              [(null? (list 9 0 8)) 'cond-2]
                              [else 'else-cons])))
+
+
+(pretty-print (parser '(let ([x 30])
+                         (let ([x (- x 1)]
+                               [y (- x 2)])
+                           (- x y)))))
+
+(pretty-print (parser '(let* ([a 1]
+                              [b 2]
+                              [c 3])
+                         (list a b c))))
+
+(pretty-print (parser '(let ([x 30])
+                         (let* ([x (- x 1)]
+                                [y (- x 2)])
+                           (- x y)))))

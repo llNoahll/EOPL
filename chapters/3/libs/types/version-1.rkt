@@ -3,6 +3,13 @@
 (provide (all-defined-out))
 
 
+(define-type S-List (Listof S-Exp))
+(define-type S-Exp (U Boolean Integer Symbol S-List))
+
+(define-predicate s-exp?  S-Exp)
+(define-predicate s-list? S-List)
+
+
 (define-type DenVal (U Symbol Integer Boolean (Pair DenVal DenVal) Null))
 (define-type ExpVal (U DenVal Void Nothing))
 
@@ -47,8 +54,8 @@
   #:transparent
   #:type-name Var-Exp)
 
-(define-struct let-exp ([bound-var : Symbol]
-                        [bound-exp : Exp]
+(define-struct let-exp ([bound-vars : (Listof Symbol)]
+                        [bound-exps : (Listof Exp)]
                         [body : Exp])
   #:transparent
   #:type-name Let-Exp)
