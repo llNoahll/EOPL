@@ -4,7 +4,7 @@
 
 
 (define-type Exp (U Symbol-Exp Const-Exp Bool-Exp If-Exp Cond-Exp
-                    Nullary-Exp Unary-Exp Binary-Exp N-ary-Exp
+                    Primitive-Proc-Exp Proc-Exp Call-Exp
                     Var-Exp Let-Exp))
 (define-predicate exp? Exp)
 
@@ -43,18 +43,18 @@
   #:type-name Let-Exp)
 
 
-(define-struct nullary-exp ([op : Symbol])
+(define-struct primitive-proc-exp ([op : Symbol] [exps : (Listof Exp)])
   #:transparent
-  #:type-name Nullary-Exp)
+  #:type-name Primitive-Proc-Exp)
 
-(define-struct unary-exp   ([op : Symbol] [exp : Exp])
+(define-struct proc-exp
+  ([vars : (Listof Symbol)]
+   [body : Exp])
   #:transparent
-  #:type-name Unary-Exp)
+  #:type-name Proc-Exp)
 
-(define-struct binary-exp  ([op : Symbol] [exp-1 : Exp] [exp-2 : Exp])
+(define-struct call-exp
+  ([rator : Exp]
+   [rands : (Listof Exp)])
   #:transparent
-  #:type-name Binary-Exp)
-
-(define-struct n-ary-exp   ([op : Symbol] [exps : (Listof Exp)])
-  #:transparent
-  #:type-name N-ary-Exp)
+  #:type-name Call-Exp)

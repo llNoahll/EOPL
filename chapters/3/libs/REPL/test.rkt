@@ -25,8 +25,9 @@
 (displayln (*eval* '(minus i) (init-env)))
 (displayln (*eval* '(minus x) (init-env)))
 
-(displayln (*eval* '(greater? i x) (init-env)))
-(displayln (*eval* '(less? i x) (init-env)))
+(displayln (*eval* '(> i x) (init-env)))
+(displayln (*eval* '(< i x) (init-env)))
+(displayln (*eval* '(= i x) (init-env)))
 
 (displayln (*eval* '(cons i i) (init-env)))
 (displayln (*eval* '(car (cons i x)) (init-env)))

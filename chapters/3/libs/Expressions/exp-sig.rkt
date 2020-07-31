@@ -7,19 +7,19 @@
 
 (define-signature exp^
   (
-   [symbol-exp : [-> Symbol  Exp]]
-   [const-exp  : [-> Integer Exp]]
-   [bool-exp   : [-> Boolean Exp]]
+   [symbol-exp : [-> Symbol  Symbol-Exp]]
+   [const-exp  : [-> Integer Const-Exp]]
+   [bool-exp   : [-> Boolean Bool-Exp]]
 
-   [nullary-exp : [-> Symbol Exp]]
-   [unary-exp   : [-> Symbol Exp Exp]]
-   [binary-exp  : [-> Symbol Exp Exp Exp]]
-   [n-ary-exp   : [-> Symbol Exp * Exp]]
+   [if-exp   : [-> Exp Exp Exp If-Exp]]
+   [cond-exp : [-> (Listof (Pair Exp (Listof Exp))) Cond-Exp]]
+   [var-exp  : [-> Symbol Var-Exp]]
+   [let-exp  : [-> (Listof Symbol) (Listof Exp) Exp Let-Exp]]
 
-   [if-exp   : [-> Exp Exp Exp Exp]]
-   [cond-exp : [-> (Listof (Pair Exp (Listof Exp))) Exp]]
-   [var-exp  : [-> Symbol Exp]]
-   [let-exp  : [-> (Listof Symbol) (Listof Exp) Exp Exp]]
+   [primitive-proc-exp : [-> Symbol Exp * Primitive-Proc-Exp]]
+
+   [proc-exp : [-> (Listof Symbol) Exp Proc-Exp]]
+   [call-exp : [-> Exp (Listof Exp) Call-Exp]]
 
    [value-of : [-> Exp Env ExpVal]]
    ))

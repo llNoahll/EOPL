@@ -53,14 +53,14 @@
                              (cdr bound-exps)))
                  ,body-exp))))]
 
-      [`(,(? s-exp? op))
-       `(nullary-exp ',op)]
-      [`(,(? s-exp? op) ,(? s-exp? exp))
-       `(unary-exp ',op ,(parser exp))]
-      [`(,(? s-exp? op) ,(? s-exp? exp-1) ,(? s-exp? exp-2))
-       `(binary-exp ',op
-                    ,(parser exp-1)
-                    ,(parser exp-2))]
+      ;; [`(,(? s-exp? op))
+      ;;  `(nullary-exp ',op)]
+      ;; [`(,(? s-exp? op) ,(? s-exp? exp))
+      ;;  `(unary-exp ',op ,(parser exp))]
+      ;; [`(,(? s-exp? op) ,(? s-exp? exp-1) ,(? s-exp? exp-2))
+      ;;  `(binary-exp ',op
+      ;;               ,(parser exp-1)
+      ;;               ,(parser exp-2))]
       [`(,(? s-exp? op) ,(? s-exp? #{exps : S-List}) ...)
-       `(n-ary-exp ',op
+       `(primitive-proc-exp ',op
                    ,@(map parser exps))])))

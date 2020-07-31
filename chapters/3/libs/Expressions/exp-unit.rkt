@@ -12,46 +12,48 @@
   (import values^ env^)
   (export exp^)
 
-  (: symbol-exp [-> Symbol Exp])
+  (: symbol-exp [-> Symbol Symbol-Exp])
   (define symbol-exp (λ (symbol) (make-symbol-exp symbol)))
 
-  (: const-exp [-> Integer Exp])
+  (: const-exp [-> Integer Const-Exp])
   (define const-exp (λ (num) (make-const-exp num)))
 
-  (: bool-exp [-> Boolean Exp])
+  (: bool-exp [-> Boolean Bool-Exp])
   (define bool-exp (λ (bool) (make-bool-exp bool)))
 
 
-  (: nullary-exp [-> Symbol Exp])
-  (define nullary-exp (λ (op) (make-nullary-exp op)))
-
-  (: unary-exp [-> Symbol Exp Exp])
-  (define unary-exp (λ (op exp) (make-unary-exp op exp)))
-
-  (: binary-exp [-> Symbol Exp Exp Exp])
-  (define binary-exp (λ (op exp-1 exp-2) (make-binary-exp op exp-1 exp-2)))
-
-  (: n-ary-exp [-> Symbol Exp * Exp])
-  (define n-ary-exp (λ (op . exps) (make-n-ary-exp op exps)))
-
-
-  (: if-exp [-> Exp Exp Exp Exp])
+  (: if-exp [-> Exp Exp Exp If-Exp])
   (define if-exp
     (λ (pred-exp true-exp false-exp)
       (make-if-exp pred-exp true-exp false-exp)))
 
-  (: cond-exp [-> (Listof (Pair Exp (Listof Exp))) Exp])
+  (: cond-exp [-> (Listof (Pair Exp (Listof Exp))) Cond-Exp])
   (define cond-exp
     (λ (exps)
       (make-cond-exp (ann exps (Listof (Pair Exp (Listof Exp)))))))
 
-  (: var-exp [-> Symbol Exp])
+  (: var-exp [-> Symbol Var-Exp])
   (define var-exp (λ (var) (make-var-exp var)))
 
-  (: let-exp [-> (Listof Symbol) (Listof Exp) Exp Exp])
+  (: let-exp [-> (Listof Symbol) (Listof Exp) Exp Let-Exp])
   (define let-exp
     (λ (bound-vars bound-exps body)
       (make-let-exp bound-vars bound-exps body)))
+
+
+  (: primitive-proc-exp [-> Symbol Exp * Primitive-Proc-Exp])
+  (define primitive-proc-exp (λ (op . exps) (make-primitive-proc-exp op exps)))
+
+
+  (: proc-exp [-> (Listof Symbol) Exp Proc-Exp])
+  (define proc-exp
+    (λ (vars body)
+      (make-proc-exp vars body)))
+
+  (: call-exp [-> Exp (Listof Exp) Call-Exp])
+  (define call-exp
+    (λ (rator rands)
+      (make-call-exp rator rands)))
 
 
   (: value-of [-> Exp Env ExpVal])
@@ -85,38 +87,21 @@
                                       vals
                                       env)))]
 
-            [(nullary-exp? exp)
-             ((hash-ref nullary-table (nullary-exp-op exp)))]
-            [(unary-exp? exp)
-             (let ([val : DenVal (cast (value-of (unary-exp-exp exp) env) DenVal)])
-               ((hash-ref unary-table (unary-exp-op exp)) val))]
-            [(binary-exp? exp)
-             (let ([val-1 : DenVal (cast (value-of (binary-exp-exp-1 exp) env) DenVal)]
-                   [val-2 : DenVal (cast (value-of (binary-exp-exp-2 exp) env) DenVal)])
-               ((hash-ref binary-table (binary-exp-op exp)) val-1 val-2))]
-            [(n-ary-exp? exp)
+            [(primitive-proc-exp? exp)
              (let ([vals : (Listof DenVal)
                          (map (λ ([exp : Exp]) : DenVal
                                   (cast (value-of exp env) DenVal))
-                              (n-ary-exp-exps exp))])
-               (hash-ref n-ary-table (n-ary-exp-op exp)) vals)]
+                              (primitive-proc-exp-exps exp))])
+               (hash-ref primitive-proc-table (primitive-proc-exp-op exp)) vals)]
 
             [else (raise-argument-error 'value-of "exp?" exp)])))
 
 
-
-  (: nullary-table (Mutable-HashTable Symbol [-> ExpVal]))
-  (define nullary-table (make-hasheqv))
-
-  (: unary-table (Mutable-HashTable Symbol [-> DenVal ExpVal]))
-  (define unary-table (make-hasheqv))
-
-  (: binary-table (Mutable-HashTable Symbol [-> DenVal DenVal ExpVal]))
-  (define binary-table (make-hasheqv))
-
-  (: n-ary-table (Mutable-HashTable Symbol [-> (Listof DenVal) ExpVal]))
-  (define n-ary-table (make-hasheqv))
-
+  (: primitive-proc-table (Mutable-HashTable Symbol (U [-> ExpVal]
+                                                       [-> DenVal ExpVal]
+                                                       [-> DenVal DenVal ExpVal]
+                                                       [-> (Listof DenVal) ExpVal])))
+  (define primitive-proc-table (make-hasheqv))
 
   (: unary-arithmetic-pred [-> [-> Integer Boolean] [-> DenVal ExpVal]])
   (define unary-arithmetic-pred
@@ -150,17 +135,13 @@
         (bool-val (relation (expval->num val-1) (expval->num val-2))))))
 
 
-  (hash-set*! nullary-table
-              ;; 'empty-list (nullary-list-func (λ () '()))
+  (hash-set*! primitive-proc-table
               'empty-list (λ () : ExpVal '())
-              )
 
-  (hash-set*! unary-table
+
               'zero? (unary-arithmetic-pred zero?)
               'minus (unary-arithmetic-func -)
-              ;; 'car   (unary-pair-func car)
-              ;; 'cdr   (unary-pair-func cdr)
-              ;; 'null? (unary-list-pred null?)
+              'add   (unary-arithmetic-func +)
               'car (λ ([val : DenVal]) : ExpVal (car (expval->pair val)))
               'cdr (λ ([val : DenVal]) : ExpVal (car (expval->pair val)))
               'null? (λ ([val : DenVal]) : ExpVal (bool-val (null? val)))
@@ -173,23 +154,18 @@
               'displayln (unary-IO-func displayln)
               'println (unary-IO-func println)
               'writeln (unary-IO-func writeln)
-              )
 
-  (hash-set*! binary-table
               '+ (binary-arithmetic-func +)
               '- (binary-arithmetic-func -)
               '* (binary-arithmetic-func *)
               '/ (binary-arithmetic-func quotient)
-              'equal?   (binary-relation =)
-              'greater? (binary-relation >)
-              'less?    (binary-relation <)
-              ;; 'cons    (binary-pair-func cons)
+              '= (binary-relation =)
+              '> (binary-relation >)
+              '< (binary-relation <)
               'cons (λ ([val-1 : DenVal] [val-2 : DenVal]) : ExpVal
                         (pair-val (cons val-1 val-2)))
-              )
 
-  (hash-set*! n-ary-table
-              ;; 'list (n-ary-list-func list)
+
               'list (λ ([vals : (Listof DenVal)]) : ExpVal (list-val vals))
               )
 

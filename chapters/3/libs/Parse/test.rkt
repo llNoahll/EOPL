@@ -50,3 +50,10 @@
                          (let* ([x (- x 1)]
                                 [y (- x 2)])
                            (- x y)))))
+
+
+(pretty-print (parser '(let ([f (λ (x) (- x 11))])
+                         (f (f 77)))))
+
+(pretty-print (parser '((λ (f) (f (f 77)))
+                        (λ (x) (- x 11)))))
