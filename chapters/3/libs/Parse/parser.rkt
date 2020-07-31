@@ -1,6 +1,6 @@
 #lang typed/racket
 
-(require "../types/version-1.rkt")
+(require "../types/types.rkt")
 
 (provide (all-defined-out))
 

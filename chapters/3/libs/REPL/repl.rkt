@@ -1,28 +1,9 @@
 #lang typed/racket
 
-(require "../Parse/parser.rkt"
-         "../types/version-1.rkt"
-         "../ExpValues/typed-version-1/values-sig.rkt"
-         "../ExpValues/typed-version-1/values-unit.rkt"
-         "../Environment/typed-version-1/env-sig.rkt"
-         "../Environment/typed-version-1/env-unit.rkt"
-         "../Expressions/typed-version-1/exp-sig.rkt"
-         "../Expressions/typed-version-1/exp-unit.rkt")
+(require "../base/base.rkt"
+         "../Parse/parser.rkt")
 
 (provide *eval* *repl*)
-
-
-(define-values/invoke-unit values@
-  (import)
-  (export values^))
-
-(define-values/invoke-unit env@
-  (import)
-  (export env^))
-
-(define-values/invoke-unit exp@
-  (import values^ env^)
-  (export exp^))
 
 
 (define-namespace-anchor ns-anchor)

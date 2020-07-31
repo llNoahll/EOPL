@@ -3,24 +3,6 @@
 (provide (all-defined-out))
 
 
-(define-type S-List (Listof S-Exp))
-(define-type S-Exp (U Boolean Integer Symbol S-List))
-
-(define-predicate s-exp?  S-Exp)
-(define-predicate s-list? S-List)
-
-
-(define-type DenVal (U Symbol Integer Boolean (Pair DenVal DenVal) Null))
-(define-type ExpVal (U DenVal Void Nothing))
-
-(define-struct env
-  ([type : (U 'empty-env 'extend-env)]
-   [has-binding? : [-> Symbol Boolean]]
-   [apply-env : [-> Symbol Any]])
-  #:transparent
-  #:type-name Env)
-
-
 (define-type Exp (U Symbol-Exp Const-Exp Bool-Exp If-Exp Cond-Exp
                     Nullary-Exp Unary-Exp Binary-Exp N-ary-Exp
                     Var-Exp Let-Exp))

@@ -1,16 +1,21 @@
-#lang racket
+#lang typed/racket
+
+(require "../types/types.rkt")
 
 (provide env^)
 
 
 (define-signature env^
-  (empty-env
-   empty-env?
+  ([empty-env    : [-> Env]]
+   [empty-env?   : [-> Env Boolean]]
 
-   extend-env
-   extend-env*
-   extend-env?
+   [extend-env   : [-> Symbol Any Env Env]]
+   [extend-env*  : [-> (Listof Symbol)
+                       (Listof Any)
+                       Env
+                       Env]]
+   [extend-env?  : [-> Env Boolean]]
 
-   env?
-   apply-env
-   has-binding?))
+   [env?         : [-> Any Boolean : Env]]
+   [apply-env    : [-> Env Symbol Any]]
+   [has-binding? : [-> Env Symbol Boolean]]))

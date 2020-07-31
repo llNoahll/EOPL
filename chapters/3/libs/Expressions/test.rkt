@@ -1,25 +1,7 @@
 #lang typed/racket
 
-(require "../../Parse/parser.rkt"
-         "../../types/version-1.rkt"
-         "../../ExpValues/typed-version-1/values-sig.rkt"
-         "../../ExpValues/typed-version-1/values-unit.rkt"
-         "../../Environment/typed-version-1/env-sig.rkt"
-         "../../Environment/typed-version-1/env-unit.rkt"
-         "exp-sig.rkt"
-         "exp-unit.rkt")
-
-(define-values/invoke-unit values@
-  (import)
-  (export values^))
-
-(define-values/invoke-unit env@
-  (import)
-  (export env^))
-
-(define-values/invoke-unit exp@
-  (import values^ env^)
-  (export exp^))
+(require "../Parse/parser.rkt"
+         "../base/base.rkt")
 
 
 (: init-env [-> Env])

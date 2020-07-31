@@ -1,8 +1,8 @@
 #lang typed/racket
 
-(require "../../types/version-1.rkt"
-         "../../ExpValues/typed-version-1/values-sig.rkt"
-         "../../Environment/typed-version-1/env-sig.rkt"
+(require "../types/types.rkt"
+         "../ExpValues/values-sig.rkt"
+         "../Environment/env-sig.rkt"
          "exp-sig.rkt")
 
 (provide exp@)

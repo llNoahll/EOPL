@@ -1,6 +1,6 @@
 #lang typed/racket
 
-(require "../../types/version-1.rkt"
+(require "../types/types.rkt"
          "values-sig.rkt")
 
 (provide values@)
