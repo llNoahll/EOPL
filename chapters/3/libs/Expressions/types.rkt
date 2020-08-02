@@ -21,9 +21,10 @@
   #:transparent
   #:type-name Bool-Exp)
 
-(define-struct if-exp ([pred-exp : Exp]
-                       [true-exp : Exp]
-                       [false-exp : Exp])
+(define-struct if-exp
+  ([pred-exp : Exp]
+   [true-exp : Exp]
+   [false-exp : Exp])
   #:transparent
   #:type-name If-Exp)
 
@@ -36,14 +37,17 @@
   #:transparent
   #:type-name Var-Exp)
 
-(define-struct let-exp ([bound-vars : (Listof Symbol)]
-                        [bound-exps : (Listof Exp)]
-                        [body : Exp])
+(define-struct let-exp
+  ([bound-vars : (Listof Symbol)]
+   [bound-exps : (Listof Exp)]
+   [body : Exp])
   #:transparent
   #:type-name Let-Exp)
 
 
-(define-struct primitive-proc-exp ([op : Symbol] [exps : (Listof Exp)])
+(define-struct primitive-proc-exp
+  ([op : Symbol]
+   [exps : (Listof Exp)])
   #:transparent
   #:type-name Primitive-Proc-Exp)
 

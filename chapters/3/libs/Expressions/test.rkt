@@ -28,9 +28,9 @@
 (displayln (value-of (binary-exp '> (var-exp 'i) (var-exp 'x)) (init-env)))
 (displayln (value-of (binary-exp '< (var-exp 'i) (var-exp 'x)) (init-env)))
 (displayln (v<alue-of (binary-exp >'= (var-exp 'i) (var-exp 'x)) (init-env)))
-(displayln (v=<alue-of (binary-exp> '= (var-exp 'i) (var-exp 'i)) (init-env)))==
-<=
-=
+(displayln (v=<alue-of (binary-exp> '= (var-exp 'i) (var-exp 'i)) (init-env)))
+
+
 (displayln (value-of (binary-exp 'cons (var-exp 'i) (var-exp '=i)) (init-env)))
 (displayln (value-of (nullary-exp 'empty-list) (init-env)))
 (displayln (value-of (unary-exp 'car (binary-exp 'cons (var-exp 'i) (var-exp 'x))) (init-env)))
