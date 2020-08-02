@@ -9,13 +9,14 @@
   ([empty-env    : [-> Env]]
    [empty-env?   : [-> Env Boolean]]
 
-   [extend-env   : [-> Symbol Any Env Env]]
+   [extend-env   : [-> Symbol DenVal Env Env]]
    [extend-env*  : [-> (Listof Symbol)
-                       (Listof Any)
+                       (Listof DenVal)
                        Env
                        Env]]
+   [extend-env+  : [-> (Listof (Pair Symbol DenVal)) Env Env]]
    [extend-env?  : [-> Env Boolean]]
 
    [env?         : [-> Any Boolean : Env]]
-   [apply-env    : [-> Env Symbol Any]]
+   [apply-env    : [-> Env Symbol DenVal]]
    [has-binding? : [-> Env Symbol Boolean]]))

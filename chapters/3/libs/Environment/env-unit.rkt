@@ -35,7 +35,7 @@
   (define empty-env? (λ (env) (eqv? (env-type env) 'empty-env)))
 
 
-  (: extend-env [-> Symbol Any Env Env])
+  (: extend-env [-> Symbol DenVal Env Env])
   (define extend-env
     (λ (var val env)
       (make-env 'extend-env
@@ -43,13 +43,13 @@
                     (if (eqv? var search-var)
                         #t
                         (has-binding? env search-var)))
-                (λ ([search-var : Symbol]) : Any
+                (λ ([search-var : Symbol]) : DenVal
                     (if (eqv? search-var var)
                         val
                         (apply-env env search-var))))))
 
   (: extend-env* [-> (Listof Symbol)
-                     (Listof Any)
+                     (Listof DenVal)
                      Env
                      Env])
   (define extend-env*
@@ -58,7 +58,7 @@
             [(= (length vars) (length vals))
              (make-env 'extend-env
                        (λ ([search-var : Symbol]) : Boolean
-                           (: exist-var? [-> (Listof Symbol) (Listof Any) Boolean])
+                           (: exist-var? [-> (Listof Symbol) (Listof DenVal) Boolean])
                            (define exist-var?
                              (λ (vars vals)
                                (cond [(or (null? vars) (null? vals)) #f]
@@ -68,8 +68,8 @@
                            (if (exist-var? vars vals)
                                #t
                                (has-binding? env search-var)))
-                       (λ ([search-var : Symbol]) : Any
-                           (: look-for-val [-> (Listof Symbol) (Listof Any) Any])
+                       (λ ([search-var : Symbol]) : DenVal
+                           (: look-for-val [-> (Listof Symbol) (Listof DenVal) DenVal])
                            (define look-for-val
                              (λ (vars vals)
                                (cond [(null? vars) (apply-env env search-var)]
@@ -78,6 +78,17 @@
 
                            (look-for-val vars vals)))]
             [else (error 'extend-env* "Bad input! vars: ~s, vals: ~s" vars vals)])))
+
+  (: extend-env+ [-> (Listof (Pair Symbol DenVal)) Env Env])
+  (define extend-env+
+    (λ (bounds env)
+      (extend-env* (map (λ ([bound : (Pair Symbol DenVal)]) : Symbol
+                          (car bound))
+                        bounds)
+                   (map (λ ([bound : (Pair Symbol DenVal)]) : DenVal
+                          (cdr bound))
+                        bounds)
+                   env)))
 
 
   (: extend-env? [-> Env Boolean])
@@ -88,7 +99,7 @@
   (define-predicate env? Env)
 
 
-  (: apply-env [-> Env Symbol Any])
+  (: apply-env [-> Env Symbol DenVal])
   (define apply-env
     (λ (env search-var)
       ((env-apply-env env) search-var)))

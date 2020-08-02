@@ -3,6 +3,8 @@
 (require "../types/types.rkt"
          "../ExpValues/values-sig.rkt"
          "../ExpValues/values-unit.rkt"
+         "../PrimitiveProc/primitive-proc-sig.rkt"
+         "../PrimitiveProc/primitive-proc-unit.rkt"
          "../Procedure/proc-sig.rkt"
          "../Procedure/proc-unit.rkt"
          "../Environment/env-sig.rkt"
@@ -16,9 +18,9 @@
 
 (define-compound-unit/infer base@
   (import)
-  (export env^ values^ proc^ exp^)
-  (link   env@ values@ proc@ exp@))
+  (export values^ env^ proc^ primitive-proc^ exp^)
+  (link   values@ env@ proc@ primitive-proc@ exp@))
 
 (define-values/invoke-unit base@
   (import)
-  (export env^ values^ proc^ exp^))
+  (export values^ env^ proc^ primitive-proc^ exp^))

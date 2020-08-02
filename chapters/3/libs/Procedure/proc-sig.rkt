@@ -8,6 +8,6 @@
 (define-signature proc^
   (
    [proc? : [-> Any Boolean : Proc]]
-   [procedure : [-> (Listof Symbol) Exp Env Proc]]
-   [apply-procedure : [-> Proc (Listof ExpVal) ExpVal]]
+   [procedure : [-> (U Symbol (Listof Symbol)) Exp Env Proc]]
+   [apply-procedure : [-> Proc (Listof DenVal) ExpVal]]
    ))

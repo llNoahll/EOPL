@@ -10,10 +10,10 @@
     ;; (extend-env 'i (num-val 1)
     ;;             (extend-env 'v (num-val 5)
     ;;                         (extend-env 'x (num-val 10)
-    ;;                                     (empty-env))))
+    ;;                                     (base-env))))
     (extend-env* '(i v x)
                  (list (num-val 1) (num-val 5) (num-val 10))
-                 (empty-env))))
+                 (base-env))))
 
 
 (displayln (*eval* '2 (init-env)))
@@ -36,16 +36,16 @@
 (displayln (*eval* '(cond [(null? (list 1 2 3)) 'cond-1]
                           [(null? (list 9 0 8)) 'cond-2]
                           [else 'else-cons])
-                   (empty-env)))
+                   (base-env)))
 (displayln (*eval* '(cond [(null? (list 1 2 3)) 'cond-1]
                           [(null? (empty-list)) 'cond-2]
                           [else 'else-cons])
-                   (empty-env)))
+                   (base-env)))
 
 (displayln (*eval* '(displayln (cond [(null? (list 1 2 3)) 'cond-1]
                                      [(null? (empty-list)) 'cond-2]
                                      [else 'else-cons]))
-                   (empty-env)))
+                   (base-env)))
 
 
 (displayln (*eval* '(let ([x 1])
@@ -68,4 +68,11 @@
                         (- x y)))
                    (init-env)))
 
-;; (*repl* (empty-env))
+(displayln (*eval* '(let ([f (λ (x) (- x 11))])
+                      (f (f 77)))
+                   (base-env)))
+(displayln (*eval* '((λ (f) (f (f 77)))
+                     (λ (x) (- x 11)))
+                   (base-env)))
+
+;; (*repl* (base-env))

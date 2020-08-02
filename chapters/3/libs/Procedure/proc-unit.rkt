@@ -15,17 +15,22 @@
   (: proc? [-> Any Boolean : Proc])
   (define-predicate proc? Proc)
 
-  (: procedure [-> (Listof Symbol) Exp Env Proc])
+  (: procedure [-> (U Symbol (Listof Symbol)) Exp Env Proc])
   (define procedure
     (λ (vars body env)
       (make-proc vars body env)))
 
-  (: apply-procedure [-> Proc (Listof ExpVal) ExpVal])
+  (: apply-procedure [-> Proc (Listof DenVal) ExpVal])
   (define apply-procedure
     (λ (proc vals)
-      (value-of (proc-body proc)
-                (extend-env* (proc-vars proc)
-                             vals
-                             (proc-saved-env proc)))))
+      (let ([vars : (U Symbol (Listof Symbol)) (proc-vars proc)])
+        (value-of (proc-body proc)
+                  (if (symbol? vars)
+                      (extend-env vars
+                                  vals
+                                  (proc-saved-env proc))
+                      (extend-env* vars
+                                   vals
+                                   (proc-saved-env proc)))))))
 
   )

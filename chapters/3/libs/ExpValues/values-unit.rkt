@@ -10,49 +10,42 @@
   (import)
   (export values^)
 
-  (: symbol-val [-> Symbol ExpVal])
+  (: symbol-val [-> Symbol DenVal])
   (define symbol-val (λ (symbol) symbol))
 
-  (: num-val [-> Integer ExpVal])
+  (: num-val [-> Integer DenVal])
   (define num-val (λ (num) num))
 
-  (: bool-val [-> Boolean ExpVal])
+  (: bool-val [-> Boolean DenVal])
   (define bool-val (λ (bool) bool))
 
-  (: pair-val [-> (Pair DenVal DenVal) ExpVal])
+  (: pair-val [-> (Pair DenVal DenVal) DenVal])
   (define pair-val (λ (pair) pair))
 
-  (: list-val [-> (Listof DenVal) ExpVal])
+  (: list-val [-> (Listof DenVal) DenVal])
   (define list-val (λ (ls) ls))
+
+  (: proc-val [-> Proc DenVal])
+  (define proc-val (λ (proc) proc))
 
 
   (: expval->num [-> ExpVal Integer])
-  (define expval->num
-    (λ (val)
-      (if (integer? val)
-          val
-          (raise-argument-error 'expval->num "integer?" val))))
+  (define expval->num (λ (val) (cast val Integer)))
 
   (: expval->bool [-> ExpVal Boolean])
-  (define expval->bool
-    (λ (val)
-      (if (boolean? val)
-          val
-          (raise-argument-error 'expval->bool "boolean?" val))))
+  (define expval->bool (λ (val) (cast val Boolean)))
+
+  (: expval->symbol [-> ExpVal Symbol])
+  (define expval->symbol (λ (val) (cast val Symbol)))
 
   (: expval->pair [-> ExpVal (Pair DenVal DenVal)])
-  (define expval->pair
-    (λ (val)
-      (if (pair? val)
-          val
-          (raise-argument-error 'expval->pair "pair?" val))))
+  (define expval->pair (λ (val) (cast val (Pair DenVal DenVal))))
 
   (: expval->list [-> ExpVal (Listof DenVal)])
-  (define expval->list
-    (λ (val)
-      (if (list? val)
-          val
-          (raise-argument-error 'expval->list "list?" val))))
+  (define expval->list (λ (val) (cast val (Listof DenVal))))
+
+  (: expval->proc [-> ExpVal Proc])
+  (define expval->proc (λ (val) (cast val Proc)))
 
 
   (: expval->s-expval [-> ExpVal Any])
@@ -69,6 +62,7 @@
             [(pair? val)
              (cons (expval->s-expval (car val))
                    (expval->s-expval (cdr val)))]
+            [(proc? val) val]
             [else
              (raise-argument-error 'expval->s-expval "s-expval?" val)])))
 
