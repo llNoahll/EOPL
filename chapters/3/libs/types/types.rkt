@@ -9,6 +9,10 @@
 (define-predicate s-exp?  S-Exp)
 (define-predicate s-list? S-List)
 
+(define-type Lambda (U 'lambda 'λ))
+(define-predicate λ? Lambda)
+(define-predicate lambda? Lambda)
+
 
 (define-type DenVal (U Symbol Integer Boolean Null
                        (Pair DenVal DenVal)

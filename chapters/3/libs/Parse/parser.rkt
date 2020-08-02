@@ -57,7 +57,7 @@
       ;;  `(primitive-proc-exp ',op
       ;;                       ,@(map parser exps))]
 
-      [`(λ (,(? symbol? #{args : (Listof Symbol)}) ...)
+      [`(,(? lambda?) (,(? symbol? #{args : (Listof Symbol)}) ...)
           ,(? s-exp? body-exp))
        `(proc-exp ',args ,(parser body-exp))]
       [`(,(? s-exp? op) ,(? s-exp? #{exps : S-List}) ...)

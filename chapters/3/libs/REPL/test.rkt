@@ -75,4 +75,11 @@
                      (λ (x) (- x 11)))
                    (base-env)))
 
+(displayln (*eval* '(let* ([x 200]
+                           [f (λ (z) (- z x))]
+                           [x 100]
+                           [g (λ (z) (- z x))])
+                      (- (f 1) (g 1)))
+                   (base-env)))
+
 ;; (*repl* (base-env))
