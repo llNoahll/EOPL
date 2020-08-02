@@ -16,10 +16,14 @@
                  (base-env))))
 
 
-(displayln (*eval* '2 (init-env)))
-(displayln (*eval* '-9 (init-env)))
+(displayln (*eval* '2 (base-env)))
+(displayln (*eval* '-9 (base-env)))
+
 (displayln (*eval* 'x (init-env)))
 (displayln (*eval* 'i (init-env)))
+
+(displayln (*eval* '#\a (base-env)))
+(displayln (*eval* '"b" (base-env)))
 
 (displayln (*eval* '(minus -9) (init-env)))
 (displayln (*eval* '(minus i) (init-env)))

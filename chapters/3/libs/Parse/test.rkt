@@ -8,6 +8,9 @@
 (pretty-print (parser 'x))
 (pretty-print (parser 'i))
 
+(pretty-print (parser '#\a))
+(pretty-print (parser '"b"))
+
 (pretty-print (parser '(minus -9)))
 (pretty-print (parser '(minus i)))
 (pretty-print (parser '(minus x)))

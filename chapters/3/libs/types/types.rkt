@@ -3,8 +3,10 @@
 (provide (all-defined-out))
 
 
+(define-type Constant (U Boolean Integer Symbol Char String))
+
 (define-type S-List (Listof S-Exp))
-(define-type S-Exp (U Boolean Integer Symbol S-List))
+(define-type S-Exp (U Constant S-List))
 
 (define-predicate s-exp?  S-Exp)
 (define-predicate s-list? S-List)
@@ -14,9 +16,7 @@
 (define-predicate lambda? Lambda)
 
 
-(define-type DenVal (U Symbol Integer Boolean Null
-                       (Pair DenVal DenVal)
-                       Proc))
+(define-type DenVal (U Constant Null (Pair DenVal DenVal) Proc))
 (define-type ExpVal (U DenVal Void Nothing))
 
 (define-struct env
@@ -35,7 +35,8 @@
   #:type-name Proc)
 
 
-(define-type Exp (U Symbol-Exp Const-Exp Bool-Exp If-Exp Cond-Exp
+(define-type Exp (U Symbol-Exp Const-Exp Bool-Exp Char-Exp String-Exp
+                    If-Exp Cond-Exp
                     Primitive-Proc-Exp Proc-Exp Call-Exp
                     Var-Exp Let-Exp))
 (define-predicate exp? Exp)
@@ -52,6 +53,14 @@
 (define-struct bool-exp ([bool : Boolean])
   #:transparent
   #:type-name Bool-Exp)
+
+(define-struct char-exp ([char : Char])
+  #:transparent
+  #:type-name Char-Exp)
+
+(define-struct string-exp ([str : String])
+  #:transparent
+  #:type-name String-Exp)
 
 (define-struct if-exp
   ([pred-exp : Exp]

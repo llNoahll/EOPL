@@ -23,6 +23,12 @@
   (: bool-exp [-> Boolean Bool-Exp])
   (define bool-exp (λ (bool) (make-bool-exp bool)))
 
+  (: char-exp [-> Char Char-Exp])
+  (define char-exp (λ (ch) (make-char-exp ch)))
+
+  (: string-exp [-> String String-Exp])
+  (define string-exp (λ (str) (make-string-exp str)))
+
 
   (: if-exp [-> Exp Exp Exp If-Exp])
   (define if-exp
@@ -63,7 +69,9 @@
     (λ (exp env)
       (cond [(symbol-exp? exp) (symbol-val (symbol-exp-symbol exp))]
             [(const-exp? exp) (num-val (const-exp-num exp))]
-            [(bool-exp?  exp) (bool-val (bool-exp-bool exp))]
+            [(bool-exp? exp) (bool-val (bool-exp-bool exp))]
+            [(char-exp? exp) (char-val (char-exp-char exp))]
+            [(string-exp? exp) (string-val (string-exp-str exp))]
 
             [(if-exp? exp)
              (let ([pred-val (value-of (if-exp-pred-exp exp) env)])

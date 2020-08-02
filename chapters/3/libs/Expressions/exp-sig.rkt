@@ -10,6 +10,8 @@
    [symbol-exp : [-> Symbol  Symbol-Exp]]
    [const-exp  : [-> Integer Const-Exp]]
    [bool-exp   : [-> Boolean Bool-Exp]]
+   [char-exp   : [-> Char Char-Exp]]
+   [string-exp : [-> String String-Exp]]
 
    [if-exp   : [-> Exp Exp Exp If-Exp]]
    [cond-exp : [-> (Listof (Pair Exp (Listof Exp))) Cond-Exp]]

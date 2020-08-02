@@ -12,6 +12,8 @@
       [`(quote ,(? symbol? symbol)) `(symbol-exp ',symbol)]
       [(? boolean? bool) `(bool-exp ,bool)]
       [(? integer? num) `(const-exp ,num)]
+      [(? string? str) `(string-exp ,str)]
+      [(? char? ch) `(char-exp ,ch)]
 
       [(? symbol? var) `(var-exp ',var)]
 
@@ -52,10 +54,6 @@
                              (cdr bound-vars)
                              (cdr bound-exps)))
                  ,body-exp))))]
-
-      ;; [`(,(? s-exp? op) ,(? s-exp? #{exps : S-List}) ...)
-      ;;  `(primitive-proc-exp ',op
-      ;;                       ,@(map parser exps))]
 
       [`(,(? lambda?) (,(? symbol? #{args : (Listof Symbol)}) ...)
           ,(? s-exp? body-exp))
