@@ -64,3 +64,21 @@
 (pretty-print (parser ''"hello"))
 (pretty-print (parser ''#\b))
 (pretty-print (parser ''(1 2 3 'a "cd")))
+
+
+(pretty-print (parser '(λ (f)
+                         ((λ (recur-func)
+                            (recur-func recur-func))
+                          (λ (recur-func)
+                            (f (λ args
+                                 (apply (recur-func recur-func) args))))))))
+
+
+(pretty-print (parser '(cond [(= n 0) 1]
+                             [(= n 1) 1]
+                             [else (* n (fact (sub1 n)))])))
+(pretty-print (parser '(λ (fact)
+                         (λ (n)
+                           (cond [(= n 0) 1]
+                                 [(= n 1) 1]
+                                 [else (* n (fact (sub1 n)))])))))

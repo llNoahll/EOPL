@@ -9,9 +9,10 @@
 (define parser
   (λ (code)
     (match code
+      ['() `(empty-list)]
       [`(quote ,(? symbol? symbol)) `(symbol-exp ',symbol)]
       [`(quote ,(? boolean? bool)) `(bool-exp ,bool)]
-      [`(quote ,(? integer? num)) `(const-exp ,num)]
+      [`(quote ,(? real? num)) `(const-exp ,num)]
       [`(quote ,(? string? str)) `(string-exp ,str)]
       [`(quote ,(? char? ch)) `(char-exp ,ch)]
       [`(quote ,(? s-list? ls))
@@ -20,7 +21,7 @@
                              ls)))]
 
       [(? boolean? bool) `(bool-exp ,bool)]
-      [(? integer? num) `(const-exp ,num)]
+      [(? real? num) `(const-exp ,num)]
       [(? string? str) `(string-exp ,str)]
       [(? char? ch) `(char-exp ,ch)]
 
@@ -32,8 +33,8 @@
        `(if-exp ,(parser pred-exp)
                 ,(parser true-exp)
                 ,(parser false-exp))]
-      [`(cond [,(? s-exp?  #{pred-exps : S-List})
-               ,(? s-list? #{body-exps : S-List})]
+      [`(cond [,(? s-exp? #{pred-exps : S-List})
+               ,(? s-exp? #{body-exps : S-List})]
               ...)
        `(cond-exp
          (list ,@(map (λ ([pred-exp : S-Exp] [body-exp : S-Exp])

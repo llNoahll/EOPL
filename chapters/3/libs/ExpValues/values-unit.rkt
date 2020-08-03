@@ -13,7 +13,7 @@
   (: symbol-val [-> Symbol DenVal])
   (define symbol-val (λ (symbol) symbol))
 
-  (: num-val [-> Integer DenVal])
+  (: num-val [-> Real DenVal])
   (define num-val (λ (num) num))
 
   (: bool-val [-> Boolean DenVal])
@@ -35,8 +35,8 @@
   (define proc-val (λ (proc) proc))
 
 
-  (: expval->num [-> ExpVal Integer])
-  (define expval->num (λ (val) (cast val Integer)))
+  (: expval->num [-> ExpVal Real])
+  (define expval->num (λ (val) (cast val Real)))
 
   (: expval->bool [-> ExpVal Boolean])
   (define expval->bool (λ (val) (cast val Boolean)))
@@ -64,7 +64,7 @@
   (define expval->s-expval
     (λ (val)
       (cond [(symbol? val) val]
-            [(integer? val) val]
+            [(real? val) val]
             [(boolean? val) val]
             [(char? val) val]
             [(string? val) val]

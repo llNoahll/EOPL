@@ -8,7 +8,7 @@
 (define-signature values^
   (
    [symbol-val : [-> Symbol DenVal]]
-   [num-val    : [-> Integer DenVal]]
+   [num-val    : [-> Real DenVal]]
    [bool-val   : [-> Boolean DenVal]]
    [char-val   : [-> Char DenVal]]
    [string-val : [-> String DenVal]]
@@ -17,7 +17,7 @@
    [proc-val   : [-> Proc DenVal]]
 
    [expval->symbol : [-> ExpVal Symbol]]
-   [expval->num    : [-> ExpVal Integer]]
+   [expval->num    : [-> ExpVal Real]]
    [expval->bool   : [-> ExpVal Boolean]]
    [expval->char   : [-> ExpVal Char]]
    [expval->string : [-> ExpVal String]]

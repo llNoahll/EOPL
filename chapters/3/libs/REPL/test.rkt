@@ -97,4 +97,33 @@
 (displayln (*eval* '(apply + '(1 2))
                    (base-env)))
 
+(displayln (*eval* '(let ([fact
+                           (Y (λ (fact)
+                                (λ (n)
+                                  (cond [(= n 0) 1]
+                                        [(= n 1) 1]
+                                        [else (* n (fact (- n 1)))]))))])
+                      (fact 5))
+                   (base-env)))
+
+
+(displayln (*eval* '(let ([funcs
+                           (Y*
+                            (λ (even? odd?)
+                              (λ (num)
+                                (cond [(zero? num) #t]
+                                      [(= 1 num) #f]
+                                      [else (odd? (- num 1))])))
+                            (λ (even? odd?)
+                              (λ (num)
+                                (cond [(zero? num) #f]
+                                      [(= 1 num) #t]
+                                      [else (even? (- num 1))]))))])
+                      (let ([even? (car funcs)]
+                            [odd?  (car (cdr funcs))])
+                        (displayln (eq? #t (even? 0)))))
+                   (base-env)))
+
+
+
 ;; (*repl* (base-env))

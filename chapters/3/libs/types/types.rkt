@@ -3,7 +3,7 @@
 (provide (all-defined-out))
 
 
-(define-type Constant (U Boolean Integer Symbol Char String))
+(define-type Constant (U Boolean Real Symbol Char String))
 
 (define-type S-List (Listof S-Exp))
 (define-type S-Exp (U Constant S-List))
@@ -46,7 +46,7 @@
   #:transparent
   #:type-name Symbol-Exp)
 
-(define-struct const-exp ([num : Integer])
+(define-struct const-exp ([num : Real])
   #:transparent
   #:type-name Const-Exp)
 

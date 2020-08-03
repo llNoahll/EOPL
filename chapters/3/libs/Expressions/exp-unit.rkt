@@ -17,7 +17,7 @@
   (: symbol-exp [-> Symbol Symbol-Exp])
   (define symbol-exp (λ (symbol) (make-symbol-exp symbol)))
 
-  (: const-exp [-> Integer Const-Exp])
+  (: const-exp [-> Real Const-Exp])
   (define const-exp (λ (num) (make-const-exp num)))
 
   (: bool-exp [-> Boolean Bool-Exp])

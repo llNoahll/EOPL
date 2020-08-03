@@ -8,7 +8,7 @@
 (define-signature exp^
   (
    [symbol-exp : [-> Symbol  Symbol-Exp]]
-   [const-exp  : [-> Integer Const-Exp]]
+   [const-exp  : [-> Real Const-Exp]]
    [bool-exp   : [-> Boolean Bool-Exp]]
    [char-exp   : [-> Char Char-Exp]]
    [string-exp : [-> String String-Exp]]
