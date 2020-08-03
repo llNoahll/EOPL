@@ -40,45 +40,47 @@
 
 
 (pretty-print (parser '(let ([x 30])
-                         (let ([x (- x 1)]
-                               [y (- x 2)])
-                           (- x y)))))
-
-(pretty-print (parser '(let* ([a 1]
-                              [b 2]
-                              [c 3])
-                         (list a b c))))
-
-(pretty-print (parser '(let ([x 30])
                          (let* ([x (- x 1)]
                                 [y (- x 2)])
+                           (+ x y)
+                           (* x y)
                            (- x y)))))
 
+;; (pretty-print (parser '(let* ([a 1]
+;;                               [b 2]
+;;                               [c 3])
+;;                          (list a b c))))
 
-(pretty-print (parser '(let ([f (λ (x) (- x 11))])
-                         (f (f 77)))))
-
-(pretty-print (parser ''a))
-(pretty-print (parser ''#t))
-(pretty-print (parser ''233))
-(pretty-print (parser ''"hello"))
-(pretty-print (parser ''#\b))
-(pretty-print (parser ''(1 2 3 'a "cd")))
-
-
-(pretty-print (parser '(λ (f)
-                         ((λ (recur-func)
-                            (recur-func recur-func))
-                          (λ (recur-func)
-                            (f (λ args
-                                 (apply (recur-func recur-func) args))))))))
+;; (pretty-print (parser '(let ([x 30])
+;;                          (let* ([x (- x 1)]
+;;                                 [y (- x 2)])
+;;                            (- x y)))))
 
 
-(pretty-print (parser '(cond [(= n 0) 1]
-                             [(= n 1) 1]
-                             [else (* n (fact (sub1 n)))])))
-(pretty-print (parser '(λ (fact)
-                         (λ (n)
-                           (cond [(= n 0) 1]
-                                 [(= n 1) 1]
-                                 [else (* n (fact (sub1 n)))])))))
+;; (pretty-print (parser '(let ([f (λ (x) (- x 11))])
+;;                          (f (f 77)))))
+
+;; (pretty-print (parser ''a))
+;; (pretty-print (parser ''#t))
+;; (pretty-print (parser ''233))
+;; (pretty-print (parser ''"hello"))
+;; (pretty-print (parser ''#\b))
+;; (pretty-print (parser ''(1 2 3 'a "cd")))
+
+
+;; (pretty-print (parser '(λ (f)
+;;                          ((λ (recur-func)
+;;                             (recur-func recur-func))
+;;                           (λ (recur-func)
+;;                             (f (λ args
+;;                                  (apply (recur-func recur-func) args))))))))
+
+
+;; (pretty-print (parser '(cond [(= n 0) 1]
+;;                              [(= n 1) 1]
+;;                              [else (* n (fact (sub1 n)))])))
+;; (pretty-print (parser '(λ (fact)
+;;                          (λ (n)
+;;                            (cond [(= n 0) 1]
+;;                                  [(= n 1) 1]
+;;                                  [else (* n (fact (sub1 n)))])))))

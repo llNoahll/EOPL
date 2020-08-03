@@ -18,6 +18,8 @@
    [var-exp  : [-> Symbol Var-Exp]]
    [let-exp  : [-> (Listof Symbol) (Listof Exp) Exp Let-Exp]]
 
+   [begin-exp : [-> (Listof Exp) Begin-Exp]]
+
    [primitive-proc-exp : [-> Symbol Exp * Primitive-Proc-Exp]]
 
    [proc-exp : [-> (U Symbol (Listof Symbol)) Exp Proc-Exp]]

@@ -27,6 +27,10 @@
 
       [(? symbol? var) `(var-exp ',var)]
 
+      [`(begin ,(? s-exp? #{exps : S-List}) ...)
+       `(begin-exp
+          (list ,@(map parser exps)))]
+
       [`(if ,(? s-exp? pred-exp)
             ,(? s-exp? true-exp)
             ,(? s-exp? false-exp))
@@ -34,43 +38,49 @@
                 ,(parser true-exp)
                 ,(parser false-exp))]
       [`(cond [,(? s-exp? #{pred-exps : S-List})
-               ,(? s-exp? #{body-exps : S-List})]
+               ,(? s-exp? #{body-exps : (Listof (Listof Any))})
+               ...]
               ...)
        `(cond-exp
-         (list ,@(map (λ ([pred-exp : S-Exp] [body-exp : S-Exp])
+         (list ,@(map (λ ([pred-exp : S-Exp] [body-exps : S-List]) : S-Exp
                         `(list ,(parser (if (eq? pred-exp 'else)
                                             #t
                                             pred-exp))
-                               ,(parser body-exp)))
+                               ,(parser `(begin ,@body-exps))))
                       pred-exps
-                      body-exps)))]
+                      (cast body-exps
+                            (Listof (Listof S-Exp))))))]
       [`(let ([,(? symbol? #{bound-vars : (Listof Symbol)})
                ,(? s-exp?  #{bound-exps : S-List})]
               ...)
-          ,(? s-exp? body-exp))
+          ,(? s-exp? #{body-exps : S-List})
+          ...)
        `(let-exp ',bound-vars
                  (list ,@(map parser bound-exps))
-                 ,(parser body-exp))]
+                 ,(parser `(begin ,@body-exps)))]
       [`(let* ([,(? symbol? #{bound-vars : (Listof Symbol)})
                 ,(? s-exp?  #{bound-exps : S-List})]
                ...)
-          ,(? s-exp? body-exp))
-       (if (and (null? bound-vars) (null? bound-exps))
-           `(let-exp '() '() ,(parser body-exp))
-           (parser
+          ,(? s-exp? #{body-exps : S-List})
+          ...)
+       (parser
+        (if (and (null? bound-vars) (null? bound-exps))
+            `(let () ,@body-exps)
             `(let ([,(car bound-vars) ,(car bound-exps)])
-               (let* (,@(map (λ ([var : Symbol] [exp : S-Exp]) : (List Symbol S-Exp)
-                                 (list var exp))
-                             (cdr bound-vars)
-                             (cdr bound-exps)))
-                 ,body-exp))))]
+                   (let* (,@(map (λ ([var : Symbol] [exp : S-Exp]) : (List Symbol S-Exp)
+                                     (list var exp))
+                                 (cdr bound-vars)
+                                 (cdr bound-exps)))
+                     ,@body-exps))))]
 
       [`(,(? lambda?) ,(? symbol? args)
-                      ,(? s-exp? body-exp))
-       `(proc-exp ',args ,(parser body-exp))]
+                      ,(? s-exp? #{body-exps : S-List})
+                      ...)
+       `(proc-exp ',args ,(parser `(begin ,@body-exps)))]
       [`(,(? lambda?) (,(? symbol? #{args : (Listof Symbol)}) ...)
-          ,(? s-exp? body-exp))
-       `(proc-exp ',args ,(parser body-exp))]
+                      ,(? s-exp? #{body-exps : S-List})
+                      ...)
+       `(proc-exp ',args ,(parser `(begin ,@body-exps)))]
       [`(,(? s-exp? op) ,(? s-exp? #{exps : S-List}) ...)
        `(call-exp ,(parser op)
                   (list ,@(map parser exps)))]

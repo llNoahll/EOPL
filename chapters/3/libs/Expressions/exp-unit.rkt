@@ -49,6 +49,12 @@
       (make-let-exp bound-vars bound-exps body)))
 
 
+  (: begin-exp [-> (Listof Exp) Begin-Exp])
+  (define begin-exp
+    (λ (exps)
+      (make-begin-exp exps)))
+
+
   (: primitive-proc-exp [-> Symbol Exp * Primitive-Proc-Exp])
   (define primitive-proc-exp (λ (op . exps) (make-primitive-proc-exp op exps)))
 
@@ -73,6 +79,12 @@
             [(char-exp? exp) (char-val (char-exp-char exp))]
             [(string-exp? exp) (string-val (string-exp-str exp))]
 
+            [(begin-exp? exp)
+             (let ([expvals (map (λ ([exp : Exp]) : ExpVal
+                                   (value-of exp env))
+                                 (begin-exp-exps exp))])
+               (car (last-pair expvals)))]
+
             [(if-exp? exp)
              (let ([pred-val (value-of (if-exp-pred-exp exp) env)])
                (if (expval->bool pred-val)
@@ -82,7 +94,7 @@
              (let* ([exps (cond-exp-exps exp)]
                     [branch-exp
                      (assf (λ ([pred-exp : Exp])
-                             (not (false? (value-of pred-exp env))))
+                             (true? (value-of pred-exp env)))
                            exps)])
                (if (false? branch-exp)
                    (error 'value-of "cond-exp miss true banch!")

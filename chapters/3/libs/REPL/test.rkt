@@ -66,9 +66,12 @@
                             [y (- x 2)])
                         (- x y)))
                    (init-env)))
+
 (displayln (*eval* '(let ([x 30])
                       (let* ([x (- x 1)]
                              [y (- x 2)])
+                        (+ x y)
+                        (* x y)
                         (- x y)))
                    (init-env)))
 

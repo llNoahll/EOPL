@@ -3,6 +3,10 @@
 (provide (all-defined-out))
 
 
+(define-predicate true? #t)
+(define-predicate string-empty? "")
+
+
 (define-type Constant (U Boolean Real Symbol Char String))
 
 (define-type S-List (Listof S-Exp))
@@ -62,6 +66,7 @@
   #:transparent
   #:type-name String-Exp)
 
+
 (define-struct if-exp
   ([pred-exp : Exp]
    [true-exp : Exp]
@@ -84,6 +89,11 @@
    [body : Exp])
   #:transparent
   #:type-name Let-Exp)
+
+
+(define-struct begin-exp ([exps : (Listof Exp)])
+  #:transparent
+  #:type-name Begin-Exp)
 
 
 (define-struct primitive-proc-exp
