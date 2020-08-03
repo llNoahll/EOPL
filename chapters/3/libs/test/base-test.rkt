@@ -1,7 +1,6 @@
 #lang typed/racket
 
-(require "../base/base.rkt"
-         "repl.rkt")
+(require "../basebase.rkt")
 
 
 (: init-env [-> Env])
