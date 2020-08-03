@@ -60,6 +60,10 @@
   (define expval->proc (λ (val) (cast val Proc)))
 
 
+  (: expval->denval [-> ExpVal DenVal])
+  (define expval->denval (λ (val) (cast val DenVal)))
+
+
   (: expval->s-expval [-> ExpVal Any])
   (define expval->s-expval
     (λ (val)

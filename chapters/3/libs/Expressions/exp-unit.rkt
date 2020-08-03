@@ -102,7 +102,7 @@
             [(var-exp? exp) (apply-env env (var-exp-var exp))]
             [(let-exp? exp)
              (let ([vals (map (λ ([bound-exp : Exp]) : DenVal
-                                  (cast (value-of bound-exp env) DenVal))
+                                  (expval->denval (value-of bound-exp env)))
                               (let-exp-bound-exps exp))])
                (value-of (let-exp-body exp)
                          (extend-env* (let-exp-bound-vars exp)
@@ -111,7 +111,7 @@
 
             [(primitive-proc-exp? exp)
              (let ([vals (map (λ ([exp : Exp]) : DenVal
-                                  (cast (value-of exp env) DenVal))
+                                  (expval->denval (value-of exp env)))
                               (primitive-proc-exp-exps exp))])
                (apply (hash-ref primitive-proc-table (primitive-proc-exp-op exp))
                       vals))]
@@ -124,7 +124,7 @@
                    (apply-procedure proc (cast (value-of rands env)
                                                (Listof DenVal)))
                    (let ([args (map (λ ([exp : Exp]) : DenVal
-                                        (cast (value-of exp env) DenVal))
+                                        (expval->denval (value-of exp env)))
                                     rands)])
                      (apply-procedure proc args))))]
 

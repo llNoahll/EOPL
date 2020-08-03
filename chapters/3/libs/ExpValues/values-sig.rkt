@@ -25,5 +25,6 @@
    [expval->list   : [-> ExpVal (Listof DenVal)]]
    [expval->proc   : [-> ExpVal Proc]]
 
+   [expval->denval : [-> ExpVal DenVal]]
    [expval->s-expval : [-> ExpVal Any]]
    ))
