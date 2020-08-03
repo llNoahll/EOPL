@@ -58,5 +58,9 @@
 (pretty-print (parser '(let ([f (λ (x) (- x 11))])
                          (f (f 77)))))
 
-(pretty-print (parser '((λ (f g) (f (f 77)))
-                        (λ (x) (- x 11)))))
+(pretty-print (parser ''a))
+(pretty-print (parser ''#t))
+(pretty-print (parser ''233))
+(pretty-print (parser ''"hello"))
+(pretty-print (parser ''#\b))
+(pretty-print (parser ''(1 2 3 'a "cd")))

@@ -28,8 +28,11 @@
   (λ (env)
     (display "]=> ")
     (let ([code : S-Exp (cast (read) S-Exp)])
-      (cond [(equal? code '(exit))
-             (void)]
-            [else
-             (writeln (*eval* code env))
-             (*repl* env)]))))
+      (case code
+        ['(exit) (void)]
+        [else
+         (writeln (*eval* code env))
+         (*repl* env)]))))
+
+
+;; (*repl* (base-env))

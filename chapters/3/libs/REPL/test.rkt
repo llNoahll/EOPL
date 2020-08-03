@@ -86,4 +86,15 @@
                       (- (f 1) (g 1)))
                    (base-env)))
 
+(displayln (*eval* '((λ args (displayln args))
+                     1 2 3 4)
+                   (base-env)))
+
+
+(displayln (*eval* '(apply + (list 1 2))
+                   (base-env)))
+
+(displayln (*eval* '(apply + '(1 2))
+                   (base-env)))
+
 ;; (*repl* (base-env))

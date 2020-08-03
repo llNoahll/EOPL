@@ -53,12 +53,12 @@
   (define primitive-proc-exp (λ (op . exps) (make-primitive-proc-exp op exps)))
 
 
-  (: proc-exp [-> (Listof Symbol) Exp Proc-Exp])
+  (: proc-exp [-> (U Symbol (Listof Symbol)) Exp Proc-Exp])
   (define proc-exp
     (λ (vars body)
       (make-proc-exp vars body)))
 
-  (: call-exp [-> Exp (Listof Exp) Call-Exp])
+  (: call-exp [-> Exp (U Var-Exp (Listof Exp)) Call-Exp])
   (define call-exp
     (λ (rator rands)
       (make-call-exp rator rands)))
@@ -107,10 +107,14 @@
              (proc-val (procedure (proc-exp-vars exp) (proc-exp-body exp) env))]
             [(call-exp? exp)
              (let ([proc (expval->proc (value-of (call-exp-rator exp) env))]
-                   [args (map (λ ([exp : Exp]) : DenVal
-                                  (cast (value-of exp env) DenVal))
-                              (call-exp-rands exp))])
-               (apply-procedure proc args))]
+                   [rands (call-exp-rands exp)])
+               (if (var-exp? rands)
+                   (apply-procedure proc (cast (value-of rands env)
+                                               (Listof DenVal)))
+                   (let ([args (map (λ ([exp : Exp]) : DenVal
+                                        (cast (value-of exp env) DenVal))
+                                    rands)])
+                     (apply-procedure proc args))))]
 
             [else (raise-argument-error 'value-of "exp?" exp)])))
 

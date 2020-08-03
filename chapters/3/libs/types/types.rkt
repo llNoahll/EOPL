@@ -93,13 +93,13 @@
   #:type-name Primitive-Proc-Exp)
 
 (define-struct proc-exp
-  ([vars : (Listof Symbol)]
+  ([vars : (U Symbol (Listof Symbol))]
    [body : Exp])
   #:transparent
   #:type-name Proc-Exp)
 
 (define-struct call-exp
   ([rator : Exp]
-   [rands : (Listof Exp)])
+   [rands : (U Var-Exp (Listof Exp))])
   #:transparent
   #:type-name Call-Exp)

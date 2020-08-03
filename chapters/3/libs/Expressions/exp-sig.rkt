@@ -20,8 +20,8 @@
 
    [primitive-proc-exp : [-> Symbol Exp * Primitive-Proc-Exp]]
 
-   [proc-exp : [-> (Listof Symbol) Exp Proc-Exp]]
-   [call-exp : [-> Exp (Listof Exp) Call-Exp]]
+   [proc-exp : [-> (U Symbol (Listof Symbol)) Exp Proc-Exp]]
+   [call-exp : [-> Exp (U Var-Exp (Listof Exp)) Call-Exp]]
 
    [value-of : [-> Exp Env ExpVal]]
    ))

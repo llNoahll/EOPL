@@ -10,6 +10,15 @@
   (λ (code)
     (match code
       [`(quote ,(? symbol? symbol)) `(symbol-exp ',symbol)]
+      [`(quote ,(? boolean? bool)) `(bool-exp ,bool)]
+      [`(quote ,(? integer? num)) `(const-exp ,num)]
+      [`(quote ,(? string? str)) `(string-exp ,str)]
+      [`(quote ,(? char? ch)) `(char-exp ,ch)]
+      [`(quote ,(? s-list? ls))
+       (parser `(list ,@(map (λ ([arg : S-Exp]) : S-Exp
+                                 `(quote ,arg))
+                             ls)))]
+
       [(? boolean? bool) `(bool-exp ,bool)]
       [(? integer? num) `(const-exp ,num)]
       [(? string? str) `(string-exp ,str)]
@@ -55,6 +64,9 @@
                              (cdr bound-exps)))
                  ,body-exp))))]
 
+      [`(,(? lambda?) ,(? symbol? args)
+                      ,(? s-exp? body-exp))
+       `(proc-exp ',args ,(parser body-exp))]
       [`(,(? lambda?) (,(? symbol? #{args : (Listof Symbol)}) ...)
           ,(? s-exp? body-exp))
        `(proc-exp ',args ,(parser body-exp))]
