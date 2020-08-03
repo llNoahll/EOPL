@@ -1,6 +1,6 @@
 #lang typed/racket
 
-(require "../basebase.rkt")
+(require "../base/base.rkt")
 
 
 (: init-env [-> Env])
@@ -18,15 +18,18 @@
 (displayln (*eval* '2 (base-env)))
 (displayln (*eval* '-9 (base-env)))
 
+(displayln (*eval* '(not #t) (base-env)))
+(displayln (*eval* '(not #f) (base-env)))
+
 (displayln (*eval* 'x (init-env)))
 (displayln (*eval* 'i (init-env)))
 
 (displayln (*eval* '#\a (base-env)))
 (displayln (*eval* '"b" (base-env)))
 
-(displayln (*eval* '(minus -9) (init-env)))
-(displayln (*eval* '(minus i) (init-env)))
-(displayln (*eval* '(minus x) (init-env)))
+(displayln (*eval* '(sub1 -9) (init-env)))
+(displayln (*eval* '(sub1 i) (init-env)))
+(displayln (*eval* '(add1 x) (init-env)))
 
 (displayln (*eval* '(> i x) (init-env)))
 (displayln (*eval* '(< i x) (init-env)))
@@ -125,7 +128,14 @@
                             [odd?  (car (cdr funcs))])
                         (displayln (eq? #t (even? 0)))))
                    (base-env)))
+(displayln (*eval* '(and) (base-env)))
+(displayln (*eval* '(or) (base-env)))
 
+(displayln (*eval* '(or #f #f #f) (base-env)))
+(displayln (*eval* '(or #f #t #f) (base-env)))
+
+(displayln (*eval* '(and #t #t #t) (base-env)))
+(displayln (*eval* '(and #f #t #f) (base-env)))
 
 
 ;; (*repl* (base-env))

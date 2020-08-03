@@ -76,9 +76,18 @@
            (num-val (apply func
                            (expval->num val-1)
                            (map (λ ([val : DenVal]) : Real
-                                  (expval->num val))
+                                    (expval->num val))
                                 vals)))]
-          [_ (error 'n-ary-arithmetic "Bad args: ~s" vals)]))))
+          [_ (error 'n-ary-arithmetic-func "Bad args: ~s" vals)]))))
+
+  (: n-ary-logic-func [-> [-> Boolean * Boolean] [-> DenVal * ExpVal]])
+  (define n-ary-logic-func
+    (λ (func)
+      (λ vals
+        (bool-val (apply func
+                         (map (λ ([val : DenVal]) : Boolean
+                                  (expval->bool val))
+                              vals))))))
 
 
   (: add-primitive-proc! [-> Symbol [-> DenVal * ExpVal] Void])
@@ -94,12 +103,23 @@
                             (base-env)))))
 
 
+  (: all-true? [-> Boolean * Boolean])
+  (define all-true? (λ vals (andmap true? vals)))
+
+  (: all-false? [-> Boolean * Boolean])
+  (define all-false? (λ vals (ormap true? vals)))
+
+
   (add-primitive-proc! 'empty-list (λ [vals : DenVal *] : ExpVal '()))
 
 
   (add-primitive-proc! 'zero? (unary-arithmetic-pred zero?))
-  (add-primitive-proc! 'minus (unary-arithmetic-func -))
-  (add-primitive-proc! 'add   (unary-arithmetic-func +))
+  (add-primitive-proc! 'sub1 (unary-arithmetic-func sub1))
+  (add-primitive-proc! 'add1 (unary-arithmetic-func add1))
+  (add-primitive-proc! 'not (λ vals
+                              (match vals
+                                [`(,val) (bool-val (not (expval->bool val)))]
+                                [_ (error 'unary-func "Bad args: ~s" vals)])))
   (add-primitive-proc! 'car (λ [vals : DenVal *] : ExpVal
                                 (match vals
                                   [`(,val) (car (expval->pair val))]
@@ -122,9 +142,11 @@
   (add-primitive-proc! 'writeln (unary-IO-func writeln))
 
 
-  (add-primitive-proc! '= (binary-arithmetic-relation =))
-  (add-primitive-proc! '> (binary-arithmetic-relation >))
-  (add-primitive-proc! '< (binary-arithmetic-relation <))
+  (add-primitive-proc! '=  (binary-arithmetic-relation =))
+  (add-primitive-proc! '>  (binary-arithmetic-relation >))
+  (add-primitive-proc! '>= (binary-arithmetic-relation >=))
+  (add-primitive-proc! '<  (binary-arithmetic-relation <))
+  (add-primitive-proc! '<= (binary-arithmetic-relation <=))
 
   (add-primitive-proc! 'eq?    (binary-equal-relation eq?))
   (add-primitive-proc! 'eqv?   (binary-equal-relation eqv?))
@@ -147,6 +169,9 @@
   (add-primitive-proc! '- (n-ary-arithmetic-func -))
   (add-primitive-proc! '* (n-ary-arithmetic-func *))
   (add-primitive-proc! '/ (n-ary-arithmetic-func /))
+
+  (add-primitive-proc! 'and (n-ary-logic-func all-true?))
+  (add-primitive-proc! 'or  (n-ary-logic-func all-false?))
 
   (add-primitive-proc! 'list (λ [vals : DenVal *] : ExpVal (list-val vals)))
 
