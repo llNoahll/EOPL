@@ -7,10 +7,10 @@
 (define-predicate string-empty? "")
 
 
-(define-type Constant (U Boolean Real Symbol Char String))
+(define-type Literal (U Boolean Real Symbol Char String))
 
 (define-type S-List (Listof S-Exp))
-(define-type S-Exp (U Constant S-List))
+(define-type S-Exp (U Literal S-List))
 
 (define-predicate s-exp?  S-Exp)
 (define-predicate s-list? S-List)
@@ -20,7 +20,7 @@
 (define-predicate lambda? Lambda)
 
 
-(define-type DenVal (U Constant Null (Pair DenVal DenVal) Proc))
+(define-type DenVal (U Literal Null (Pair DenVal DenVal) Proc))
 (define-type ExpVal (U DenVal Void Nothing))
 
 (define-struct env
