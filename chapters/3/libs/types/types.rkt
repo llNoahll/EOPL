@@ -3,7 +3,7 @@
 (provide (all-defined-out))
 
 
-(define-predicate true? #t)
+(define-predicate true? True)
 (define-predicate string-empty? "")
 
 
@@ -41,7 +41,7 @@
 
 (define-type Exp (U Symbol-Exp Const-Exp Bool-Exp Char-Exp String-Exp
                     If-Exp Cond-Exp
-                    Primitive-Proc-Exp Proc-Exp Call-Exp
+                    Begin-Exp Primitive-Proc-Exp Proc-Exp Call-Exp
                     Var-Exp Let-Exp))
 (define-predicate exp? Exp)
 

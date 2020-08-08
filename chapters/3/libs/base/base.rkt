@@ -19,12 +19,12 @@
 
 (define-compound-unit/infer base@
   (import)
-  (export values^ env^ proc^ primitive-proc^ exp^)
-  (link   values@ env@ proc@ primitive-proc@ exp@))
+  (export values^ env^ proc^ exp^ primitive-proc^)
+  (link   values@ env@ proc@ exp@ primitive-proc@))
 
 (define-values/invoke-unit base@
   (import)
-  (export values^ env^ proc^ primitive-proc^ exp^))
+  (export values^ env^ proc^ exp^ primitive-proc^))
 
 
 (define-namespace-anchor ns-anchor)
