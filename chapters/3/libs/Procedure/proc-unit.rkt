@@ -22,7 +22,7 @@
                  body
                  (extend-env+ (free-vars (if (symbol? vars) (list vars) vars)
                                          body env)
-                              env))))
+                              (empty-env)))))
 
   (: apply-procedure [-> Proc (Listof DenVal) ExpVal])
   (define apply-procedure
