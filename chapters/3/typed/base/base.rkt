@@ -221,36 +221,37 @@
                       (base-env)))
 
 (base-env (extend-env 'Y
-                      (cast (*eval* '(λ (f)
-                                       ((λ (recur-func)
-                                          (recur-func recur-func))
-                                        (λ (recur-func)
-                                          (f (λ args
-                                               (apply (recur-func recur-func) args))))))
-                                    (base-env))
-                            DenVal)
+                      (expval->denval
+                       (*eval* '(λ (f)
+                                  ((λ (recur-func)
+                                     (recur-func recur-func))
+                                   (λ (recur-func)
+                                     (f (λ args
+                                          (apply (recur-func recur-func) args))))))
+                               (base-env)))
                       (base-env)))
 
+
 (base-env (extend-env 'map
-                      (cast (*eval* '(Y (λ (map)
-                                          (λ (func ls)
-                                            (if (null? ls)
-                                                '()
-                                                (cons (func (car ls))
-                                                      (map func (cdr ls)))))))
-                                    (base-env))
-                            DenVal)
+                      (expval->denval
+                       (*eval* '(Y (λ (map)
+                                     (λ (func ls)
+                                       (if (null? ls)
+                                           '()
+                                           (cons (func (car ls))
+                                                 (map func (cdr ls)))))))
+                               (base-env)))
                       (base-env)))
 
 (base-env (extend-env 'Y*
-                      (cast (*eval* '(λ funcs
-                                       ((λ (recur-funcs)
-                                          (recur-funcs recur-funcs))
-                                        (λ (recur-funcs)
-                                          (map (λ (func)
-                                                 (λ args
-                                                   (apply (apply func (recur-funcs recur-funcs)) args)))
-                                               funcs))))
-                                    (base-env))
-                            DenVal)
+                      (expval->denval
+                       (*eval* '(λ funcs
+                                  ((λ (recur-funcs)
+                                     (recur-funcs recur-funcs))
+                                   (λ (recur-funcs)
+                                     (map (λ (func)
+                                            (λ args
+                                              (apply (apply func (recur-funcs recur-funcs)) args)))
+                                          funcs))))
+                               (base-env)))
                       (base-env)))

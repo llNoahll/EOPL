@@ -48,6 +48,11 @@
     (λ (bound-vars bound-exps body)
       (make-let-exp bound-vars bound-exps body)))
 
+  (: letrec-exp [-> (Listof Symbol) (Listof Exp) Exp Letrec-Exp])
+  (define letrec-exp
+    (λ (bound-vars bound-exps body)
+      (make-letrec-exp bound-vars bound-exps body)))
+
 
   (: begin-exp [-> (Listof Exp) Begin-Exp])
   (define begin-exp
@@ -63,6 +68,11 @@
   (define proc-exp
     (λ (vars body)
       (make-proc-exp vars body)))
+
+  (: trace-proc-exp [-> (U Symbol (Listof Symbol)) Exp Trace-Proc-Exp])
+  (define trace-proc-exp
+    (λ (vars body)
+      (make-trace-proc-exp vars body)))
 
   (: call-exp [-> Exp (U Var-Exp (Listof Exp)) Call-Exp])
   (define call-exp
@@ -80,53 +90,67 @@
             [(string-exp? exp) (string-val (string-exp-str exp))]
 
             [(begin-exp? exp)
-             (let ([expvals (map (λ ([exp : Exp]) : ExpVal
-                                   (value-of exp env))
-                                 (begin-exp-exps exp))])
-               (car (last-pair expvals)))]
+             (define expvals
+               (map (ann (λ (exp) (value-of exp env)) [-> Exp ExpVal])
+                    (begin-exp-exps exp)))
+
+             (car (last-pair expvals))]
 
             [(if-exp? exp)
-             (let ([pred-val (value-of (if-exp-pred-exp exp) env)])
-               (if (expval->bool pred-val)
-                   (value-of (if-exp-true-exp exp) env)
-                   (value-of (if-exp-false-exp exp) env)))]
+             (define pred-val (value-of (if-exp-pred-exp exp) env))
+
+             (if (expval->bool pred-val)
+                 (value-of (if-exp-true-exp exp) env)
+                 (value-of (if-exp-false-exp exp) env))]
             [(cond-exp? exp)
-             (let* ([exps (cond-exp-exps exp)]
-                    [branch-exp
-                     (assf (λ ([pred-exp : Exp])
-                             (true? (value-of pred-exp env)))
-                           exps)])
-               (if (false? branch-exp)
-                   (error 'value-of "cond-exp miss true banch!")
-                   (value-of (cadr branch-exp) env)))]
+             (define exps (cond-exp-exps exp))
+             (define branch-exp
+               (assf (λ ([pred-exp : Exp])
+                       (true? (value-of pred-exp env)))
+                     exps))
+
+             (if (false? branch-exp)
+                 (error 'value-of "cond-exp miss true banch!")
+                 (value-of (cadr branch-exp) env))]
             [(var-exp? exp) (apply-env env (var-exp-var exp))]
             [(let-exp? exp)
-             (let ([vals (map (λ ([bound-exp : Exp]) : DenVal
-                                  (expval->denval (value-of bound-exp env)))
-                              (let-exp-bound-exps exp))])
-               (value-of (let-exp-body exp)
-                         (extend-env* (let-exp-bound-vars exp)
-                                      vals
-                                      env)))]
+             (define vals
+               (map (ann (λ (bound-exp) (expval->denval (value-of bound-exp env)))
+                         [-> Exp DenVal])
+                    (let-exp-bound-exps exp)))
+
+             (value-of (let-exp-body exp)
+                       (extend-env* (let-exp-bound-vars exp)
+                                    vals
+                                    env))]
+            [(letrec-exp? exp)
+             (value-of (letrec-exp-body exp)
+                       (extend-env-rec* (letrec-exp-bound-vars exp)
+                                        (letrec-exp-bound-exps exp)
+                                        env))]
 
             [(primitive-proc-exp? exp)
-             (let ([vals (map (λ ([exp : Exp]) : DenVal
-                                  (expval->denval (value-of exp env)))
-                              (primitive-proc-exp-exps exp))])
-               (apply (hash-ref primitive-proc-table (primitive-proc-exp-op exp))
-                      vals))]
+             (define vals
+               (map (ann (λ (exp) (expval->denval (value-of exp env)))
+                         [-> Exp DenVal])
+                    (primitive-proc-exp-exps exp)))
+
+             (apply (hash-ref primitive-proc-table (primitive-proc-exp-op exp))
+                    vals)]
+            [(trace-proc-exp? exp)
+             (proc-val (trace-procedure (proc-exp-vars exp) (proc-exp-body exp) env))]
             [(proc-exp? exp)
              (proc-val (procedure (proc-exp-vars exp) (proc-exp-body exp) env))]
             [(call-exp? exp)
-             (let ([proc (expval->proc (value-of (call-exp-rator exp) env))]
-                   [rands (call-exp-rands exp)])
-               (if (var-exp? rands)
-                   (apply-procedure proc (cast (value-of rands env)
-                                               (Listof DenVal)))
-                   (let ([args (map (λ ([exp : Exp]) : DenVal
-                                        (expval->denval (value-of exp env)))
-                                    rands)])
-                     (apply-procedure proc args))))]
+             (define proc (expval->proc (value-of (call-exp-rator exp) env)))
+             (define rands (call-exp-rands exp))
+
+             (if (var-exp? rands)
+                 (apply-procedure proc (cast (value-of rands env) (Listof DenVal)))
+                 (let ([args (map (ann (λ (exp) (expval->denval (value-of exp env)))
+                                       [-> Exp DenVal])
+                                  rands)])
+                   (apply-procedure proc args)))]
 
             [else (raise-argument-error 'value-of "exp?" exp)])))
 

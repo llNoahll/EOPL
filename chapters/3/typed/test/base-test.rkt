@@ -207,5 +207,36 @@
 (displayln (*check-code* '(and #t #t #t) (base-env) base-eval-ns))
 (displayln (*check-code* '(and #f #t #f) (base-env) base-eval-ns))
 
+(displayln (*check-code* '(letrec ([even? (λ (num)
+                                            (cond [(zero? num) #t]
+                                                  [(= 1 num) #f]
+                                                  [else (odd? (sub1 num))]))]
+                                   [odd?  (λ (num)
+                                            (cond [(zero? num) #f]
+                                                  [(= 1 num) #t]
+                                                  [else (even? (sub1 num))]))])
+                            (displayln "-----------------------")
+                            (displayln (even? 0))
+                            (displayln (even? 2))
+                            (displayln (even? 4))
+
+                            (displayln (odd? 1))
+                            (displayln (odd? 3))
+                            (displayln (odd? 5)))
+                         (base-env) base-eval-ns))
+
+;; (displayln (*check-code* '(letrec ([fib (λ (num)
+;;                                           (cond [(= 0 num) 0]
+;;                                                 [(= 1 num) 1]
+;;                                                 [else (+ (fib (- num 1))
+;;                                                          (fib (- num 2)))]))])
+;;                             (displayln (fib 0))
+;;                             (displayln (fib 1))
+;;                             (displayln (fib 2))
+;;                             (displayln (fib 3))
+;;                             (displayln (fib 4))
+;;                             (displayln (fib 5))
+;;                             (displayln (fib 6)))
+;;                          (base-env) base-eval-ns))
 
 ;; (*repl* (base-env))

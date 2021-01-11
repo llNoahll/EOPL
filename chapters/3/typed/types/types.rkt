@@ -19,12 +19,17 @@
 (define-predicate λ? Lambda)
 (define-predicate lambda? Lambda)
 
+(define-type Trace-Lambda (U 'trace-lambda 'trace-λ))
+(define-predicate trace-λ? Trace-Lambda)
+(define-predicate trace-lambda? Trace-Lambda)
 
-(define-type DenVal (U Literal Null (Pair DenVal DenVal) Proc))
+
+(define-type DenVal (U Literal Null Proc Trace-Proc
+                       (Pair DenVal DenVal)))
 (define-type ExpVal (U DenVal Void Nothing))
 
 (define-struct env
-  ([type : (U 'empty-env 'extend-env)]
+  ([type : (U 'empty-env 'extend-env 'extend-env-rec)]
    [has-binding? : [-> Symbol Boolean]]
    [apply-env : [-> Symbol DenVal]])
   #:transparent
@@ -38,11 +43,16 @@
   #:transparent
   #:type-name Proc)
 
+(define-struct (trace-proc proc)
+  ()
+  #:transparent
+  #:type-name Trace-Proc)
+
 
 (define-type Exp (U Symbol-Exp Const-Exp Bool-Exp Char-Exp String-Exp
                     If-Exp Cond-Exp
-                    Begin-Exp Primitive-Proc-Exp Proc-Exp Call-Exp
-                    Var-Exp Let-Exp))
+                    Begin-Exp Primitive-Proc-Exp Proc-Exp Trace-Proc-Exp Call-Exp
+                    Var-Exp Let-Exp Letrec-Exp))
 (define-predicate exp? Exp)
 
 
@@ -90,6 +100,13 @@
   #:transparent
   #:type-name Let-Exp)
 
+(define-struct letrec-exp
+  ([bound-vars : (Listof Symbol)]
+   [bound-exps : (Listof Exp)]
+   [body : Exp])
+  #:transparent
+  #:type-name Letrec-Exp)
+
 
 (define-struct begin-exp ([exps : (Listof Exp)])
   #:transparent
@@ -107,6 +124,11 @@
    [body : Exp])
   #:transparent
   #:type-name Proc-Exp)
+
+(define-struct (trace-proc-exp proc-exp)
+  ()
+  #:transparent
+  #:type-name Trace-Proc-Exp)
 
 (define-struct call-exp
   ([rator : Exp]

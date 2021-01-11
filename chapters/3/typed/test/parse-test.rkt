@@ -117,3 +117,21 @@
 
 
 (pretty-print (parser '(if #t 1 2)))
+
+
+(pretty-print (parser '(letrec ([even? (λ (num)
+                                         (cond [(zero? num) #t]
+                                               [(= 1 num) #f]
+                                               [else (odd? (sub1 num))]))]
+                                [odd?  (λ (num)
+                                         (cond [(zero? num) #f]
+                                               [(= 1 num) #t]
+                                               [else (even? (sub1 num))]))])
+                         (odd? 5))))
+
+(pretty-print (parser '(letrec ([fib (λ (num)
+                                       (cond [(= 0 num) 0]
+                                             [(= 1 num) 1]
+                                             [else (+ (fib (- num 1))
+                                                      (fib (- num 2)))]))])
+                         (fib 0))))
