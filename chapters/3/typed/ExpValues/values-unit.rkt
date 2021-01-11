@@ -36,19 +36,19 @@
 
 
   (: expval->num [-> ExpVal Real])
-  (define expval->num (λ (val) (cast val Real)))
+  (define expval->num (λ (val) (assert val real?)))
 
   (: expval->bool [-> ExpVal Boolean])
-  (define expval->bool (λ (val) (cast val Boolean)))
+  (define expval->bool (λ (val) (assert val boolean?)))
 
   (: expval->symbol [-> ExpVal Symbol])
-  (define expval->symbol (λ (val) (cast val Symbol)))
+  (define expval->symbol (λ (val) (assert val symbol?)))
 
   (: expval->char [-> ExpVal Char])
-  (define expval->char (λ (val) (cast val Char)))
+  (define expval->char (λ (val) (assert val char?)))
 
   (: expval->string [-> ExpVal String])
-  (define expval->string (λ (val) (cast val String)))
+  (define expval->string (λ (val) (assert val string?)))
 
   (: expval->pair [-> ExpVal (Pair DenVal DenVal)])
   (define expval->pair (λ (val) (cast val (Pair DenVal DenVal))))
@@ -57,11 +57,11 @@
   (define expval->list (λ (val) (cast val (Listof DenVal))))
 
   (: expval->proc [-> ExpVal Proc])
-  (define expval->proc (λ (val) (cast val Proc)))
+  (define expval->proc (λ (val) (assert val proc?)))
 
 
   (: expval->denval [-> ExpVal DenVal])
-  (define expval->denval (λ (val) (cast val DenVal)))
+  (define expval->denval (λ (val) (assert val denval?)))
 
 
   (: expval->s-expval [-> ExpVal Any])

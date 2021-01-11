@@ -46,7 +46,7 @@
       (define vars (proc-vars proc))
 
       (: result ExpVal)
-      (define result (symbol-val 'undefined))
+      (define result undefined)
 
       (dynamic-wind
         (λ ()

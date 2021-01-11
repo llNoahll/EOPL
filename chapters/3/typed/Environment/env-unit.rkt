@@ -97,8 +97,8 @@
   (: extend-env-rec [-> Symbol Exp Env Env])
   (define extend-env-rec
     (λ (var exp env)
-      (: val (Parameter DenVal))
-      (define val (make-parameter (symbol-val 'undefined)))
+      (: val (Parameter DenVal (U DenVal Undefined)))
+      (define val (make-parameter undefined))
 
       (: env Env)
       (define env
@@ -109,7 +109,7 @@
                           (has-binding? env search-var)))
                   (λ ([search-var : Symbol]) : DenVal
                       (if (eqv? search-var var)
-                          (val)
+                          (assert (val) denval?)
                           (apply-env env search-var)))))
 
 
@@ -121,12 +121,14 @@
   (define extend-env-rec+
     (λ (exp-bounds saved-env)
 
-      (: val-bounds (Listof (Pair Symbol (Parameter DenVal))))
+      (: val-bounds (Listof (Pair Symbol (Parameter DenVal (U DenVal Undefined)))))
       (define val-bounds
         (map (ann (λ (exp-bound)
                     (cons (car exp-bound)
-                          (make-parameter (symbol-val 'undefined))))
-                  [-> (Pair Symbol Exp) (Pair Symbol (Parameter DenVal))])
+                          (ann (make-parameter undefined)
+                               (Parameter DenVal (U DenVal Undefined)))))
+                  [-> (Pair Symbol Exp)
+                      (Pair Symbol (Parameter DenVal (U DenVal Undefined)))])
              exp-bounds))
 
       (: env Env)
@@ -136,19 +138,19 @@
                       (or (pair? (assoc search-var exp-bounds))
                           (has-binding? saved-env search-var)))
                   (λ ([search-var : Symbol]) : DenVal
-                      (: val-bound (Option (Pair Symbol (Parameter DenVal))))
+                      (: val-bound (Option (Pair Symbol (Parameter DenVal (U DenVal Undefined)))))
                       (define val-bound (assoc search-var val-bounds))
 
                       (if (false? val-bound)
                           (apply-env saved-env search-var)
                           ;; lazy evaluate.
-                          ((cdr val-bound))))))
+                          (assert ((cdr val-bound)) denval?)))))
 
 
       (for-each (ann (λ (val-bound exp-bound)
                        ;; ((cdr val-bound) (expval->denval (value-of (cdr exp-bound) (extend-env+ val-bounds saved-env))))
                        ((cdr val-bound) (expval->denval (value-of (cdr exp-bound) env))))
-                     [-> (Pair Symbol (Parameter DenVal))
+                     [-> (Pair Symbol (Parameter DenVal (U DenVal Undefined)))
                          (Pair Symbol Exp)
                          Void])
            val-bounds exp-bounds)

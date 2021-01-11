@@ -1,10 +1,13 @@
 #lang typed/racket
 
-(provide (all-defined-out))
+(require/typed racket/undefined
+  [undefined Undefined])
+
+(provide undefined (all-defined-out))
 
 
+(define-predicate undefined? Undefined)
 (define-predicate true? True)
-(define-predicate string-empty? "")
 
 
 (define-type Literal (U Boolean Real Symbol Char String))
@@ -26,7 +29,11 @@
 
 (define-type DenVal (U Literal Null Proc Trace-Proc
                        (Pair DenVal DenVal)))
-(define-type ExpVal (U DenVal Void Nothing))
+(define-predicate denval? DenVal)
+
+(define-type ExpVal (U DenVal Void Undefined Nothing))
+(define-predicate expval? ExpVal)
+
 
 (define-struct env
   ([type : (U 'empty-env 'extend-env 'extend-env-rec)]
