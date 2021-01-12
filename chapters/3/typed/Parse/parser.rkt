@@ -50,49 +50,49 @@
                       pred-exps
                       (cast body-exps
                             (Listof (Listof S-Exp))))))]
-      [`(let ([,(? symbol? #{bound-vars : (Listof Symbol)})
-               ,(? s-exp?  #{bound-exps : S-List})]
+      [`(let ([,(? symbol? #{bind-vars : (Listof Symbol)})
+               ,(? s-exp?  #{bind-exps : S-List})]
               ...)
           ,(? s-exp? #{body-exps : S-List})
           ...)
-       `(let-exp ',bound-vars
-                 (list ,@(map parser bound-exps))
+       `(let-exp ',bind-vars
+                 (list ,@(map parser bind-exps))
                  ,(parser `(begin ,@body-exps)))]
-      [`(let* ([,(? symbol? #{bound-vars : (Listof Symbol)})
-                ,(? s-exp?  #{bound-exps : S-List})]
+      [`(let* ([,(? symbol? #{bind-vars : (Listof Symbol)})
+                ,(? s-exp?  #{bind-exps : S-List})]
                ...)
           ,(? s-exp? #{body-exps : S-List})
           ...)
        (parser
-        (if (and (null? bound-vars) (null? bound-exps))
+        (if (and (null? bind-vars) (null? bind-exps))
             `(let () ,@body-exps)
-            `(let ([,(car bound-vars) ,(car bound-exps)])
+            `(let ([,(car bind-vars) ,(car bind-exps)])
                (let* (,@(map (λ ([var : Symbol] [exp : S-Exp]) : (List Symbol S-Exp)
                                  (list var exp))
-                             (cdr bound-vars)
-                             (cdr bound-exps)))
+                             (cdr bind-vars)
+                             (cdr bind-exps)))
                  ,@body-exps))))]
-      [`(letrec ([,(? symbol? #{bound-vars : (Listof Symbol)})
-                  ,(? s-exp?  #{bound-exps : S-List})]
+      [`(letrec ([,(? symbol? #{bind-vars : (Listof Symbol)})
+                  ,(? s-exp?  #{bind-exps : S-List})]
                  ...)
           ,(? s-exp? #{body-exps : S-List})
           ...)
-       `(letrec-exp ',bound-vars
-                    (list ,@(map parser bound-exps))
+       `(letrec-exp ',bind-vars
+                    (list ,@(map parser bind-exps))
                     ,(parser `(begin ,@body-exps)))]
-      [`(letrec* ([,(? symbol? #{bound-vars : (Listof Symbol)})
-                   ,(? s-exp?  #{bound-exps : S-List})]
+      [`(letrec* ([,(? symbol? #{bind-vars : (Listof Symbol)})
+                   ,(? s-exp?  #{bind-exps : S-List})]
                   ...)
           ,(? s-exp? #{body-exps : S-List})
           ...)
        (parser
-        (if (and (null? bound-vars) (null? bound-exps))
+        (if (and (null? bind-vars) (null? bind-exps))
             `(letrec () ,@body-exps)
-            `(letrec ([,(car bound-vars) ,(car bound-exps)])
+            `(letrec ([,(car bind-vars) ,(car bind-exps)])
                (letrec* (,@(map (λ ([var : Symbol] [exp : S-Exp]) : (List Symbol S-Exp)
                                     (list var exp))
-                                (cdr bound-vars)
-                                (cdr bound-exps)))
+                                (cdr bind-vars)
+                                (cdr bind-exps)))
                  ,@body-exps))))]
 
 

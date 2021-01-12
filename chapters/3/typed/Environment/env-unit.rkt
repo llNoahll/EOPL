@@ -43,13 +43,13 @@
     (λ (var val env)
       (make-env 'extend-env
                 (λ ([search-var : Symbol]) : Boolean
-                    (if (eqv? var search-var)
-                        #t
-                        (has-binding? env search-var)))
+                  (if (eqv? var search-var)
+                       #t
+                       (has-binding? env search-var)))
                 (λ ([search-var : Symbol]) : Location
-                    (if (eqv? search-var var)
-                        (make-parameter val)
-                        (apply-env env search-var))))))
+                  (if (eqv? search-var var)
+                      (make-parameter val)
+                      (apply-env env search-var))))))
 
   (: extend-env* [-> (Listof Symbol) (Listof DenVal) Env Env])
   (define extend-env*
@@ -58,91 +58,91 @@
             [(= (length vars) (length vals))
              (make-env 'extend-env
                        (λ ([search-var : Symbol]) : Boolean
-                           (: exist-var? [-> (Listof Symbol) Boolean])
-                           (define exist-var?
-                             (λ (vars)
-                               (cond [(or (null? vars)) #f]
-                                     [(eqv? search-var (car vars)) #t]
-                                     [else (exist-var? (cdr vars))])))
+                         (: exist-var? [-> (Listof Symbol) Boolean])
+                         (define exist-var?
+                           (λ (vars)
+                             (cond [(or (null? vars)) #f]
+                                   [(eqv? search-var (car vars)) #t]
+                                   [else (exist-var? (cdr vars))])))
 
-                           (if (exist-var? vars)
-                               #t
-                               (has-binding? env search-var)))
+                         (if (exist-var? vars)
+                             #t
+                             (has-binding? env search-var)))
                        (λ ([search-var : Symbol]) : Location
-                           (: look-for-val [-> (Listof Symbol) (Listof DenVal)
-                                               Location])
-                           (define look-for-val
-                             (λ (vars vals)
-                               (cond [(null? vars) (apply-env env search-var)]
-                                     [(eqv? search-var (car vars)) (make-parameter (car vals))]
-                                     [else (look-for-val (cdr vars) (cdr vals))])))
+                         (: look-for-val [-> (Listof Symbol) (Listof DenVal)
+                                             Location])
+                         (define look-for-val
+                           (λ (vars vals)
+                             (cond [(null? vars) (apply-env env search-var)]
+                                   [(eqv? search-var (car vars)) (make-parameter (car vals))]
+                                   [else (look-for-val (cdr vars) (cdr vals))])))
 
-                           (look-for-val vars vals)))]
+                         (look-for-val vars vals)))]
             [else (error 'extend-env* "Bad input! vars: ~s, vals: ~s" vars vals)])))
 
   (: extend-env+ [-> (Listof (Pair Symbol DenVal)) Env Env])
   (define extend-env+
-    (λ (bounds env)
-      (extend-env* (map (λ ([bound : (Pair Symbol DenVal)]) : Symbol
-                          (car bound))
-                        bounds)
-                   (map (λ ([bound : (Pair Symbol DenVal)]) : DenVal
-                          (cdr bound))
-                        bounds)
+    (λ (binds env)
+      (extend-env* (map (λ ([bind : (Pair Symbol DenVal)]) : Symbol
+                          (car bind))
+                        binds)
+                   (map (λ ([bind : (Pair Symbol DenVal)]) : DenVal
+                          (cdr bind))
+                        binds)
                    env)))
 
-  (: extend-env-bound [-> Symbol Location Env Env])
-  (define extend-env-bound
+  (: extend-env-bind [-> Symbol Location Env Env])
+  (define extend-env-bind
     (λ (var loc env)
       (make-env 'extend-env
                 (λ ([search-var : Symbol]) : Boolean
-                    (if (eqv? var search-var)
-                        #t
-                        (has-binding? env search-var)))
+                  (if (eqv? var search-var)
+                      #t
+                      (has-binding? env search-var)))
                 (λ ([search-var : Symbol]) : Location
-                    (if (eqv? search-var var)
-                        loc
-                        (apply-env env search-var))))))
+                  (if (eqv? search-var var)
+                      loc
+                      (apply-env env search-var))))))
 
-  (: extend-env-bound* [-> (Listof Symbol) (Listof Location) Env Env])
-  (define extend-env-bound*
+  (: extend-env-bind* [-> (Listof Symbol) (Listof Location) Env Env])
+  (define extend-env-bind*
     (λ (vars locs env)
       (cond [(and (null? vars) (null? locs)) env]
             [(= (length vars) (length locs))
              (make-env 'extend-env
                        (λ ([search-var : Symbol]) : Boolean
-                           (: exist-var? [-> (Listof Symbol) Boolean])
-                           (define exist-var?
-                             (λ (vars)
-                               (cond [(or (null? vars)) #f]
-                                     [(eqv? search-var (car vars)) #t]
-                                     [else (exist-var? (cdr vars))])))
+                         (: exist-var? [-> (Listof Symbol) Boolean])
+                         (define exist-var?
+                           (λ (vars)
+                             (cond [(or (null? vars)) #f]
+                                   [(eqv? search-var (car vars)) #t]
+                                   [else (exist-var? (cdr vars))])))
 
-                           (if (exist-var? vars)
-                               #t
-                               (has-binding? env search-var)))
+                         (if (exist-var? vars)
+                             #t
+                             (has-binding? env search-var)))
                        (λ ([search-var : Symbol]) : Location
-                           (: look-for-loc [-> (Listof Symbol) (Listof Location)
-                                               Location])
-                           (define look-for-loc
-                             (λ (vars locs)
-                               (cond [(null? vars) (apply-env env search-var)]
-                                     [(eqv? search-var (car vars)) (car locs)]
-                                     [else (look-for-loc (cdr vars) (cdr locs))])))
+                         (: look-for-loc [-> (Listof Symbol) (Listof Location)
+                                             Location])
+                         (define look-for-loc
+                           (λ (vars locs)
+                             (cond [(null? vars) (apply-env env search-var)]
+                                   [(eqv? search-var (car vars)) (car locs)]
+                                   [else (look-for-loc (cdr vars) (cdr locs))])))
 
-                           (look-for-loc vars locs)))]
+                         (look-for-loc vars locs)))]
             [else (error 'extend-env* "Bad input! vars: ~s, locs: ~s" vars locs)])))
 
-  (: extend-env-bound+ [-> (Listof (Pair Symbol Location)) Env Env])
-  (define extend-env-bound+
-    (λ (bounds env)
-      (extend-env-bound* (map (λ ([bound : (Pair Symbol Location)]) : Symbol
-                                (car bound))
-                              bounds)
-                         (map (λ ([bound : (Pair Symbol Location)]) : Location
-                                (cdr bound))
-                              bounds)
-                         env)))
+  (: extend-env-bind+ [-> (Listof (Pair Symbol Location)) Env Env])
+  (define extend-env-bind+
+    (λ (binds env)
+      (extend-env-bind* (map (λ ([bind : (Pair Symbol Location)]) : Symbol
+                               (car bind))
+                             binds)
+                        (map (λ ([bind : (Pair Symbol Location)]) : Location
+                               (cdr bind))
+                             binds)
+                        env)))
 
 
   (: extend-env? [-> Env Boolean])
@@ -159,13 +159,13 @@
       (define env
         (make-env 'extend-env-rec
                   (λ ([search-var : Symbol]) : Boolean
-                      (if (eqv? var search-var)
-                          #t
-                          (has-binding? env search-var)))
+                    (if (eqv? var search-var)
+                        #t
+                        (has-binding? env search-var)))
                   (λ ([search-var : Symbol]) : Location
-                      (if (eqv? search-var var)
-                          val
-                          (apply-env env search-var)))))
+                    (if (eqv? search-var var)
+                        val
+                        (apply-env env search-var)))))
 
 
       (val (expval->denval (value-of exp env)))
@@ -174,41 +174,41 @@
 
   (: extend-env-rec+ [-> (Listof (Pair Symbol Exp)) Env Env])
   (define extend-env-rec+
-    (λ (exp-bounds saved-env)
+    (λ (exp-binds saved-env)
 
-      (: val-bounds (Listof (Pair Symbol Location)))
-      (define val-bounds
-        (map (ann (λ (exp-bound)
-                    (cons (car exp-bound)
+      (: val-binds (Listof (Pair Symbol Location)))
+      (define val-binds
+        (map (ann (λ (exp-bind)
+                    (cons (car exp-bind)
                           (ann (make-parameter undefined)
                                Location)))
                   [-> (Pair Symbol Exp)
                       (Pair Symbol Location)])
-             exp-bounds))
+             exp-binds))
 
       (: env Env)
       (define env
         (make-env 'extend-env-rec
                   (λ ([search-var : Symbol]) : Boolean
-                      (or (pair? (assoc search-var exp-bounds))
-                          (has-binding? saved-env search-var)))
+                    (or (pair? (assoc search-var exp-binds))
+                        (has-binding? saved-env search-var)))
                   (λ ([search-var : Symbol]) : Location
-                      (: val-bound (Option (Pair Symbol Location)))
-                      (define val-bound (assoc search-var val-bounds))
+                    (: val-bind (Option (Pair Symbol Location)))
+                    (define val-bind (assoc search-var val-binds))
 
-                      (if (false? val-bound)
-                          (apply-env saved-env search-var)
-                          ;; lazy evaluate.
-                          (cdr val-bound)))))
+                    (if (false? val-bind)
+                        (apply-env saved-env search-var)
+                        ;; lazy evaluate.
+                        (cdr val-bind)))))
 
 
-      (for-each (ann (λ (val-bound exp-bound)
-                       ;; ((cdr val-bound) (expval->denval (value-of (cdr exp-bound) (extend-env+ val-bounds saved-env))))
-                       ((cdr val-bound) (expval->denval (value-of (cdr exp-bound) env))))
+      (for-each (ann (λ (val-bind exp-bind)
+                       ;; ((cdr val-bind) (expval->denval (value-of (cdr exp-bind) (extend-env+ val-binds saved-env))))
+                       ((cdr val-bind) (expval->denval (value-of (cdr exp-bind) env))))
                      [-> (Pair Symbol Location)
                          (Pair Symbol Exp)
                          Void])
-           val-bounds exp-bounds)
+                val-binds exp-binds)
 
       env))
 
@@ -221,43 +221,43 @@
                             vars exps)
                        saved-env)))
 
-  (: extend-env-rec-bound [-> Symbol Location Env Env])
-  (define extend-env-rec-bound
+  (: extend-env-rec-bind [-> Symbol Location Env Env])
+  (define extend-env-rec-bind
     (λ (var loc env)
       (make-env 'extend-env-rec
                 (λ ([search-var : Symbol]) : Boolean
-                    (if (eqv? var search-var)
-                        #t
-                        (has-binding? env search-var)))
+                  (if (eqv? var search-var)
+                      #t
+                      (has-binding? env search-var)))
                 (λ ([search-var : Symbol]) : Location
-                    (if (eqv? search-var var)
-                        loc
-                        (apply-env env search-var))))))
+                  (if (eqv? search-var var)
+                      loc
+                      (apply-env env search-var))))))
 
-  (: extend-env-rec-bound+ [-> (Listof (Pair Symbol Location)) Env Env])
-  (define extend-env-rec-bound+
-    (λ (loc-bounds saved-env)
+  (: extend-env-rec-bind+ [-> (Listof (Pair Symbol Location)) Env Env])
+  (define extend-env-rec-bind+
+    (λ (loc-binds saved-env)
       (make-env 'extend-env-rec
                 (λ ([search-var : Symbol]) : Boolean
-                    (or (pair? (assoc search-var loc-bounds))
-                        (has-binding? saved-env search-var)))
+                  (or (pair? (assoc search-var loc-binds))
+                      (has-binding? saved-env search-var)))
                 (λ ([search-var : Symbol]) : Location
-                    (: loc-bound (Option (Pair Symbol Location)))
-                    (define loc-bound (assoc search-var loc-bounds))
+                  (: loc-bind (Option (Pair Symbol Location)))
+                  (define loc-bind (assoc search-var loc-binds))
 
-                    (if (false? loc-bound)
-                        (apply-env saved-env search-var)
-                        ;; lazy evaluate.
-                        (cdr loc-bound))))))
+                  (if (false? loc-bind)
+                      (apply-env saved-env search-var)
+                      ;; lazy evaluate.
+                      (cdr loc-bind))))))
 
-  (: extend-env-rec-bound* [-> (Listof Symbol) (Listof Location) Env Env])
-  (define extend-env-rec-bound*
+  (: extend-env-rec-bind* [-> (Listof Symbol) (Listof Location) Env Env])
+  (define extend-env-rec-bind*
     (λ (vars locs saved-env)
-      (extend-env-rec-bound+ (map (ann (λ (var loc)
-                                         (cons var loc))
-                                       [-> Symbol Location (Pair Symbol Location)])
-                                  vars locs)
-                             saved-env)))
+      (extend-env-rec-bind+ (map (ann (λ (var loc)
+                                        (cons var loc))
+                                      [-> Symbol Location (Pair Symbol Location)])
+                                 vars locs)
+                            saved-env)))
 
 
   (: extend-env-rec? [-> Env Boolean])

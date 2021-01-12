@@ -104,15 +104,15 @@
   #:type-name Var-Exp)
 
 (define-struct let-exp
-  ([bound-vars : (Listof Symbol)]
-   [bound-exps : (Listof Exp)]
+  ([bind-vars : (Listof Symbol)]
+   [bind-exps : (Listof Exp)]
    [body : Exp])
   #:transparent
   #:type-name Let-Exp)
 
 (define-struct letrec-exp
-  ([bound-vars : (Listof Symbol)]
-   [bound-exps : (Listof Exp)]
+  ([bind-vars : (Listof Symbol)]
+   [bind-exps : (Listof Exp)]
    [body : Exp])
   #:transparent
   #:type-name Letrec-Exp)

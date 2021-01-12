@@ -13,9 +13,9 @@
    [extend-env* : [-> (Listof Symbol) (Listof DenVal) Env Env]]
    [extend-env+ : [-> (Listof (Pair Symbol DenVal)) Env Env]]
 
-   [extend-env-bound  : [-> Symbol Location Env Env]]
-   [extend-env-bound* : [-> (Listof Symbol) (Listof Location) Env Env]]
-   [extend-env-bound+ : [-> (Listof (Pair Symbol Location)) Env Env]]
+   [extend-env-bind  : [-> Symbol Location Env Env]]
+   [extend-env-bind* : [-> (Listof Symbol) (Listof Location) Env Env]]
+   [extend-env-bind+ : [-> (Listof (Pair Symbol Location)) Env Env]]
 
    [extend-env? : [-> Env Boolean]]
 
@@ -24,9 +24,9 @@
    [extend-env-rec* : [-> (Listof Symbol) (Listof Exp) Env Env]]
    [extend-env-rec+ : [-> (Listof (Pair Symbol Exp)) Env Env]]
 
-   [extend-env-rec-bound  : [-> Symbol Location Env Env]]
-   [extend-env-rec-bound* : [-> (Listof Symbol) (Listof Location) Env Env]]
-   [extend-env-rec-bound+ : [-> (Listof (Pair Symbol Location)) Env Env]]
+   [extend-env-rec-bind  : [-> Symbol Location Env Env]]
+   [extend-env-rec-bind* : [-> (Listof Symbol) (Listof Location) Env Env]]
+   [extend-env-rec-bind+ : [-> (Listof (Pair Symbol Location)) Env Env]]
 
    [extend-env-rec? : [-> Env Boolean]]
 

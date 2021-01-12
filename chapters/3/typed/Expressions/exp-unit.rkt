@@ -45,13 +45,13 @@
 
   (: let-exp [-> (Listof Symbol) (Listof Exp) Exp Let-Exp])
   (define let-exp
-    (λ (bound-vars bound-exps body)
-      (make-let-exp bound-vars bound-exps body)))
+    (λ (bind-vars bind-exps body)
+      (make-let-exp bind-vars bind-exps body)))
 
   (: letrec-exp [-> (Listof Symbol) (Listof Exp) Exp Letrec-Exp])
   (define letrec-exp
-    (λ (bound-vars bound-exps body)
-      (make-letrec-exp bound-vars bound-exps body)))
+    (λ (bind-vars bind-exps body)
+      (make-letrec-exp bind-vars bind-exps body)))
 
 
   (: begin-exp [-> (Listof Exp) Begin-Exp])
@@ -115,18 +115,18 @@
             [(var-exp? exp) ((apply-env env (var-exp-var exp)))]
             [(let-exp? exp)
              (define vals
-               (map (ann (λ (bound-exp) (expval->denval (value-of bound-exp env)))
+               (map (ann (λ (bind-exp) (expval->denval (value-of bind-exp env)))
                          [-> Exp DenVal])
-                    (let-exp-bound-exps exp)))
+                    (let-exp-bind-exps exp)))
 
              (value-of (let-exp-body exp)
-                       (extend-env* (let-exp-bound-vars exp)
+                       (extend-env* (let-exp-bind-vars exp)
                                     vals
                                     env))]
             [(letrec-exp? exp)
              (value-of (letrec-exp-body exp)
-                       (extend-env-rec* (letrec-exp-bound-vars exp)
-                                        (letrec-exp-bound-exps exp)
+                       (extend-env-rec* (letrec-exp-bind-vars exp)
+                                        (letrec-exp-bind-exps exp)
                                         env))]
 
             [(primitive-proc-exp? exp)
