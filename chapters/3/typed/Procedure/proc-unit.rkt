@@ -20,8 +20,8 @@
     (λ (vars body env)
       (make-proc vars
                  body
-                 (extend-env-bound+ (free-vars (if (symbol? vars) (list vars) vars)
-                                               body env)
+                 (extend-env-bound+ (free-bounds (if (symbol? vars) (list vars) vars)
+                                                 body env)
                                     (empty-env))
                  )))
 
@@ -34,8 +34,8 @@
     (λ (vars body env)
       (make-trace-proc vars
                        body
-                       (extend-env-bound+ (free-vars (if (symbol? vars) (list vars) vars)
-                                                     body env)
+                       (extend-env-bound+ (free-bounds (if (symbol? vars) (list vars) vars)
+                                                       body env)
                                           (empty-env))
                        )))
 
@@ -74,8 +74,8 @@
             (displayln (format "result: ~a\n" result)))))))
 
 
-  (: free-vars [-> (Listof Symbol) Exp Env (Listof (Pair Symbol Location))])
-  (define free-vars
+  (: free-bounds [-> (Listof Symbol) Exp Env (Listof (Pair Symbol Location))])
+  (define free-bounds
     (λ (vars exp env)
       (cond [(symbol-exp? exp) '()]
             [(const-exp? exp) '()]
@@ -96,62 +96,62 @@
                (if (null? exps)
                    bounds
                    (loop (cdr exps)
-                         (append (free-vars (append (map (inst car Symbol Location)
-                                                         bounds) vars)
-                                            (car exps)
-                                            env)
+                         (append (free-bounds (append (map (inst car Symbol Location)
+                                                           bounds) vars)
+                                              (car exps)
+                                              env)
                                  bounds))))]
 
             [(if-exp? exp)
-             (free-vars vars
-                        (begin-exp (list (if-exp-pred-exp  exp)
-                                         (if-exp-true-exp  exp)
-                                         (if-exp-false-exp exp)))
-                        env)]
+             (free-bounds vars
+                          (begin-exp (list (if-exp-pred-exp  exp)
+                                           (if-exp-true-exp  exp)
+                                           (if-exp-false-exp exp)))
+                          env)]
             [(cond-exp? exp)
-             (free-vars vars
-                        (begin-exp (apply append (cond-exp-exps exp)))
-                        env)]
+             (free-bounds vars
+                          (begin-exp (apply append (cond-exp-exps exp)))
+                          env)]
             [(let-exp? exp)
              (let loop : (Listof (Pair Symbol Location))
                   ([exps : (Listof Exp) (let-exp-bound-exps exp)]
                    [bounds : (Listof (Pair Symbol Location)) '()])
                   (if (null? exps)
-                      (append (free-vars (append (map (inst car Symbol Location)
-                                                      bounds)
-                                                 (let-exp-bound-vars exp)
-                                                 vars)
-                                         (let-exp-body exp)
-                                         env)
+                      (append (free-bounds (append (map (inst car Symbol Location)
+                                                        bounds)
+                                                   (let-exp-bound-vars exp)
+                                                   vars)
+                                           (let-exp-body exp)
+                                           env)
                               bounds)
                       (loop (cdr exps)
-                            (append (free-vars (append (map (inst car Symbol Location)
-                                                            bounds)
-                                                       vars)
-                                               (car exps)
-                                               env)
+                            (append (free-bounds (append (map (inst car Symbol Location)
+                                                              bounds)
+                                                         vars)
+                                                 (car exps)
+                                                 env)
                                     bounds))))]
 
             [(primitive-proc-exp? exp)
-             (free-vars vars
-                        (begin-exp (primitive-proc-exp-exps exp))
-                        env)]
+             (free-bounds vars
+                          (begin-exp (primitive-proc-exp-exps exp))
+                          env)]
             [(proc-exp? exp)
              (let ([proc-vars (proc-exp-vars exp)])
-               (free-vars (if (symbol? proc-vars)
-                              (cons proc-vars vars)
-                              (append proc-vars vars))
-                          (proc-exp-body exp)
-                          env))]
+               (free-bounds (if (symbol? proc-vars)
+                                (cons proc-vars vars)
+                                (append proc-vars vars))
+                            (proc-exp-body exp)
+                            env))]
             [(call-exp? exp)
              (let ([rator (call-exp-rator exp)]
                    [rands (call-exp-rands exp)])
-               (free-vars vars
-                          (begin-exp (if (var-exp? rands)
-                                         (list rator rands)
-                                         (cons rator rands)))
-                          env))]
+               (free-bounds vars
+                            (begin-exp (if (var-exp? rands)
+                                           (list rator rands)
+                                           (cons rator rands)))
+                            env))]
 
-            [else (raise-argument-error 'free-vars "exp?" exp)])))
+            [else (raise-argument-error 'free-bounds "exp?" exp)])))
 
   )
