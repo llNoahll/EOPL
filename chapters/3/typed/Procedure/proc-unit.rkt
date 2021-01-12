@@ -20,10 +20,9 @@
     (λ (vars body env)
       (make-proc vars
                  body
-                 env
-                 ;; (extend-env+ (free-vars (if (symbol? vars) (list vars) vars)
-                 ;;                         body env)
-                 ;;              (empty-env))
+                 (extend-env-bound+ (free-vars (if (symbol? vars) (list vars) vars)
+                                               body env)
+                                    (empty-env))
                  )))
 
 
@@ -35,9 +34,10 @@
     (λ (vars body env)
       (make-trace-proc vars
                        body
-                       (extend-env+ (free-vars (if (symbol? vars) (list vars) vars)
-                                               body env)
-                                    (empty-env)))))
+                       (extend-env-bound+ (free-vars (if (symbol? vars) (list vars) vars)
+                                                     body env)
+                                          (empty-env))
+                       )))
 
   (: apply-procedure [-> Proc (Listof DenVal) ExpVal])
   (define apply-procedure
@@ -66,16 +66,15 @@
                                        (proc-saved-env proc))
                           (extend-env* vars
                                        vals
-                                       (proc-saved-env proc))))))
+                                       (proc-saved-env proc)))))
+
+          result)
         (λ ()
           (when (trace-proc? proc)
-            (displayln (format "result: ~a\n" result)))))
+            (displayln (format "result: ~a\n" result)))))))
 
 
-      result))
-
-
-  (: free-vars [-> (Listof Symbol) Exp Env (Listof (Pair Symbol DenVal))])
+  (: free-vars [-> (Listof Symbol) Exp Env (Listof (Pair Symbol Location))])
   (define free-vars
     (λ (vars exp env)
       (cond [(symbol-exp? exp) '()]
@@ -91,13 +90,14 @@
                    (list (cons var (apply-env env var)))))]
 
             [(begin-exp? exp)
-             (let loop : (Listof (Pair Symbol DenVal))
+             (let loop : (Listof (Pair Symbol Location))
                   ([exps : (Listof Exp) (begin-exp-exps exp)]
-                   [bounds : (Listof (Pair Symbol DenVal)) '()])
+                   [bounds : (Listof (Pair Symbol Location)) '()])
                (if (null? exps)
                    bounds
                    (loop (cdr exps)
-                         (append (free-vars (append (map (inst car Symbol DenVal) bounds) vars)
+                         (append (free-vars (append (map (inst car Symbol Location)
+                                                         bounds) vars)
                                             (car exps)
                                             env)
                                  bounds))))]
@@ -113,18 +113,20 @@
                         (begin-exp (apply append (cond-exp-exps exp)))
                         env)]
             [(let-exp? exp)
-             (let loop : (Listof (Pair Symbol DenVal))
+             (let loop : (Listof (Pair Symbol Location))
                   ([exps : (Listof Exp) (let-exp-bound-exps exp)]
-                   [bounds : (Listof (Pair Symbol DenVal)) '()])
+                   [bounds : (Listof (Pair Symbol Location)) '()])
                   (if (null? exps)
-                      (append (free-vars (append (map (inst car Symbol DenVal) bounds)
+                      (append (free-vars (append (map (inst car Symbol Location)
+                                                      bounds)
                                                  (let-exp-bound-vars exp)
                                                  vars)
                                          (let-exp-body exp)
                                          env)
                               bounds)
                       (loop (cdr exps)
-                            (append (free-vars (append (map (inst car Symbol DenVal) bounds)
+                            (append (free-vars (append (map (inst car Symbol Location)
+                                                            bounds)
                                                        vars)
                                                (car exps)
                                                env)

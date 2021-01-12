@@ -35,10 +35,13 @@
 (define-predicate expval? ExpVal)
 
 
+(define-type Location (Parameter DenVal (U DenVal Undefined)))
+
+
 (define-struct env
   ([type : (U 'empty-env 'extend-env 'extend-env-rec)]
    [has-binding? : [-> Symbol Boolean]]
-   [apply-env : [-> Symbol DenVal]])
+   [apply-env : [-> Symbol Location]])
   #:transparent
   #:type-name Env)
 

@@ -112,7 +112,7 @@
              (if (false? branch-exp)
                  (error 'value-of "cond-exp miss true banch!")
                  (value-of (cadr branch-exp) env))]
-            [(var-exp? exp) (apply-env env (var-exp-var exp))]
+            [(var-exp? exp) ((apply-env env (var-exp-var exp)))]
             [(let-exp? exp)
              (define vals
                (map (ann (λ (bound-exp) (expval->denval (value-of bound-exp env)))

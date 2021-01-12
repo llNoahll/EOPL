@@ -14,5 +14,5 @@
    [trace-procedure : [-> (U Symbol (Listof Symbol)) Exp Env Trace-Proc]]
 
    [apply-procedure : [-> Proc (Listof DenVal) ExpVal]]
-   [free-vars : [-> (Listof Symbol) Exp Env (Listof (Pair Symbol DenVal))]]
+   [free-vars : [-> (Listof Symbol) Exp Env (Listof (Pair Symbol Location))]]
    ))
