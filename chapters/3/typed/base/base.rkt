@@ -47,10 +47,10 @@
   (λ (code env)
     (: exp Exp)
     (define exp
-      (cast (call-with-values
-             (λ () (eval (parser code) eval-ns))
-             (λ args (car args)))
-            Exp))
+      (assert (call-with-values
+               (λ () (eval (parser code) eval-ns))
+               (λ args (car args)))
+              exp?))
 
     ;; (pretty-print code)
     (value-of exp env)))

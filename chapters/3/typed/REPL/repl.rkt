@@ -10,7 +10,7 @@
 (define *repl*
   (λ (env)
     (display "]=> ")
-    (let ([code : S-Exp (cast (read) S-Exp)])
+    (let ([code : S-Exp (assert (read) s-exp?)])
       (case code
         ['(exit) (void)]
         [else
