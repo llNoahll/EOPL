@@ -36,6 +36,7 @@
 
 
 (define-type Location (Parameter DenVal (U DenVal Undefined)))
+(define-predicate location? Location)
 
 
 (define-struct env
