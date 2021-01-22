@@ -34,9 +34,7 @@
 (define-type ExpVal (U DenVal Void Undefined Nothing))
 (define-predicate expval? ExpVal)
 
-
 (define-type Location (Parameter DenVal (U DenVal Undefined)))
-(define-predicate location? Location)
 
 
 (define-struct env
@@ -60,58 +58,63 @@
   #:type-name Trace-Proc)
 
 
-(define-type Exp (U Symbol-Exp Const-Exp Bool-Exp Char-Exp String-Exp
-                    If-Exp Cond-Exp
-                    Begin-Exp Primitive-Proc-Exp Proc-Exp Trace-Proc-Exp Call-Exp
-                    Var-Exp Let-Exp Letrec-Exp))
-(define-predicate exp? Exp)
+(define-struct exp ()
+  #:transparent
+  #:type-name Exp)
 
 
-(define-struct symbol-exp ([symbol : Symbol])
+(define-struct (symbol-exp exp)
+  ([symbol : Symbol])
   #:transparent
   #:type-name Symbol-Exp)
 
-(define-struct const-exp ([num : Real])
+(define-struct (const-exp exp)
+  ([num : Real])
   #:transparent
   #:type-name Const-Exp)
 
-(define-struct bool-exp ([bool : Boolean])
+(define-struct (bool-exp exp)
+  ([bool : Boolean])
   #:transparent
   #:type-name Bool-Exp)
 
-(define-struct char-exp ([char : Char])
+(define-struct (char-exp exp)
+  ([char : Char])
   #:transparent
   #:type-name Char-Exp)
 
-(define-struct string-exp ([str : String])
+(define-struct (string-exp exp)
+  ([str : String])
   #:transparent
   #:type-name String-Exp)
 
 
-(define-struct if-exp
+(define-struct (if-exp exp)
   ([pred-exp : Exp]
    [true-exp : Exp]
    [false-exp : Exp])
   #:transparent
   #:type-name If-Exp)
 
-(define-struct cond-exp ([exps : (Listof (Pair Exp (Listof Exp)))])
+(define-struct (cond-exp exp)
+  ([exps : (Listof (Pair Exp (Listof Exp)))])
   #:transparent
   #:type-name Cond-Exp)
 
 
-(define-struct var-exp ([var : Symbol])
+(define-struct (var-exp exp)
+  ([var : Symbol])
   #:transparent
   #:type-name Var-Exp)
 
-(define-struct let-exp
+(define-struct (let-exp exp)
   ([bind-vars : (Listof Symbol)]
    [bind-exps : (Listof Exp)]
    [body : Exp])
   #:transparent
   #:type-name Let-Exp)
 
-(define-struct letrec-exp
+(define-struct (letrec-exp exp)
   ([bind-vars : (Listof Symbol)]
    [bind-exps : (Listof Exp)]
    [body : Exp])
@@ -119,18 +122,19 @@
   #:type-name Letrec-Exp)
 
 
-(define-struct begin-exp ([exps : (Listof Exp)])
+(define-struct (begin-exp exp)
+  ([exps : (Listof Exp)])
   #:transparent
   #:type-name Begin-Exp)
 
 
-(define-struct primitive-proc-exp
+(define-struct (primitive-proc-exp exp)
   ([op : Symbol]
    [exps : (Listof Exp)])
   #:transparent
   #:type-name Primitive-Proc-Exp)
 
-(define-struct proc-exp
+(define-struct (proc-exp exp)
   ([vars : (U Symbol (Listof Symbol))]
    [body : Exp])
   #:transparent
@@ -141,7 +145,7 @@
   #:transparent
   #:type-name Trace-Proc-Exp)
 
-(define-struct call-exp
+(define-struct (call-exp exp)
   ([rator : Exp]
    [rands : (U Var-Exp (Listof Exp))])
   #:transparent
