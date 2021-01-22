@@ -9,7 +9,6 @@
 (define parser
   (λ (code)
     (match code
-      ['() `(empty-list)]
       [`(quote ,(? symbol? symbol)) `(symbol-exp ',symbol)]
       [`(quote ,(? boolean? bool)) `(bool-exp ,bool)]
       [`(quote ,(? real? num)) `(const-exp ,num)]
