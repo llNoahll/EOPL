@@ -1,6 +1,7 @@
 #lang typed/racket
 
 (require "../types/types.rkt"
+         "../Reference/ref-sig.rkt"
          "../ExpValues/values-sig.rkt"
          "../Environment/env-sig.rkt"
          "../Procedure/proc-sig.rkt"
@@ -11,7 +12,7 @@
 
 
 (define-unit exp@
-  (import values^ env^ proc^ primitive-proc^)
+  (import ref^ values^ env^ proc^ primitive-proc^)
   (export exp^)
 
   (: symbol-exp [-> Symbol Symbol-Exp])
@@ -112,7 +113,7 @@
              (if (false? branch-exp)
                  (error 'value-of "cond-exp miss true banch!")
                  (value-of (cadr branch-exp) env))]
-            [(var-exp? exp) ((apply-env env (var-exp-var exp)))]
+            [(var-exp? exp) (deref (apply-env env (var-exp-var exp)))]
             [(let-exp? exp)
              (define vals
                (map (ann (λ (bind-exp) (expval->denval (value-of bind-exp env)))

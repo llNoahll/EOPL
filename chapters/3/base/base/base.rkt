@@ -2,6 +2,8 @@
 
 (require "../types/types.rkt"
          "../Parse/parser.rkt"
+         "../Reference/ref-sig.rkt"
+         "../Reference/ref-unit.rkt"
          "../ExpValues/values-sig.rkt"
          "../ExpValues/values-unit.rkt"
          "../PrimitiveProc/primitive-proc-sig.rkt"
@@ -31,12 +33,12 @@
 
 (define-compound-unit/infer base@
   (import)
-  (export values^ env^ proc^ primitive-proc^ exp^)
-  (link   values@ env@ proc@ primitive-proc@ exp@))
+  (export ref^ values^ env^ proc^ primitive-proc^ exp^)
+  (link   ref@ values@ env@ proc@ primitive-proc@ exp@))
 
 (define-values/invoke-unit base@
   (import)
-  (export values^ env^ proc^ primitive-proc^ exp^))
+  (export ref^ values^ env^ proc^ primitive-proc^ exp^))
 
 
 (define-namespace-anchor ns-anchor)
@@ -210,7 +212,13 @@
 (add-primitive-proc! 'or  (n-ary-logic-func all-false?))
 
 (add-primitive-proc! 'list (λ [vals : DenVal *] : ExpVal (list-val vals)))
-
+(add-primitive-proc! 'format (λ [vals : DenVal *] : ExpVal
+                                 (match vals
+                                   [`(,str ,args ...)
+                                    (if (string? str)
+                                        (string-val (apply format str args))
+                                        (error 'format "Bad arg: ~s" str))]
+                                   [_ (error 'n-ary-func "Bad args: ~s" vals)])))
 
 
 (base-env (extend-env 'apply

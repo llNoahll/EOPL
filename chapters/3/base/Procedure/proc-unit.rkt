@@ -74,7 +74,7 @@
             (displayln (format "result: ~a\n" result)))))))
 
 
-  (: free-binds [-> (Listof Symbol) Exp Env (Listof (Pair Symbol Location))])
+  (: free-binds [-> (Listof Symbol) Exp Env (Listof (Pair Symbol Ref))])
   (define free-binds
     (λ (vars exp env)
       (cond [(symbol-exp? exp) '()]
@@ -90,13 +90,13 @@
                    (list (cons var (apply-env env var)))))]
 
             [(begin-exp? exp)
-             (let loop : (Listof (Pair Symbol Location))
+             (let loop : (Listof (Pair Symbol Ref))
                   ([exps : (Listof Exp) (begin-exp-exps exp)]
-                   [binds : (Listof (Pair Symbol Location)) '()])
+                   [binds : (Listof (Pair Symbol Ref)) '()])
                   (if (null? exps)
                       binds
                       (loop (cdr exps)
-                            (append (free-binds (append (map (inst car Symbol Location)
+                            (append (free-binds (append (map (inst car Symbol Ref)
                                                              binds) vars)
                                                 (car exps)
                                                 env)
@@ -113,11 +113,11 @@
                          (begin-exp (apply append (cond-exp-exps exp)))
                          env)]
             [(let-exp? exp)
-             (let loop : (Listof (Pair Symbol Location))
+             (let loop : (Listof (Pair Symbol Ref))
                   ([exps : (Listof Exp) (let-exp-bind-exps exp)]
-                   [binds : (Listof (Pair Symbol Location)) '()])
+                   [binds : (Listof (Pair Symbol Ref)) '()])
                   (if (null? exps)
-                      (append (free-binds (append (map (inst car Symbol Location)
+                      (append (free-binds (append (map (inst car Symbol Ref)
                                                        binds)
                                                   (let-exp-bind-vars exp)
                                                   vars)
@@ -125,7 +125,7 @@
                                           env)
                               binds)
                       (loop (cdr exps)
-                            (append (free-binds (append (map (inst car Symbol Location)
+                            (append (free-binds (append (map (inst car Symbol Ref)
                                                              binds)
                                                         vars)
                                                 (car exps)

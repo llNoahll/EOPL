@@ -27,20 +27,25 @@
 (define-predicate trace-lambda? Trace-Lambda)
 
 
-(define-type DenVal (U Literal Null Proc Trace-Proc
-                       (Pair DenVal DenVal)))
+(define-struct ref
+  ([val : (Boxof DenVal)])
+  #:transparent
+  #:type-name Ref)
+
+
+(define-type DenVal (U Literal Undefined
+                       Proc Trace-Proc
+                       Null (Pair DenVal DenVal)))
 (define-predicate denval? DenVal)
 
-(define-type ExpVal (U DenVal Void Undefined Nothing))
+(define-type ExpVal (U DenVal Void Nothing))
 (define-predicate expval? ExpVal)
-
-(define-type Location (Parameter DenVal (U DenVal Undefined)))
 
 
 (define-struct env
   ([type : (U 'empty-env 'extend-env 'extend-env-rec)]
    [has-binding? : [-> Symbol Boolean]]
-   [apply-env : [-> Symbol Location]])
+   [apply-env : [-> Symbol Ref]])
   #:transparent
   #:type-name Env)
 
