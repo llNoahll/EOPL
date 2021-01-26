@@ -42,6 +42,8 @@
   (: extend-env [-> Symbol DenVal Env Env])
   (define extend-env
     (λ (var val env)
+      (define ref (newref val))
+
       (make-env 'extend-env
                 (λ ([search-var : Symbol]) : Boolean
                   (if (eqv? var search-var)
@@ -49,12 +51,14 @@
                        (has-binding? env search-var)))
                 (λ ([search-var : Symbol]) : Ref
                   (if (eqv? search-var var)
-                      (newref val)
+                      ref
                       (apply-env env search-var))))))
 
   (: extend-env* [-> (Listof Symbol) (Listof DenVal) Env Env])
   (define extend-env*
     (λ (vars vals env)
+      (define refs (map newref vals))
+
       (cond [(and (null? vars) (null? vals)) env]
             [(= (length vars) (length vals))
              (make-env 'extend-env
@@ -70,15 +74,15 @@
                              #t
                              (has-binding? env search-var)))
                        (λ ([search-var : Symbol]) : Ref
-                         (: look-for-val [-> (Listof Symbol) (Listof DenVal)
+                         (: look-for-ref [-> (Listof Symbol) (Listof Ref)
                                              ref])
-                         (define look-for-val
-                           (λ (vars vals)
+                         (define look-for-ref
+                           (λ (vars refs)
                              (cond [(null? vars) (apply-env env search-var)]
-                                   [(eqv? search-var (car vars)) (newref (car vals))]
-                                   [else (look-for-val (cdr vars) (cdr vals))])))
+                                   [(eqv? search-var (car vars)) (car refs)]
+                                   [else (look-for-ref (cdr vars) (cdr refs))])))
 
-                         (look-for-val vars vals)))]
+                         (look-for-ref vars refs)))]
             [else (error 'extend-env* "Bad input! vars: ~s, vals: ~s" vars vals)])))
 
   (: extend-env+ [-> (Listof (Pair Symbol DenVal)) Env Env])
@@ -153,8 +157,8 @@
   (: extend-env-rec [-> Symbol Exp Env Env])
   (define extend-env-rec
     (λ (var exp env)
-      (: val Ref)
-      (define val (newref undefined))
+      (: ref Ref)
+      (define ref (newref undefined))
 
       (: env Env)
       (define env
@@ -165,11 +169,11 @@
                         (has-binding? env search-var)))
                   (λ ([search-var : Symbol]) : Ref
                     (if (eqv? search-var var)
-                        val
+                        ref
                         (apply-env env search-var)))))
 
 
-      (setref! val (expval->denval (value-of exp env)))
+      (setref! ref (expval->denval (value-of exp env)))
 
       env))
 
@@ -177,8 +181,8 @@
   (define extend-env-rec+
     (λ (exp-binds saved-env)
 
-      (: val-binds (Listof (Pair Symbol Ref)))
-      (define val-binds
+      (: ref-binds (Listof (Pair Symbol Ref)))
+      (define ref-binds
         (map (ann (λ (exp-bind)
                     (cons (car exp-bind)
                           (ann (newref undefined)
@@ -194,21 +198,21 @@
                     (or (pair? (assoc search-var exp-binds))
                         (has-binding? saved-env search-var)))
                   (λ ([search-var : Symbol]) : Ref
-                    (: val-bind (Option (Pair Symbol Ref)))
-                    (define val-bind (assoc search-var val-binds))
+                    (: ref-bind (Option (Pair Symbol Ref)))
+                    (define ref-bind (assoc search-var ref-binds))
 
-                    (if (false? val-bind)
+                    (if (false? ref-bind)
                         (apply-env saved-env search-var)
                         ;; lazy evaluate.
-                        (cdr val-bind)))))
+                        (cdr ref-bind)))))
 
 
-      (for-each (ann (λ (val-bind exp-bind)
-                       (setref! (cdr val-bind) (expval->denval (value-of (cdr exp-bind) env))))
+      (for-each (ann (λ (ref-bind exp-bind)
+                       (setref! (cdr ref-bind) (expval->denval (value-of (cdr exp-bind) env))))
                      [-> (Pair Symbol Ref)
                          (Pair Symbol Exp)
                          Void])
-                val-binds exp-binds)
+                ref-binds exp-binds)
 
       env))
 
