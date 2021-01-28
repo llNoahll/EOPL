@@ -64,6 +64,13 @@
   (define expval->denval (λ (val) (assert val denval?)))
 
 
+  (: s-expval->expval [-> Any ExpVal])
+  (define s-expval->expval
+    (λ (arg)
+      (if (expval? arg)
+          arg
+          (raise-argument-error 's-expval->expval "expval?" arg))))
+
   (: expval->s-expval [-> ExpVal Any])
   (define expval->s-expval
     (λ (val)

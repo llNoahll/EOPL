@@ -27,4 +27,5 @@
 
    [expval->denval : [-> ExpVal DenVal]]
    [expval->s-expval : [-> ExpVal Any]]
+   [s-expval->expval : [-> Any ExpVal]]
    ))

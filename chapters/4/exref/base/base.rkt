@@ -58,6 +58,15 @@
     (value-of exp env)))
 
 
+(: nullary-IO-func [-> [-> Any] [-> DenVal * ExpVal]])
+(define nullary-IO-func
+  (λ (func)
+    (λ vals
+      (match vals
+        ['() (s-expval->expval (func))]
+        [_ (error 'nullary-func "Bad args: ~s" vals)]))))
+
+
 (: unary-arithmetic-pred [-> [-> Real Boolean] [-> DenVal * ExpVal]])
 (define unary-arithmetic-pred
   (λ (pred)
@@ -79,7 +88,7 @@
   (λ (func)
     (λ vals
       (match vals
-        [`(,val) (func (expval->s-expval val))]
+        [`(,val) (s-expval->expval (func (expval->s-expval val)))]
         [_ (error 'unary-func "Bad args: ~s" vals)]))))
 
 
@@ -170,6 +179,9 @@
                                 (match vals
                                   [`(,val) (bool-val (null? val))]
                                   [_ (error 'unary-func "Bad args: ~s" vals)])))
+
+
+(add-primitive-proc! 'read (nullary-IO-func read))
 
 (add-primitive-proc! 'display (unary-IO-func display))
 (add-primitive-proc! 'print (unary-IO-func print))

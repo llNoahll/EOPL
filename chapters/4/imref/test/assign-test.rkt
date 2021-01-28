@@ -37,3 +37,38 @@
          [b (g)])
     (displayln (format "a = ~a, b = ~a" a b)))
  (base-env))
+
+
+(*eval*
+ '(letrec ([times4 (λ (x)
+                     (if (zero? x)
+                         0
+                         (- (times4 (- x 1)) -4)))])
+    (displayln (times4 3)))
+ (base-env))
+
+
+(*eval*
+ '(let ([times4 0])
+    (set! times4
+      (λ (x)
+        (if (zero? x)
+            0
+            (- (times4 (- x 1)) -4))))
+    (displayln (times4 3)))
+ (base-env))
+
+
+(*eval*
+ '(let* ([x 11]
+         [p (λ () x)])
+    (displayln (p))
+    (set! x 13)
+    (displayln (p)))
+ (base-env))
+
+
+;; (*eval*
+;;  '(let ([n (read)])
+;;     (displayln n))
+;;  (base-env))
