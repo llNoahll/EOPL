@@ -150,13 +150,6 @@
                           (base-env)))))
 
 
-(: all-true? [-> Boolean * Boolean])
-(define all-true? (λ vals (andmap true? vals)))
-
-(: all-false? [-> Boolean * Boolean])
-(define all-false? (λ vals (ormap true? vals)))
-
-
 (add-primitive-proc! 'empty-list (λ [vals : DenVal *] : ExpVal '()))
 
 
@@ -219,9 +212,6 @@
 (add-primitive-proc! '- (n-ary-arithmetic-func -))
 (add-primitive-proc! '* (n-ary-arithmetic-func *))
 (add-primitive-proc! '/ (n-ary-arithmetic-func /))
-
-(add-primitive-proc! 'and (n-ary-logic-func all-true?))
-(add-primitive-proc! 'or  (n-ary-logic-func all-false?))
 
 (add-primitive-proc! 'list (λ [vals : DenVal *] : ExpVal (list-val vals)))
 (add-primitive-proc! 'format (λ [vals : DenVal *] : ExpVal

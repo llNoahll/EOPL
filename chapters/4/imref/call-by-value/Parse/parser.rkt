@@ -29,8 +29,18 @@
       [`(set! ,(? symbol? var) ,(? s-exp? exp))
        `(assign-exp ',var ,(parser exp))]
 
-      [`(begin ,(? s-exp? #{exps : S-List}) ...)
-       `(begin-exp (list ,@(map parser exps)))]
+      [`(begin
+          (define ,(? symbol? #{vars : (Listof Any)})
+            ,(? s-exp? #{vals : (Listof Any)})) ...
+          ,(? s-exp? #{exps : S-List}) ...)
+       (if (null? vars)
+           `(begin-exp
+              (list ,@(map parser exps)))
+           (parser `(letrec ,(map (ann (λ (var val) (list var val))
+                                       [-> Symbol S-Exp (List Symbol S-Exp)])
+                                  (cast vars (Listof Symbol))
+                                  (cast vals S-List))
+                      ,@exps)))]
 
       [`(if ,(? s-exp? pred-exp)
             ,(? s-exp? true-exp)
@@ -50,6 +60,20 @@
                                  ,(parser `(begin ,@body-exps))))
                       pred-exps
                       (cast body-exps (Listof (Listof S-Exp))))))]
+
+      [`(and ,(? s-exp? #{exps : S-List}) ...)
+       (if (null? exps)
+           `(bool-exp #t)
+           (parser `(if ,(car exps)
+                        (and ,@(cdr exps))
+                        #f)))]
+      [`(or ,(? s-exp? #{exps : S-List}) ...)
+       (if (null? exps)
+           `(bool-exp #f)
+           (parser `(if ,(car exps)
+                        #t
+                        (or ,@(cdr exps)))))]
+
       [`(let ([,(? symbol? #{bind-vars : (Listof Symbol)})
                ,(? s-exp?  #{bind-exps : S-List})]
               ...)

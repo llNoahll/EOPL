@@ -198,14 +198,6 @@
                                   [odd?  (car (cdr funcs))])
                               (displayln (eq? #t (even? 0)))))
                          (base-env) base-eval-ns))
-(displayln (*check-code* '(and) (base-env) base-eval-ns))
-(displayln (*check-code* '(or) (base-env) base-eval-ns))
-
-(displayln (*check-code* '(or #f #f #f) (base-env) base-eval-ns))
-(displayln (*check-code* '(or #f #t #f) (base-env) base-eval-ns))
-
-(displayln (*check-code* '(and #t #t #t) (base-env) base-eval-ns))
-(displayln (*check-code* '(and #f #t #f) (base-env) base-eval-ns))
 
 (displayln (*check-code* '(letrec ([even? (λ (num)
                                             (cond [(zero? num) #t]
@@ -225,18 +217,23 @@
                             (displayln (odd? 5)))
                          (base-env) base-eval-ns))
 
-;; (displayln (*check-code* '(letrec ([fib (λ (num)
-;;                                           (cond [(= 0 num) 0]
-;;                                                 [(= 1 num) 1]
-;;                                                 [else (+ (fib (- num 1))
-;;                                                          (fib (- num 2)))]))])
-;;                             (displayln (fib 0))
-;;                             (displayln (fib 1))
-;;                             (displayln (fib 2))
-;;                             (displayln (fib 3))
-;;                             (displayln (fib 4))
-;;                             (displayln (fib 5))
-;;                             (displayln (fib 6)))
-;;                          (base-env) base-eval-ns))
+(displayln (*check-code* '(begin
+                            (define fib
+                              (λ (num)
+                                (cond [(= 0 num) 0]
+                                      [(= 1 num) 1]
+                                      [else (+ (fib (- num 1))
+                                               (fib (- num 2)))])))
+                            (fib 2))
+                         (base-env) base-eval-ns))
+
+(displayln (*check-code* '(and) (base-env) base-eval-ns))
+(displayln (*check-code* '(or) (base-env) base-eval-ns))
+
+(displayln (*check-code* '(or #f #f #f) (base-env) base-eval-ns))
+(displayln (*check-code* '(or #f #t #f) (base-env) base-eval-ns))
+
+(displayln (*check-code* '(and #t #t #t) (base-env) base-eval-ns))
+(displayln (*check-code* '(and #f #t #f) (base-env) base-eval-ns))
 
 ;; (*repl* (base-env))
