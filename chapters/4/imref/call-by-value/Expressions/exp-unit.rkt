@@ -89,10 +89,8 @@
   (define value-of
     (λ (exp env)
       (cond [(assign-exp? exp)
-             (define ref (apply-env env (assign-exp-var exp)))
-             (define val (expval->denval (value-of (assign-exp-exp exp) env)))
-
-             (setref! ref val)]
+             (set-binding! env (assign-exp-var exp)
+                           (expval->denval (value-of (assign-exp-exp exp) env)))]
 
             [(symbol-exp? exp) (symbol-val (symbol-exp-symbol exp))]
             [(const-exp? exp) (num-val (const-exp-num exp))]
@@ -123,7 +121,7 @@
              (if (false? branch)
                  (void)
                  (value-of (cadr branch) env))]
-            [(var-exp? exp) (deref (apply-env env (var-exp-var exp)))]
+            [(var-exp? exp) (apply-env env (var-exp-var exp))]
             [(let-exp? exp)
              (define vals
                (map (ann (λ (bind-exp) (expval->denval (value-of bind-exp env)))

@@ -32,6 +32,9 @@
    [extend-env-rec? : [-> Env Boolean]]
 
 
-   [env?         : [-> Any Boolean : Env]]
-   [apply-env    : [-> Env Symbol Ref]]
-   [has-binding? : [-> Env Symbol Boolean]]))
+   [env?          : [-> Any Boolean : Env]]
+   [apply-env-ref : [-> Env Symbol Ref]]
+   [apply-env     : [-> Env Symbol DenVal]]
+   [has-binding?  : [-> Env Symbol Boolean]]
+   [set-binding!  : [-> Env Symbol DenVal Void]]
+   ))

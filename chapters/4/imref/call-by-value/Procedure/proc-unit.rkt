@@ -93,7 +93,7 @@
              (let ([var : Symbol (var-exp-var exp)])
                (if (memq var vars)
                    '()
-                   (list (cons var (apply-env env var)))))]
+                   (list (cons var (apply-env-ref env var)))))]
 
             [(begin-exp? exp)
              (let loop : (Listof (Pair Symbol Ref))

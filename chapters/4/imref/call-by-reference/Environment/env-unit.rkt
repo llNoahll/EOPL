@@ -52,7 +52,7 @@
                 (λ ([search-var : Symbol]) : Ref
                   (if (eqv? search-var var)
                       ref
-                      (apply-env env search-var))))))
+                      (apply-env-ref env search-var))))))
 
   (: extend-env* [-> (Listof Symbol) (Listof DenVal) Env Env])
   (define extend-env*
@@ -78,7 +78,7 @@
                                              ref])
                          (define look-for-ref
                            (λ (vars refs)
-                             (cond [(null? vars) (apply-env env search-var)]
+                             (cond [(null? vars) (apply-env-ref env search-var)]
                                    [(eqv? search-var (car vars)) (car refs)]
                                    [else (look-for-ref (cdr vars) (cdr refs))])))
 
@@ -107,7 +107,7 @@
                 (λ ([search-var : Symbol]) : Ref
                   (if (eqv? search-var var)
                       ref
-                      (apply-env env search-var))))))
+                      (apply-env-ref env search-var))))))
 
   (: extend-env-bind* [-> (Listof Symbol) (Listof Ref) Env Env])
   (define extend-env-bind*
@@ -131,7 +131,7 @@
                                              Ref])
                          (define look-for-ref
                            (λ (vars refs)
-                             (cond [(null? vars) (apply-env env search-var)]
+                             (cond [(null? vars) (apply-env-ref env search-var)]
                                    [(eqv? search-var (car vars)) (car refs)]
                                    [else (look-for-ref (cdr vars) (cdr refs))])))
 
@@ -170,7 +170,7 @@
                   (λ ([search-var : Symbol]) : Ref
                     (if (eqv? search-var var)
                         ref
-                        (apply-env env search-var)))))
+                        (apply-env-ref env search-var)))))
 
 
       (setref! ref (expval->denval (value-of exp env)))
@@ -202,7 +202,7 @@
                     (define ref-bind (assoc search-var ref-binds))
 
                     (if (false? ref-bind)
-                        (apply-env saved-env search-var)
+                        (apply-env-ref saved-env search-var)
                         ;; lazy evaluate.
                         (cdr ref-bind)))))
 
@@ -236,7 +236,7 @@
                 (λ ([search-var : Symbol]) : Ref
                   (if (eqv? search-var var)
                       ref
-                      (apply-env env search-var))))))
+                      (apply-env-ref env search-var))))))
 
   (: extend-env-rec-bind+ [-> (Listof (Pair Symbol Ref)) Env Env])
   (define extend-env-rec-bind+
@@ -250,7 +250,7 @@
                   (define ref-bind (assoc search-var ref-binds))
 
                   (if (false? ref-bind)
-                      (apply-env saved-env search-var)
+                      (apply-env-ref saved-env search-var)
                       ;; lazy evaluate.
                       (cdr ref-bind))))))
 
@@ -272,15 +272,26 @@
   (define-predicate env? Env)
 
 
-  (: apply-env [-> Env Symbol Ref])
+  (: apply-env-ref [-> Env Symbol Ref])
+  (define apply-env-ref
+    (λ (env search-var)
+      ((env-apply-env-ref env) search-var)))
+
+  (: apply-env [-> Env Symbol DenVal])
   (define apply-env
     (λ (env search-var)
-      ((env-apply-env env) search-var)))
+      (deref ((env-apply-env-ref env) search-var))))
 
 
   (: has-binding? [-> Env Symbol Boolean])
   (define has-binding?
     (λ (env search-var)
       ((env-has-binding? env) search-var)))
+
+  (: set-binding! [-> Env Symbol DenVal Void])
+  (define set-binding!
+    (λ (env search-var new-val)
+      (setref! ((env-apply-env-ref env) search-var)
+               new-val)))
 
   )

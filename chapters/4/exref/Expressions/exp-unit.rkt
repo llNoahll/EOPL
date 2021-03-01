@@ -113,7 +113,7 @@
              (if (false? branch)
                  (void)
                  (value-of (cadr branch) env))]
-            [(var-exp? exp) (deref (apply-env env (var-exp-var exp)))]
+            [(var-exp? exp) (apply-env env (var-exp-var exp))]
             [(let-exp? exp)
              (define vals
                (map (ann (λ (bind-exp) (expval->denval (value-of bind-exp env)))
