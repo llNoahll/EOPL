@@ -104,15 +104,15 @@
                  (value-of (if-exp-true-exp exp) env)
                  (value-of (if-exp-false-exp exp) env))]
             [(cond-exp? exp)
-             (define exps (cond-exp-exps exp))
-             (define branch-exp
+             (define branches (cond-exp-branches exp))
+             (define branch
                (assf (λ ([pred-exp : Exp])
                        (true? (value-of pred-exp env)))
-                     exps))
+                     branches))
 
-             (if (false? branch-exp)
+             (if (false? branch)
                  (void)
-                 (value-of (cadr branch-exp) env))]
+                 (value-of (cadr branch) env))]
             [(var-exp? exp) (deref (apply-env env (var-exp-var exp)))]
             [(let-exp? exp)
              (define vals

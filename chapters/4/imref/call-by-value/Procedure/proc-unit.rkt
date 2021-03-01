@@ -116,7 +116,7 @@
                          env)]
             [(cond-exp? exp)
              (free-binds vars
-                         (begin-exp (apply append (cond-exp-exps exp)))
+                         (begin-exp (apply append (cond-exp-branches exp)))
                          env)]
             [(let-exp? exp)
              (let loop : (Listof (Pair Symbol Ref))
