@@ -112,7 +112,7 @@
 
             [(begin-exp? exp)
              (let loop : (Listof (Pair Symbol Ref))
-                  ([exps : (Listof Exp) (begin-exp-exps exp)]
+                  ([exps  : (Listof Exp) (begin-exp-exps exp)]
                    [binds : (Listof (Pair Symbol Ref)) '()])
                   (if (null? exps)
                       binds
@@ -154,9 +154,12 @@
                                     binds))))]
 
             [(primitive-proc-exp? exp)
-             (free-binds vars
-                         (begin-exp (primitive-proc-exp-exps exp))
-                         env)]
+             (define exps (primitive-proc-exp-exps exp))
+             (if (null? exps)
+                 '()
+                 (free-binds vars
+                             (begin-exp exps)
+                             env))]
             [(proc-exp? exp)
              (let ([proc-vars (proc-exp-vars exp)])
                (free-binds (if (symbol? proc-vars)

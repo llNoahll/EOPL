@@ -16,12 +16,14 @@
    [string-exp : [-> String String-Exp]]
 
    [if-exp     : [-> Exp Exp Exp If-Exp]]
-   [cond-exp   : [-> (Listof (Pair Exp (Listof Exp))) Cond-Exp]]
+   [cond-exp   : [-> (Pair (Pair Exp (Listof Exp))
+                           (Listof (Pair Exp (Listof Exp))))
+                     Cond-Exp]]
    [var-exp    : [-> Symbol Var-Exp]]
    [let-exp    : [-> (Listof Symbol) (Listof Exp) Exp Let-Exp]]
    [letrec-exp : [-> (Listof Symbol) (Listof Exp) Exp Letrec-Exp]]
 
-   [begin-exp : [-> (Listof Exp) Begin-Exp]]
+   [begin-exp : [-> (Pair Exp (Listof Exp)) Begin-Exp]]
 
    [primitive-proc-exp : [-> Symbol Exp * Primitive-Proc-Exp]]
 

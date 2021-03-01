@@ -40,10 +40,12 @@
     (λ (pred-exp true-exp false-exp)
       (make-if-exp pred-exp true-exp false-exp)))
 
-  (: cond-exp [-> (Listof (Pair Exp (Listof Exp))) Cond-Exp])
+  (: cond-exp [-> (Pair (Pair Exp (Listof Exp))
+                        (Listof (Pair Exp (Listof Exp))))
+                  Cond-Exp])
   (define cond-exp
     (λ (exps)
-      (make-cond-exp (ann exps (Listof (Pair Exp (Listof Exp)))))))
+      (make-cond-exp exps)))
 
   (: var-exp [-> Symbol Var-Exp])
   (define var-exp (λ (var) (make-var-exp var)))
@@ -59,7 +61,7 @@
       (make-letrec-exp bind-vars bind-exps body)))
 
 
-  (: begin-exp [-> (Listof Exp) Begin-Exp])
+  (: begin-exp [-> (Pair Exp (Listof Exp)) Begin-Exp])
   (define begin-exp
     (λ (exps)
       (make-begin-exp exps)))
