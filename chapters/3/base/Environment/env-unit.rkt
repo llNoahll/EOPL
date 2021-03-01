@@ -41,25 +41,25 @@
 
   (: extend-env [-> Symbol DenVal Env Env])
   (define extend-env
-    (λ (var val env)
+    (λ (var val saved-env)
       (define ref (newref val))
 
       (make-env 'extend-env
                 (λ ([search-var : Symbol]) : Boolean
                   (if (eqv? var search-var)
                        #t
-                       (has-binding? env search-var)))
+                       (has-binding? saved-env search-var)))
                 (λ ([search-var : Symbol]) : Ref
                   (if (eqv? search-var var)
                       ref
-                      (apply-env env search-var))))))
+                      (apply-env saved-env search-var))))))
 
   (: extend-env* [-> (Listof Symbol) (Listof DenVal) Env Env])
   (define extend-env*
-    (λ (vars vals env)
+    (λ (vars vals saved-env)
       (define refs (map newref vals))
 
-      (cond [(and (null? vars) (null? vals)) env]
+      (cond [(and (null? vars) (null? vals)) saved-env]
             [(= (length vars) (length vals))
              (make-env 'extend-env
                        (λ ([search-var : Symbol]) : Boolean
@@ -72,13 +72,13 @@
 
                          (if (exist-var? vars)
                              #t
-                             (has-binding? env search-var)))
+                             (has-binding? saved-env search-var)))
                        (λ ([search-var : Symbol]) : Ref
                          (: look-for-ref [-> (Listof Symbol) (Listof Ref)
                                              ref])
                          (define look-for-ref
                            (λ (vars refs)
-                             (cond [(null? vars) (apply-env env search-var)]
+                             (cond [(null? vars) (apply-env saved-env search-var)]
                                    [(eqv? search-var (car vars)) (car refs)]
                                    [else (look-for-ref (cdr vars) (cdr refs))])))
 
@@ -87,32 +87,32 @@
 
   (: extend-env+ [-> (Listof (Pair Symbol DenVal)) Env Env])
   (define extend-env+
-    (λ (binds env)
+    (λ (binds saved-env)
       (extend-env* (map (λ ([bind : (Pair Symbol DenVal)]) : Symbol
                           (car bind))
                         binds)
                    (map (λ ([bind : (Pair Symbol DenVal)]) : DenVal
                           (cdr bind))
                         binds)
-                   env)))
+                   saved-env)))
 
   (: extend-env-bind [-> Symbol Ref Env Env])
   (define extend-env-bind
-    (λ (var ref env)
+    (λ (var ref saved-env)
       (make-env 'extend-env
                 (λ ([search-var : Symbol]) : Boolean
                   (if (eqv? var search-var)
                       #t
-                      (has-binding? env search-var)))
+                      (has-binding? saved-env search-var)))
                 (λ ([search-var : Symbol]) : Ref
                   (if (eqv? search-var var)
                       ref
-                      (apply-env env search-var))))))
+                      (apply-env saved-env search-var))))))
 
   (: extend-env-bind* [-> (Listof Symbol) (Listof Ref) Env Env])
   (define extend-env-bind*
-    (λ (vars refs env)
-      (cond [(and (null? vars) (null? refs)) env]
+    (λ (vars refs saved-env)
+      (cond [(and (null? vars) (null? refs)) saved-env]
             [(= (length vars) (length refs))
              (make-env 'extend-env
                        (λ ([search-var : Symbol]) : Boolean
@@ -125,13 +125,13 @@
 
                          (if (exist-var? vars)
                              #t
-                             (has-binding? env search-var)))
+                             (has-binding? saved-env search-var)))
                        (λ ([search-var : Symbol]) : Ref
                          (: look-for-ref [-> (Listof Symbol) (Listof Ref)
                                              Ref])
                          (define look-for-ref
                            (λ (vars refs)
-                             (cond [(null? vars) (apply-env env search-var)]
+                             (cond [(null? vars) (apply-env saved-env search-var)]
                                    [(eqv? search-var (car vars)) (car refs)]
                                    [else (look-for-ref (cdr vars) (cdr refs))])))
 
@@ -140,14 +140,14 @@
 
   (: extend-env-bind+ [-> (Listof (Pair Symbol Ref)) Env Env])
   (define extend-env-bind+
-    (λ (binds env)
+    (λ (binds saved-env)
       (extend-env-bind* (map (λ ([bind : (Pair Symbol Ref)]) : Symbol
                                (car bind))
                              binds)
                         (map (λ ([bind : (Pair Symbol Ref)]) : Ref
                                (cdr bind))
                              binds)
-                        env)))
+                        saved-env)))
 
 
   (: extend-env? [-> Env Boolean])
@@ -156,7 +156,7 @@
 
   (: extend-env-rec [-> Symbol Exp Env Env])
   (define extend-env-rec
-    (λ (var exp env)
+    (λ (var exp saved-env)
       (: ref Ref)
       (define ref (newref undefined))
 
@@ -166,11 +166,11 @@
                   (λ ([search-var : Symbol]) : Boolean
                     (if (eqv? var search-var)
                         #t
-                        (has-binding? env search-var)))
+                        (has-binding? saved-env search-var)))
                   (λ ([search-var : Symbol]) : Ref
                     (if (eqv? search-var var)
                         ref
-                        (apply-env env search-var)))))
+                        (apply-env saved-env search-var)))))
 
 
       (setref! ref (expval->denval (value-of exp env)))
@@ -227,16 +227,16 @@
 
   (: extend-env-rec-bind [-> Symbol Ref Env Env])
   (define extend-env-rec-bind
-    (λ (var ref env)
+    (λ (var ref saved-env)
       (make-env 'extend-env-rec
                 (λ ([search-var : Symbol]) : Boolean
                   (if (eqv? var search-var)
                       #t
-                      (has-binding? env search-var)))
+                      (has-binding? saved-env search-var)))
                 (λ ([search-var : Symbol]) : Ref
                   (if (eqv? search-var var)
                       ref
-                      (apply-env env search-var))))))
+                      (apply-env saved-env search-var))))))
 
   (: extend-env-rec-bind+ [-> (Listof (Pair Symbol Ref)) Env Env])
   (define extend-env-rec-bind+
