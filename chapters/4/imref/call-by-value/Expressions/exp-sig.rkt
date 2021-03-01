@@ -16,9 +16,7 @@
    [string-exp : [-> String String-Exp]]
 
    [if-exp     : [-> Exp Exp Exp If-Exp]]
-   [cond-exp   : [-> (Pair (Pair Exp (Pair Exp (Listof Exp)))
-                           (Listof (Pair Exp (Pair Exp (Listof Exp)))))
-                     Cond-Exp]]
+   [cond-exp   : [-> (Pair (List Exp Exp) (Listof (List Exp Exp))) Cond-Exp]]
    [var-exp    : [-> Symbol Var-Exp]]
    [let-exp    : [-> (Listof Symbol) (Listof Exp) Exp Let-Exp]]
    [letrec-exp : [-> (Listof Symbol) (Listof Exp) Exp Letrec-Exp]]

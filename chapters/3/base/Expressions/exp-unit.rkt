@@ -36,9 +36,7 @@
     (λ (pred-exp true-exp false-exp)
       (make-if-exp pred-exp true-exp false-exp)))
 
-  (: cond-exp [-> (Pair (Pair Exp (Pair Exp (Listof Exp)))
-                        (Listof (Pair Exp (Pair Exp (Listof Exp)))))
-                  Cond-Exp])
+  (: cond-exp [-> (Pair (List Exp Exp) (Listof (List Exp Exp))) Cond-Exp])
   (define cond-exp
     (λ (exps)
       (make-cond-exp exps)))
@@ -113,7 +111,7 @@
                      exps))
 
              (if (false? branch-exp)
-                 (error 'value-of "cond-exp miss true banch!")
+                 (void)
                  (value-of (cadr branch-exp) env))]
             [(var-exp? exp) (deref (apply-env env (var-exp-var exp)))]
             [(let-exp? exp)
