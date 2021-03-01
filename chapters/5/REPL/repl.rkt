@@ -14,7 +14,7 @@
       (case code
         ['(exit) (void)]
         [else
-         (writeln (*eval* code env))
+         (writeln (*eval* code env (id-cont)))
          (*repl* env)]))))
 
 
