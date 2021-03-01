@@ -109,8 +109,8 @@
   #:type-name If-Exp)
 
 (define-struct (cond-exp exp)
-  ([exps : (Pair (Pair Exp (Listof Exp))
-                 (Listof (Pair Exp (Listof Exp))))])
+  ([exps : (Pair (Pair Exp (Pair Exp (Listof Exp)))
+                 (Listof (Pair Exp (Pair Exp (Listof Exp)))))])
   #:transparent
   #:type-name Cond-Exp)
 

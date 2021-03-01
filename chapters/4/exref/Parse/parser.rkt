@@ -29,7 +29,7 @@
       [`(begin
           (define ,(? symbol? #{vars : (Listof Any)})
             ,(? s-exp? #{vals : (Listof Any)})) ...
-          ,(? s-exp? #{exps : S-List}) ...)
+          ,(? s-exp? #{exps : S-List}) ..1)
        (if (null? vars)
            `(begin-exp
               (list ,@(map parser exps)))
@@ -47,8 +47,8 @@
                 ,(parser false-exp))]
       [`(cond [,(? s-exp? #{pred-exps : S-List})
                ,(? s-exp? #{body-exps : (Listof (Listof Any))})
-               ...]
-              ...)
+               ..1]
+              ..1)
        `(cond-exp
          (list ,@(map (λ ([pred-exp : S-Exp] [body-exps : S-List]) : S-Exp
                           `(list ,(parser (if (eq? pred-exp 'else)
@@ -57,7 +57,8 @@
                                  ,(parser `(begin ,@body-exps))))
                       pred-exps
                       (cast body-exps
-                            (Listof (Listof S-Exp))))))]
+                            (Pair (Pair S-Exp S-List)
+                                  (Listof (Pair S-Exp S-List)))))))]
 
       [`(and ,(? s-exp? #{exps : S-List}) ...)
        (if (null? exps)
@@ -76,7 +77,7 @@
                ,(? s-exp?  #{bind-exps : S-List})]
               ...)
           ,(? s-exp? #{body-exps : S-List})
-          ...)
+          ..1)
        `(let-exp ',bind-vars
                  (list ,@(map parser bind-exps))
                  ,(parser `(begin ,@body-exps)))]
@@ -84,7 +85,7 @@
                 ,(? s-exp?  #{bind-exps : S-List})]
                ...)
           ,(? s-exp? #{body-exps : S-List})
-          ...)
+          ..1)
        (parser
         (if (and (null? bind-vars) (null? bind-exps))
             `(let () ,@body-exps)
@@ -98,7 +99,7 @@
                   ,(? s-exp?  #{bind-exps : S-List})]
                  ...)
           ,(? s-exp? #{body-exps : S-List})
-          ...)
+          ..1)
        `(letrec-exp ',bind-vars
                     (list ,@(map parser bind-exps))
                     ,(parser `(begin ,@body-exps)))]
@@ -106,7 +107,7 @@
                    ,(? s-exp?  #{bind-exps : S-List})]
                   ...)
           ,(? s-exp? #{body-exps : S-List})
-          ...)
+          ..1)
        (parser
         (if (and (null? bind-vars) (null? bind-exps))
             `(letrec () ,@body-exps)
@@ -120,20 +121,20 @@
 
       [`(,(? λ?) ,(? symbol? args)
                   ,(? s-exp? #{body-exps : S-List})
-                  ...)
+                  ..1)
        `(proc-exp ',args ,(parser `(begin ,@body-exps)))]
       [`(,(? λ?) (,(? symbol? #{args : (Listof Symbol)}) ...)
                   ,(? s-exp? #{body-exps : S-List})
-                  ...)
+                  ..1)
        `(proc-exp ',args ,(parser `(begin ,@body-exps)))]
 
       [`(,(? trace-λ?) ,(? symbol? args)
                         ,(? s-exp? #{body-exps : S-List})
-                        ...)
+                        ..1)
        `(trace-proc-exp ',args ,(parser `(begin ,@body-exps)))]
       [`(,(? trace-λ?) (,(? symbol? #{args : (Listof Symbol)}) ...)
                         ,(? s-exp? #{body-exps : S-List})
-                        ...)
+                        ..1)
        `(trace-proc-exp ',args ,(parser `(begin ,@body-exps)))]
 
       [`(,(? s-exp? op) ,(? s-exp? #{exps : S-List}) ...)

@@ -36,8 +36,8 @@
     (λ (pred-exp true-exp false-exp)
       (make-if-exp pred-exp true-exp false-exp)))
 
-  (: cond-exp [-> (Pair (Pair Exp (Listof Exp))
-                        (Listof (Pair Exp (Listof Exp))))
+  (: cond-exp [-> (Pair (Pair Exp (Pair Exp (Listof Exp)))
+                        (Listof (Pair Exp (Pair Exp (Listof Exp)))))
                   Cond-Exp])
   (define cond-exp
     (λ (exps)
