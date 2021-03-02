@@ -57,7 +57,7 @@
               exp?))
 
     ;; (pretty-print code)
-    (final-answer-val (value-of/k exp env cont))))
+    (value-of/k exp env cont)))
 
 
 (: nullary-IO-func [-> [-> Any] [-> DenVal * ExpVal]])

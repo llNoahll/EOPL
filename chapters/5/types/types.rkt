@@ -42,10 +42,9 @@
 (define-predicate expval? ExpVal)
 
 
-(define-struct final-answer
-  ([val : ExpVal])
-  #:transparent
-  #:type-name FinalAnswer)
+(define-new-subtype FinalAnswer (final-answer ExpVal))
+(define-predicate final-answer? FinalAnswer)
+
 (define-type Cont [-> ExpVal FinalAnswer])
 
 
