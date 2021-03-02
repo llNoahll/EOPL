@@ -39,40 +39,33 @@
                                          (empty-env))
                        )))
 
-  (: apply-procedure/k [-> Proc (Listof DenVal) Cont ExpVal])
+  (: apply-procedure/k [-> Proc (Listof DenVal) Cont FinalAnswer])
   (define apply-procedure/k
     (λ (proc vals cont)
       (: vars (U Symbol (Listof Symbol)))
       (define vars (proc-vars proc))
 
-      (: result ExpVal)
-      (define result undefined)
+      (when (trace-proc? proc)
+        (displayln (format "enter: ~a\n"
+                           (if (symbol? vars)
+                               (cons vars vals)
+                               (map (ann (λ (var val) (cons var val))
+                                         [-> Symbol DenVal (Pair Symbol DenVal)])
+                                    vars vals)))))
 
-      (dynamic-wind
-        (λ ()
-          (when (trace-proc? proc)
-            (displayln (format "enter: ~a\n"
-                               (if (symbol? vars)
-                                   (cons vars vals)
-                                   (map (ann (λ (var val) (cons var val))
-                                             [-> Symbol DenVal (Pair Symbol DenVal)])
-                                        vars vals))))))
-        (λ ()
-          (set! result
-            (value-of/k (proc-body proc)
-                        (if (symbol? vars)
-                            (extend-env  vars
-                                         vals
-                                         (proc-saved-env proc))
-                            (extend-env* vars
-                                         vals
-                                         (proc-saved-env proc)))
-                        cont))
-
-          result)
-        (λ ()
-          (when (trace-proc? proc)
-            (displayln (format "result: ~a\n" result)))))))
+      (value-of/k (proc-body proc)
+                  (if (symbol? vars)
+                      (extend-env  vars
+                                   vals
+                                   (proc-saved-env proc))
+                      (extend-env* vars
+                                   vals
+                                   (proc-saved-env proc)))
+                  (ann (λ (result)
+                         (when (trace-proc? proc)
+                           (displayln (format "result: ~a\n" result)))
+                         (cont result))
+                       Cont))))
 
 
   (: free-binds [-> (Listof Symbol) Exp Env (Listof (Pair Symbol Ref))])

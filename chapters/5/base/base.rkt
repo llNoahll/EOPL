@@ -46,7 +46,7 @@
 (define-namespace-anchor ns-anchor)
 (define eval-ns (namespace-anchor->namespace ns-anchor))
 
-(: *eval* [-> S-Exp Env Cont FinalAnswer])
+(: *eval* [-> S-Exp Env Cont ExpVal])
 (define *eval*
   (λ (code env cont)
     (: exp Exp)
@@ -57,7 +57,7 @@
               exp?))
 
     ;; (pretty-print code)
-    (value-of/k exp env cont)))
+    (final-answer-val (value-of/k exp env cont))))
 
 
 (: nullary-IO-func [-> [-> Any] [-> DenVal * ExpVal]])

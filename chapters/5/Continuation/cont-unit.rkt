@@ -11,7 +11,7 @@
   (export cont^)
 
   (: id-cont [-> Cont])
-  (define id-cont (λ () (λ (val) val)))
+  (define id-cont (λ () (λ (val) (make-final-answer val))))
 
   (: end-cont [-> Cont])
   (define end-cont

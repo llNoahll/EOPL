@@ -41,9 +41,11 @@
 (define-type ExpVal (U DenVal Void Nothing))
 (define-predicate expval? ExpVal)
 
-(define-type FinalAnswer ExpVal)
-(define-predicate final-answer? FinalAnswer)
 
+(define-struct final-answer
+  ([val : ExpVal])
+  #:transparent
+  #:type-name FinalAnswer)
 (define-type Cont [-> ExpVal FinalAnswer])
 
 
