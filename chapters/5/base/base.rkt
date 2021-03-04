@@ -146,8 +146,8 @@
     (base-env (extend-env op-name
                           (proc-val (procedure 'args
                                                (primitive-proc-exp 'apply-primitive
-                                                                   (symbol-exp op-name)
-                                                                   (var-exp 'args))
+                                                                   (list (symbol-exp op-name)
+                                                                         (var-exp 'args)))
                                                (empty-env)))
                           (base-env)))))
 
