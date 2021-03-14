@@ -100,8 +100,7 @@
     (λ vals
       (match vals
         [`(,val-1 ,val-2)
-         (bool-val (relation (expval->s-expval val-1)
-                             (expval->s-expval val-2)))]
+         (bool-val (relation val-1 val-2))]
         [_ (error 'binary-relation "Bad args: ~s" vals)]))))
 
 
