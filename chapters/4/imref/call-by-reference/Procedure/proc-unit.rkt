@@ -106,17 +106,14 @@
              (list (cons var (apply-env-ref env var))))]
 
         [(begin-exp exps)
-         (let loop : (Listof (Pair Symbol Ref))
-              ([exps exps]
-               [binds : (Listof (Pair Symbol Ref)) '()])
-              (if (null? exps)
-                  binds
-                  (loop (cdr exps)
-                        (append (free-binds (append (map (inst car Symbol Ref)
-                                                         binds) vars)
-                                            (car exps)
-                                            env)
-                                binds))))]
+         (define curr-free-binds (free-binds vars (car exps) env))
+         (define next-exps (cdr exps))
+         (if (null? next-exps)
+             curr-free-binds
+             (append curr-free-binds
+                     (free-binds (append (map (inst car Symbol Ref) curr-free-binds) vars)
+                                 (begin-exp next-exps)
+                                 env)))]
 
         [(if-exp pred-exp true-exp false-exp)
          (free-binds vars
@@ -127,34 +124,27 @@
                      (begin-exp (apply append branches))
                      env)]
 
-        [(or (let-exp bind-vars exps body)
-             (letrec-exp bind-vars exps body))
-         #:when (not (false? exps))
-         (let loop : (Listof (Pair Symbol Ref))
-              ([exps exps]
-               [binds : (Listof (Pair Symbol Ref)) '()])
-              (if (null? exps)
-                  (append (free-binds (append (map (inst car Symbol Ref)
-                                                   binds)
-                                              bind-vars
-                                              vars)
-                                      body
-                                      env)
-                          binds)
-                  (loop (cdr exps)
-                        (append (free-binds (append (map (inst car Symbol Ref)
-                                                         binds)
-                                                    vars)
-                                            (car exps)
-                                            env)
-                                binds))))]
+        [(let-exp bind-vars bind-exps body)
+         (cond [(null? bind-exps) (free-binds vars body env)]
+               [else
+                (define args-free-binds (free-binds vars (begin-exp bind-exps) env))
+                (define new-env (extend-env-bind+ args-free-binds (empty-env)))
+                (define body-free-binds (free-binds (append vars bind-vars) body new-env))
+
+                (append args-free-binds body-free-binds)])]
+        [(letrec-exp bind-vars bind-exps body)
+         (define new-env
+           (extend-env+ (map (ann (λ (var) (cons var undefined))
+                                  [-> Symbol (Pair Symbol Undefined)])
+                             vars)
+                        env))
+
+         (free-binds (append vars bind-vars) (begin-exp (cons body bind-exps)) new-env)]
 
         [(primitive-proc-exp _ exps)
          (if (null? exps)
              '()
-             (free-binds vars
-                         (begin-exp exps)
-                         env))]
+             (free-binds vars (begin-exp exps) env))]
         [(or (trace-proc-exp proc-vars body) (proc-exp proc-vars body))
          #:when (not (false? body))
          (free-binds (if (symbol? proc-vars)

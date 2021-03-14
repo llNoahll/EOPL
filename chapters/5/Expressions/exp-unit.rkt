@@ -86,7 +86,7 @@
          (define new-env
            (extend-env+ (map (ann (λ (var) (cons var undefined))
                                   [-> Symbol (Pair Symbol Undefined)])
-                             (letrec-exp-bind-vars exp))
+                             vars)
                         env))
 
          (let loop : FinalAnswer ([exps exps] [vars vars])

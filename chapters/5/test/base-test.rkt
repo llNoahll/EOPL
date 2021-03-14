@@ -218,6 +218,61 @@
                          (base-env) base-eval-ns))
 
 (displayln (*check-code* '(begin
+                            (define odd?
+                              (λ (num)
+                                (cond [(zero? num) #f]
+                                      [(= 1 num) #t]
+                                      [else (even? (sub1 num))])))
+                            (define even?
+                              (λ (num)
+                                (cond [(zero? num) #t]
+                                      [(= 1 num) #f]
+                                      [else (odd? (sub1 num))])))
+                            (displayln "-----------------------")
+                            (displayln (even? 0))
+                            (displayln (even? 2))
+                            (displayln (even? 4))
+
+                            (displayln (odd? 1))
+                            (displayln (odd? 3))
+                            (displayln (odd? 5)))
+                         (base-env) base-eval-ns))
+
+(displayln (*check-code* '(begin
+                            (define sqrt
+                              (λ (x)
+                                (define average
+                                  (λ (x y)
+                                    (/ (+ x y) 2)))
+
+                                (define abs
+                                  (λ (x)
+                                    (cond [(< x 0) (- x)]
+                                          [(= x 0) 0]
+                                          [(> x 0) x])))
+
+                                (define good-enough?
+                                  (λ (y)
+                                    (< (abs (- (* y y) x)) tolerance)))
+
+                                (define improve
+                                  (λ (y)
+                                    (average (/ x y) y)))
+
+                                (define try
+                                  (λ (y)
+                                    (if (good-enough? y)
+                                        y
+                                        (try (improve y)))))
+
+                                (define tolerance 0.0000001)
+
+                                (try 1)))
+
+                            (sqrt 2))
+                         (base-env) base-eval-ns))
+
+(displayln (*check-code* '(begin
                             (define fib
                               (λ (num)
                                 (cond [(= 0 num) 0]
