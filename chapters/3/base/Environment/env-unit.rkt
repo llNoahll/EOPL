@@ -74,8 +74,7 @@
                              #t
                              (has-binding? saved-env search-var)))
                        (λ ([search-var : Symbol]) : Ref
-                         (: look-for-ref [-> (Listof Symbol) (Listof Ref)
-                                             ref])
+                         (: look-for-ref [-> (Listof Symbol) (Listof Ref) Ref])
                          (define look-for-ref
                            (λ (vars refs)
                              (cond [(null? vars) (apply-env-ref saved-env search-var)]
