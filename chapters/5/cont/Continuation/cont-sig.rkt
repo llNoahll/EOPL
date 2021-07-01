@@ -22,6 +22,7 @@
    [let-cont    : [-> (Listof Exp) (Listof Symbol) Exp Env Cont Cont]]
    [letrec-cont : [-> Symbol (Listof Symbol) (Listof Exp) Exp Env Cont Cont]]
 
+   [proc-cont : [-> Proc Cont Cont]]
    [primitive-proc-cont : [-> Symbol (Listof Exp) Env Cont Cont]]
 
    [rator-cont : [-> (U Var-Exp (Listof Exp)) Env Cont Cont]]

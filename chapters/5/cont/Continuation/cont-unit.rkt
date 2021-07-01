@@ -119,6 +119,15 @@
 
       (make-cont var vars exps)))
 
+
+  (: proc-cont [-> Proc Cont Cont])
+  (define proc-cont
+    (λ (proc cont)
+      (λ (val)
+        (when (trace-proc? proc)
+          (displayln (format "result: ~a\n" val)))
+        (cont val))))
+
   (: primitive-proc-cont [-> Symbol (Listof Exp) Env Cont Cont])
   (define primitive-proc-cont
     (λ (op exps env cont)
