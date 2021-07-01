@@ -17,9 +17,7 @@
    [exps-cont   : [-> (Listof Exp) (Listof DenVal) Env Cont Cont]]
 
    [if-cont   : [-> Exp Exp Env Cont Cont]]
-   [cond-cont : [-> (Pair (List Exp Exp) (Listof (List Exp Exp)))
-                    Env Cont
-                    Cont]]
+   [cond-cont : [-> Exp (Listof (List Exp Exp)) Env Cont Cont]]
 
    [let-cont    : [-> (Listof Exp) (Listof Symbol) Exp Env Cont Cont]]
    [letrec-cont : [-> Symbol (Listof Symbol) (Listof Exp) Exp Env Cont Cont]]

@@ -11,8 +11,6 @@
 (provide cont@)
 
 
-(define-type Cont [-> ExpVal FinalAnswer])
-
 (define-unit cont@
   (import exp^ values^ env^ proc^ primitive-proc^)
   (export cont^)
@@ -54,7 +52,8 @@
           (λ (val)
             (if (null? exps)
                 (apply-cont cont (reverse (cons (expval->denval val) vals)))
-                (value-of/k (car exps) env
+                (value-of/k (car exps)
+                            env
                             (make-cont (cdr exps) (cons (expval->denval val) vals)))))))
 
       (make-cont exps vals)))
@@ -70,18 +69,23 @@
                     env
                     cont))))
 
-  (: cond-cont [-> (Pair (List Exp Exp) (Listof (List Exp Exp)))
-                   Env Cont
-                   Cont])
+  (: cond-cont [-> Exp (Listof (List Exp Exp)) Env Cont Cont])
   (define cond-cont
-    (λ (branches env cont)
-      (λ (pred-val)
-        (if (expval->bool pred-val)
-            (value-of/k (cadar branches) env cont)
-            (let ([next (cdr branches)])
-              (if (null? next)
-                  (apply-cont cont (void))
-                  (value-of/k (cond-exp next) env cont)))))))
+    (λ (body next env cont)
+      (: make-cont [-> Exp (Listof (List Exp Exp)) Cont])
+      (define make-cont
+        (λ (body next)
+          (λ (pred-val)
+            (if (expval->bool pred-val)
+                (value-of/k body env cont)
+                (if (null? next)
+                    (apply-cont cont (void))
+                    (let ([branch (car next)])
+                      (value-of/k (car branch)
+                                  env
+                                  (make-cont (cadr branch) (cdr next)))))))))
+
+      (make-cont body next)))
 
 
   (: let-cont [-> (Listof Exp) (Listof Symbol) Exp Env Cont Cont])

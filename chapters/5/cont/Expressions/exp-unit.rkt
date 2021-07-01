@@ -45,9 +45,10 @@
                      env
                      (if-cont true-exp false-exp env cont))]
         [(cond-exp branches)
-         (value-of/k (caar branches)
+         (define branch (car branches))
+         (value-of/k (car branch)
                      env
-                     (cond-cont branches env cont))]
+                     (cond-cont (cadr branch) (cdr branches) env cont))]
 
         [(let-exp vars exps body)
          (cond [(or (null? vars) (null? exps)) (value-of/k body env cont)]
