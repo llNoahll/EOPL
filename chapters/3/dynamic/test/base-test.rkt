@@ -55,7 +55,7 @@
                                   (λ (recur-func)
                                     (f (λ args
                                          (apply (recur-func recur-func) args))))))
-                               #t base-eval-ns)
+                               #t init-eval-ns)
 (namespace-set-variable-value! 'Y*
                                (λ funcs
                                  ((λ (recur-funcs)
@@ -65,7 +65,7 @@
                                            (λ args
                                              (apply (apply func (recur-funcs recur-funcs)) args)))
                                          funcs))))
-                               #t base-eval-ns)
+                               #t init-eval-ns)
 
 (namespace-set-variable-value! 'i  1 #t init-eval-ns)
 (namespace-set-variable-value! 'v  5 #t init-eval-ns)
@@ -280,6 +280,15 @@
                                       [else (+ (fib (- num 1))
                                                (fib (- num 2)))])))
                             (fib 2))
+                         (base-env) base-eval-ns))
+
+(displayln (*check-code* '(begin
+                            (define x 10)
+                            (define y 10)
+                            (define test (λ () x))
+                            (let ([x 80])
+                              (displayln (eq? x y))
+                              (test)))
                          (base-env) base-eval-ns))
 
 (displayln (*check-code* '(and) (base-env) base-eval-ns))
