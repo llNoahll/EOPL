@@ -259,14 +259,23 @@
                       (expval->denval
                        (*eval*
                         '(λ funcs
-                           ((λ (recur-funcs) recur-funcs)
-                            (map (λ (func)
-                                   (apply func
-                                          (map (λ (func)
-                                                 (λ (arg)
-                                                   ((apply func recur-funcs) arg)))
-                                               funcs)))
-                                 funcs)))
+                           (map (λ (func)
+                                  (apply func
+                                         (map (λ (func)
+                                                (λ args
+                                                  (apply (apply func recur-funcs) args)))
+                                              funcs)))
+                                funcs))
+
+                        ;; '(λ funcs
+                        ;;    ((λ (recur-funcs) recur-funcs)
+                        ;;     (map (λ (func)
+                        ;;            (apply func
+                        ;;                   (map (λ (func)
+                        ;;                          (λ (arg)
+                        ;;                            ((apply func recur-funcs) arg)))
+                        ;;                        funcs)))
+                        ;;          funcs)))
 
                         ;; '(λ funcs
                         ;;    ((λ (recur-func) (map (recur-func recur-func) funcs))
