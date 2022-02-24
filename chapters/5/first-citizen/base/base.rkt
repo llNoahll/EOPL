@@ -46,7 +46,7 @@
 (define-namespace-anchor ns-anchor)
 (define eval-ns (namespace-anchor->namespace ns-anchor))
 
-(: *eval* [-> S-Exp Env Cont ExpVal])
+(: *eval* [-> S-Exp Env Cont* ExpVal])
 (define *eval*
   (λ (code env cont)
     (: exp Exp)
@@ -240,7 +240,7 @@
                                      (f (λ args
                                           (apply (recur-func recur-func) args))))))
                                (base-env)
-                               (id-cont)))
+                               (id-cont*)))
                       (base-env)))
 
 
@@ -253,7 +253,7 @@
                                            (cons (func (car ls))
                                                  (map func (cdr ls)))))))
                                (base-env)
-                               (id-cont)))
+                               (id-cont*)))
                       (base-env)))
 
 (base-env (extend-env 'Y*
@@ -267,5 +267,5 @@
                                               (apply (apply func (recur-funcs recur-funcs)) args)))
                                           funcs))))
                                (base-env)
-                               (id-cont)))
+                               (id-cont*)))
                       (base-env)))

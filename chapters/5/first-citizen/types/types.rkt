@@ -45,7 +45,39 @@
 (define-new-subtype FinalAnswer (final-answer ExpVal))
 (define-predicate final-answer? FinalAnswer)
 
-(define-type Cont [-> ExpVal FinalAnswer])
+(struct cont
+  ([type : Symbol]
+   [saved-cont : [-> Cont*]]
+   [func : [-> ExpVal FinalAnswer]])
+  ;; #:property prop:procedure
+  ;; (ann (λ (self val) ((cont-func self) val))
+  ;;      [-> Cont ExpVal FinalAnswer])
+  #:transparent
+  #:type-name Cont)
+;; (define-type Cont* (∩ Cont [-> ExpVal FinalAnswer]))
+(define-type Cont* Cont)
+
+(struct handlers-cont cont
+  ([preds    : (Listof Proc)]
+   [handlers : (Listof Proc)])
+  #:transparent
+  #:type-name Handlers-Cont)
+;; (define-type Handlers-Cont* (∩ Handlers-Cont [-> ExpVal FinalAnswer]))
+(define-type Handlers-Cont* Handlers-Cont)
+
+(struct id-cont cont
+  ()
+  #:transparent
+  #:type-name Id-Cont)
+;; (define-type Id-Cont* (∩ Id-Cont [-> ExpVal FinalAnswer]))
+(define-type Id-Cont* Id-Cont)
+
+(struct end-cont cont
+  ()
+  #:transparent
+  #:type-name End-Cont)
+;; (define-type End-Cont* (∩ End-Cont [-> ExpVal FinalAnswer]))
+(define-type End-Cont* End-Cont)
 
 
 (define-struct env
@@ -168,3 +200,16 @@
    [rands : (U Var-Exp (Listof Exp))])
   #:transparent
   #:type-name Call-Exp)
+
+
+(define-struct (handlers-exp exp)
+  ([catch-preds : (Listof Exp)]
+   [catch-bodys : (Listof Exp)]
+   [body : Exp])
+  #:transparent
+  #:type-name Handlers-Exp)
+
+(define-struct (raise-exp exp)
+  ([exp : Exp])
+  #:transparent
+  #:type-name Raise-Exp)

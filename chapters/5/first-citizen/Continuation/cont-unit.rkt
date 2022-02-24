@@ -10,18 +10,19 @@
   (import)
   (export cont^)
 
-  (: id-cont [-> Cont])
-  (define id-cont (λ () (λ (val) (final-answer val))))
+  (: id-cont* [-> Id-Cont*])
+  (define id-cont* (λ () (id-cont 'id-cont id-cont* final-answer)))
 
-  (: end-cont [-> Cont])
-  (define end-cont
+  (: end-cont* [-> End-Cont*])
+  (define end-cont*
     (λ ()
-      (displayln "End of Computation!")
-      (id-cont)))
+      (end-cont 'end-cont end-cont*
+                (ann (λ (val)
+                       (displayln "End of Computation!")
+                       (final-answer val))
+                     [-> ExpVal FinalAnswer]))))
 
-  (: apply-cont [-> Cont ExpVal FinalAnswer])
-  (define apply-cont
-    (λ (cont val)
-      (cont val)))
+  (: apply-cont [-> Cont* ExpVal FinalAnswer])
+  (define apply-cont (λ (cont* val) ((cont-func cont*) val)))
 
   )

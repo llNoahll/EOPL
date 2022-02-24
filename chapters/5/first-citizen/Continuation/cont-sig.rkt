@@ -7,7 +7,7 @@
 
 (define-signature cont^
   (
-   [id-cont    : [-> Cont]]
-   [end-cont   : [-> Cont]]
-   [apply-cont : [-> Cont ExpVal FinalAnswer]]
+   [id-cont*   : [-> Id-Cont*]]
+   [end-cont*  : [-> End-Cont*]]
+   [apply-cont : [-> Cont* ExpVal FinalAnswer]]
    ))

@@ -76,6 +76,17 @@
                         #t
                         (or ,@(cdr exps)))))]
 
+      [`(with-handlers ([,(? s-exp? #{pred-exps : S-List})
+                         ,(? s-exp? #{handler-exps : S-List})]
+                        ...)
+          ,(? s-exp? #{body-exps : S-List})
+          ..1)
+       `(handlers-exp (list ,@(map parser pred-exps))
+                      (list ,@(map parser handler-exps))
+                      (begin-exp
+                        (list ,@(map parser body-exps))))]
+      [`(raise ,(? s-exp? exp)) `(raise-exp ,(parser exp))]
+
       [`(let ([,(? symbol? #{bind-vars : (Listof Symbol)})
                ,(? s-exp?  #{bind-exps : S-List})]
               ...)

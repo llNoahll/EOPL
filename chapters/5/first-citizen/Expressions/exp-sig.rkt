@@ -7,5 +7,5 @@
 
 (define-signature exp^
   (
-   [value-of/k : [-> Exp Env Cont FinalAnswer]]
+   [value-of/k : [-> Exp Env Cont* FinalAnswer]]
    ))

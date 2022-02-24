@@ -32,8 +32,7 @@
            (make-env 'empty-env
                      (λ ([search-var : Symbol]) : Boolean #f)
                      (λ ([search-var : Symbol]) : Nothing (report-no-binding-found search-var)))])
-      (λ ()
-        empty-environment)))
+      (λ () empty-environment)))
 
   (: empty-env? [-> Env Boolean])
   (define empty-env? (λ (env) (eqv? (env-type env) 'empty-env)))

@@ -164,3 +164,10 @@
 (pretty-print (parser '(let ([n 0])
                          (set! n (+ n 1))
                          n)))
+
+(pretty-print (parser '(let ([n 1])
+                         (with-handlers ([(λ (arg) (eq? arg 0))
+                                          (λ (arg) (displayln "raise a value: ZERO."))]
+                                         [(λ (arg) (eq? arg 1))
+                                          (λ (arg) (displayln "raise a value: ONE."))])
+                           (raise n)))))

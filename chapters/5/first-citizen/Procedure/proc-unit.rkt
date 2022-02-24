@@ -1,6 +1,7 @@
 #lang typed/racket
 
 (require "../types/types.rkt"
+         "../Continuation/cont-sig.rkt"
          "../Expressions/exp-sig.rkt"
          "../Environment/env-sig.rkt"
          "proc-sig.rkt")
@@ -9,7 +10,7 @@
 
 
 (define-unit proc@
-  (import env^ exp^)
+  (import cont^ env^ exp^)
   (export proc^)
 
   (: proc? [-> Any Boolean : Proc])
@@ -39,9 +40,9 @@
                                          (empty-env))
                        )))
 
-  (: apply-procedure/k [-> Proc (Listof DenVal) Cont FinalAnswer])
+  (: apply-procedure/k [-> Proc (Listof DenVal) Cont* FinalAnswer])
   (define apply-procedure/k
-    (λ (proc vals cont)
+    (λ (proc vals saved-cont)
       (: vars (U Symbol (Listof Symbol)))
       (define vars (proc-vars proc))
 
@@ -61,11 +62,13 @@
                       (extend-env* vars
                                    vals
                                    (proc-saved-env proc)))
-                  (ann (λ (result)
-                         (when (trace-proc? proc)
-                           (displayln (format "result: ~a\n" result)))
-                         (cont result))
-                       Cont))))
+                  (cont 'apply-procedure-cont
+                        (λ () saved-cont)
+                        (ann (λ (result)
+                          (when (trace-proc? proc)
+                            (displayln (format "result: ~a\n" result)))
+                               (apply-cont saved-cont result))
+                             [-> ExpVal FinalAnswer])))))
 
 
   (: free-binds [-> (Listof Symbol) Exp Env (Listof (Pair Symbol Ref))])
