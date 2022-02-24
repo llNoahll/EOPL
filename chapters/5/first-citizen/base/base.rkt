@@ -124,7 +124,7 @@
          (num-val (apply func
                          (expval->num val-1)
                          (map (λ ([val : DenVal]) : Real
-                                  (expval->num val))
+                                (expval->num val))
                               vals)))]
         [_ (error 'n-ary-arithmetic-func "Bad args: ~s" vals)]))))
 
@@ -134,7 +134,7 @@
     (λ vals
       (bool-val (apply func
                        (map (λ ([val : DenVal]) : Boolean
-                                (expval->bool val))
+                              (expval->bool val))
                             vals))))))
 
 
@@ -162,17 +162,17 @@
                               [`(,val) (bool-val (not (expval->bool val)))]
                               [_ (error 'unary-func "Bad args: ~s" vals)])))
 (add-primitive-proc! 'car (λ [vals : DenVal *] : ExpVal
-                              (match vals
-                                [`(,val) (car (expval->pair val))]
-                                [_ (error 'unary-func "Bad args: ~s" vals)])))
+                            (match vals
+                              [`(,val) (car (expval->pair val))]
+                              [_ (error 'unary-func "Bad args: ~s" vals)])))
 (add-primitive-proc! 'cdr (λ [vals : DenVal *] : ExpVal
-                              (match vals
-                                [`(,val) (cdr (expval->pair val))]
-                                [_ (error 'unary-func "Bad args: ~s" vals)])))
+                            (match vals
+                              [`(,val) (cdr (expval->pair val))]
+                              [_ (error 'unary-func "Bad args: ~s" vals)])))
 (add-primitive-proc! 'null? (λ [vals : DenVal *] : ExpVal
-                                (match vals
-                                  [`(,val) (bool-val (null? val))]
-                                  [_ (error 'unary-func "Bad args: ~s" vals)])))
+                              (match vals
+                                [`(,val) (bool-val (null? val))]
+                                [_ (error 'unary-func "Bad args: ~s" vals)])))
 
 
 (add-primitive-proc! 'read (nullary-IO-func read))
@@ -198,15 +198,15 @@
 
 
 (add-primitive-proc! 'cons (λ [vals : DenVal *] : ExpVal
-                               (match vals
-                                 [`(,val-1 ,val-2) (pair-val (cons val-1 val-2))]
-                                 [_ (error 'binary-func "Bad args: ~s" vals)])))
+                             (match vals
+                               [`(,val-1 ,val-2) (pair-val (cons val-1 val-2))]
+                               [_ (error 'binary-func "Bad args: ~s" vals)])))
 
 (add-primitive-proc! 'apply-primitive (λ [vals : DenVal *] : ExpVal
-                                          (match vals
-                                            [`(,(? symbol? val-1) ,(? list? val-2))
-                                             (apply (hash-ref primitive-proc-table val-1) val-2)]
-                                            [_ (error 'binary-func "Bad args: ~s" vals)])))
+                                        (match vals
+                                          [`(,(? symbol? val-1) ,(? list? val-2))
+                                           (apply (hash-ref primitive-proc-table val-1) val-2)]
+                                          [_ (error 'binary-func "Bad args: ~s" vals)])))
 
 
 (add-primitive-proc! '+ (n-ary-arithmetic-func +))
@@ -216,12 +216,12 @@
 
 (add-primitive-proc! 'list (λ [vals : DenVal *] : ExpVal (list-val vals)))
 (add-primitive-proc! 'format (λ [vals : DenVal *] : ExpVal
-                                 (match vals
-                                   [`(,str ,args ...)
-                                    (if (string? str)
-                                        (string-val (apply format str args))
-                                        (error 'format "Bad arg: ~s" str))]
-                                   [_ (error 'n-ary-func "Bad args: ~s" vals)])))
+                               (match vals
+                                 [`(,str ,args ...)
+                                  (if (string? str)
+                                      (string-val (apply format str args))
+                                      (error 'format "Bad arg: ~s" str))]
+                                 [_ (error 'n-ary-func "Bad args: ~s" vals)])))
 
 
 (base-env (extend-env 'apply

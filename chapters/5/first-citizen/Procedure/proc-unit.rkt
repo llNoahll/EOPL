@@ -42,7 +42,7 @@
 
   (: apply-procedure/k [-> Proc (Listof DenVal) Cont* FinalAnswer])
   (define apply-procedure/k
-    (λ (proc vals saved-cont)
+    (λ (proc vals cont*)
       (: vars (U Symbol (Listof Symbol)))
       (define vars (proc-vars proc))
 
@@ -63,11 +63,11 @@
                                    vals
                                    (proc-saved-env proc)))
                   (cont 'apply-procedure-cont
-                        (λ () saved-cont)
+                        (inherit-handlers-cont* cont*)
                         (ann (λ (result)
-                          (when (trace-proc? proc)
-                            (displayln (format "result: ~a\n" result)))
-                               (apply-cont saved-cont result))
+                               (when (trace-proc? proc)
+                                 (displayln (format "result: ~a\n" result)))
+                               (apply-cont cont* result))
                              [-> ExpVal FinalAnswer])))))
 
 

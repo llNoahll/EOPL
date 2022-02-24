@@ -7,7 +7,11 @@
 
 (define-signature cont^
   (
-   [id-cont*   : [-> Id-Cont*]]
-   [end-cont*  : [-> End-Cont*]]
-   [apply-cont : [-> Cont* ExpVal FinalAnswer]]
+   [id-cont*  : [-> Id-Cont*]]
+   [end-cont* : [-> End-Cont*]]
+
+   [apply-cont    : [-> Cont* ExpVal FinalAnswer]]
+   [apply-handler : [-> Cont* DenVal FinalAnswer]]
+
+   [inherit-handlers-cont* : [-> Cont* (Option Handlers-Cont*)]]
    ))

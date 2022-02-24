@@ -47,7 +47,7 @@
 
 (struct cont
   ([type : Symbol]
-   [saved-cont : [-> Cont*]]
+   [handlers-cont* : (Option Handlers-Cont*)]
    [func : [-> ExpVal FinalAnswer]])
   ;; #:property prop:procedure
   ;; (ann (λ (self val) ((cont-func self) val))
