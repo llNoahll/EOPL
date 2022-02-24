@@ -29,9 +29,9 @@
 
   (: apply-handler [-> Cont* DenVal FinalAnswer])
   (define apply-handler
-    (λ (cont* val)
+    (λ (cont* ex)
       (: args (Listof DenVal))
-      (define args (list val))
+      (define args (list ex))
 
       (let loop : FinalAnswer ([handlers-cont* (inherit-handlers-cont* cont*)])
         (if (handlers-cont? handlers-cont*)
@@ -49,7 +49,7 @@
                                     (apply-procedure/k (car handlers) args handlers-cont*)
                                     (check (cdr preds) (cdr handlers))))
                               [-> ExpVal FinalAnswer])))))
-            (error "uncaught exception: " val)))))
+            (error "uncaught exception: " ex)))))
 
   (: inherit-handlers-cont* [-> Cont* (Option Handlers-Cont*)])
   (define inherit-handlers-cont*
