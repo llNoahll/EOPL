@@ -292,7 +292,7 @@
 (displayln (*check-code* '(and #f #t #f) (base-env) base-eval-ns))
 
 
-(displayln (*check-code* '(+ 10 (let/cc k (+ 1 (k 2))))
+(displayln (*check-code* '(+ 10 (let/cc cc (+ 1 (cc 2))))
                          (base-env) base-eval-ns))
 (displayln (*check-code* '(let ()
                             (displayln
@@ -306,6 +306,36 @@
                             (define fact
                               (λ (n)
                                 (let ([ls (let/cc cc (list cc n 1))])
+                                  (define cc  (car ls))
+                                  (define n   (car (cdr ls)))
+                                  (define res (car (cdr (cdr ls))))
+                                  (if (zero? n)
+                                      res
+                                      (cc (list cc (sub1 n) (* n res)))))))
+
+                            (list (fact 0)
+                                  (fact 1)
+                                  (fact 2)
+                                  (fact 3)
+                                  (fact 4)
+                                  (fact 5)))
+                         (base-env) base-eval-ns))
+
+(displayln (*check-code* '(+ 10 (call/cc (λ (cc) (+ 1 (cc 2)))) )
+                         (base-env) base-eval-ns))
+(displayln (*check-code* '(let ()
+                            (displayln
+                             (call/cc
+                              (λ (cc)
+                                (displayln 'hello)
+                                (cc 'cc)
+                                (displayln 'world))))
+                            (displayln 456))
+                         (base-env) base-eval-ns))
+(displayln (*check-code* '(begin
+                            (define fact
+                              (λ (n)
+                                (let ([ls (call/cc (λ (cc) (list cc n 1)))])
                                   (define cc  (car ls))
                                   (define n   (car (cdr ls)))
                                   (define res (car (cdr (cdr ls))))

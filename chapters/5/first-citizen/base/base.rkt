@@ -268,3 +268,10 @@
                                (base-env)
                                (id-cont*)))
                       (base-env)))
+
+(base-env (extend-env 'call/cc
+                      (expval->denval
+                       (*eval* '(λ (cont) (let/cc cc (cont cc)))
+                               (base-env)
+                               (id-cont*)))
+                      (base-env)))
