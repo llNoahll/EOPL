@@ -163,20 +163,28 @@
           rator env
           (cont 'call-rator-cont
                 (inherit-handlers-cont* cont*)
-                (ann (λ (val)
-                       (define proc (expval->proc val))
+                (ann (λ (caller)
+                       (unless (or (proc? caller) (cont? caller))
+                         (raise-argument-error 'value-of/k "caller?" caller))
+
                        (if (var-exp? rands)
                            (value-of/k
                             rands env
                             (cont 'call-rator-cont
                                   (inherit-handlers-cont* cont*)
                                   (ann (λ (args)
-                                         (apply-procedure/k proc (cast args (Listof DenVal)) cont*))
+                                         (cond [(proc? caller)
+                                                (apply-procedure/k caller (cast args (Listof DenVal)) cont*)]
+                                               [(cont? caller)
+                                                (apply-cont caller (car (cast args (Listof DenVal))))]))
                                        [-> ExpVal FinalAnswer])))
                            (let loop : FinalAnswer
                                 ([rands rands] [args : (Listof DenVal) '()])
                              (if (null? rands)
-                                 (apply-procedure/k proc (reverse args) cont*)
+                                 (cond [(proc? caller)
+                                        (apply-procedure/k caller (reverse args) cont*)]
+                                       [(cont? caller)
+                                        (apply-cont caller (car (last-pair args)))])
                                  (value-of/k
                                   (car rands) env
                                   (cont 'call-rator-cont

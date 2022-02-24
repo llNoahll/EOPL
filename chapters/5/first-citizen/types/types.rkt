@@ -35,6 +35,7 @@
 
 (define-type DenVal (U Literal Undefined
                        Proc Trace-Proc
+                       Cont
                        Null (Pair DenVal DenVal)))
 (define-predicate denval? DenVal)
 

@@ -226,8 +226,7 @@
 
 (base-env (extend-env 'apply
                       (proc-val (procedure '(func args)
-                                           (call-exp (var-exp 'func)
-                                                     (var-exp 'args))
+                                           (call-exp (var-exp 'func) (var-exp 'args))
                                            (empty-env)))
                       (base-env)))
 

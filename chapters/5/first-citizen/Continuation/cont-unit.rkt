@@ -24,8 +24,8 @@
                        (final-answer val))
                      [-> ExpVal FinalAnswer]))))
 
-  (: apply-cont [-> Cont* ExpVal FinalAnswer])
-  (define apply-cont (λ (cont* val) ((cont-func cont*) val)))
+  (: apply-cont [-> Cont ExpVal FinalAnswer])
+  (define apply-cont (λ (cont val) ((cont-func cont) val)))
 
   (: apply-handler [-> Cont* DenVal FinalAnswer])
   (define apply-handler
