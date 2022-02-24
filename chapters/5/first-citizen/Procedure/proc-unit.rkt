@@ -76,9 +76,7 @@
     (λ (vars exp env)
       (match exp
         [(assign-exp var exp)
-         (free-binds vars
-                     (begin-exp (list (var-exp var) exp))
-                     env)]
+         (free-binds vars (begin-exp (list (var-exp var) exp)) env)]
 
         [(or (symbol-exp _) (const-exp _) (bool-exp _) (char-exp _) (string-exp _)) '()]
 
@@ -107,10 +105,11 @@
                      env)]
 
         [(let-exp bind-vars bind-exps body)
-         (cond [(null? bind-exps) (free-binds vars body env)]
+         (cond [(or (null? bind-vars) (null? bind-exps))
+                (free-binds vars body env)]
                [else
                 (define args-free-binds (free-binds vars (begin-exp bind-exps) env))
-                (define new-env (extend-env-bind+ args-free-binds (empty-env)))
+                (define new-env (extend-env-bind+ args-free-binds env))
                 (define body-free-binds (free-binds (append vars bind-vars) body new-env))
 
                 (append args-free-binds body-free-binds)])]
@@ -123,11 +122,14 @@
 
          (free-binds (append vars bind-vars) (begin-exp (cons body bind-exps)) new-env)]
 
+        [(let/cc-exp cc-var body) (free-binds (cons cc-var vars) body env)]
+
         [(primitive-proc-exp _ exps)
          (if (null? exps)
              '()
              (free-binds vars (begin-exp exps) env))]
-        [(or (trace-proc-exp proc-vars body) (proc-exp proc-vars body))
+        [(or (trace-proc-exp proc-vars body)
+             (proc-exp proc-vars body))
          #:when (not (false? body))
          (free-binds (if (symbol? proc-vars)
                          (cons proc-vars vars)

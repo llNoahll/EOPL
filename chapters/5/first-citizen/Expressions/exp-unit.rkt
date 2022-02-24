@@ -101,6 +101,8 @@
                                         (loop (cdr exps) (cdr vars)))
                                       [-> ExpVal FinalAnswer])))))]
 
+        [(let/cc-exp cc-var body) (value-of/k body (extend-env cc-var cont* env) cont*)]
+
         [(handlers-exp catch-preds catch-handlers body)
          (let loop : FinalAnswer
               ([pred-exps    catch-preds]

@@ -173,6 +173,13 @@
   #:type-name Letrec-Exp)
 
 
+(define-struct (let/cc-exp exp)
+  ([cc-var : Symbol]
+   [body : Exp])
+  #:transparent
+  #:type-name Let/CC-Exp)
+
+
 (define-struct (begin-exp exp)
   ([exps : (Pair Exp (Listof Exp))])
   #:transparent

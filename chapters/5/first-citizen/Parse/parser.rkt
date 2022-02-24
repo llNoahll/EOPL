@@ -10,19 +10,19 @@
   (λ (code)
     (match code
       [`(quote ,(? symbol? symbol)) `(symbol-exp ',symbol)]
-      [`(quote ,(? boolean? bool)) `(bool-exp ,bool)]
-      [`(quote ,(? real? num)) `(const-exp ,num)]
-      [`(quote ,(? string? str)) `(string-exp ,str)]
-      [`(quote ,(? char? ch)) `(char-exp ,ch)]
+      [`(quote ,(? boolean? bool))  `(bool-exp ,bool)]
+      [`(quote ,(? real? num))      `(const-exp ,num)]
+      [`(quote ,(? string? str))    `(string-exp ,str)]
+      [`(quote ,(? char? ch))       `(char-exp ,ch)]
       [`(quote ,(? s-list? ls))
        (parser `(list ,@(map (λ ([arg : S-Exp]) : S-Exp
                                  `(quote ,arg))
                              ls)))]
 
       [(? boolean? bool) `(bool-exp ,bool)]
-      [(? real? num) `(const-exp ,num)]
-      [(? string? str) `(string-exp ,str)]
-      [(? char? ch) `(char-exp ,ch)]
+      [(? real? num)     `(const-exp ,num)]
+      [(? string? str)   `(string-exp ,str)]
+      [(? char? ch)      `(char-exp ,ch)]
 
       [(? symbol? var) `(var-exp ',var)]
 
@@ -83,8 +83,7 @@
           ..1)
        `(handlers-exp (list ,@(map parser pred-exps))
                       (list ,@(map parser handler-exps))
-                      (begin-exp
-                        (list ,@(map parser body-exps))))]
+                      ,(parser `(begin ,@body-exps)))]
       [`(raise ,(? s-exp? exp)) `(raise-exp ,(parser exp))]
 
       [`(let ([,(? symbol? #{bind-vars : (Listof Symbol)})
@@ -131,6 +130,12 @@
                                 (cdr bind-vars)
                                 (cdr bind-exps)))
                  ,@body-exps))))]
+
+
+      [`(let/cc ,(? symbol? cc-var)
+          ,(? s-exp? #{body-exps : S-List})
+          ..1)
+       `(let/cc-exp ',cc-var ,(parser `(begin ,@body-exps)))]
 
 
       [`(,(? λ?) ,(? symbol? args)

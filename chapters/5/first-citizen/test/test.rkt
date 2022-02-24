@@ -3,26 +3,26 @@
 (require "../base/base.rkt")
 
 
-(value-of (let-exp
-           '(x)
-           (list (const-exp 10))
-           (proc-exp
-            '()
-            (begin-exp
-              (list
-               (if-exp
-                (call-exp (var-exp 'zero?) (list (var-exp 'x)))
-                (const-exp 1)
-                (begin-exp
-                  (list
-                   ;; (assign-exp
-                   ;;  'x
-                   ;;  (call-exp (var-exp '-) (list (var-exp 'x) (const-exp 1))))
-                   (var-exp 'x))))))))
-          (base-env)
-          (end-cont*))
+(value-of/k (let-exp
+             '(x)
+             (list (const-exp 10))
+             (proc-exp
+              '()
+              (begin-exp
+                (list
+                 (if-exp
+                  (call-exp (var-exp 'zero?) (list (var-exp 'x)))
+                  (const-exp 1)
+                  (begin-exp
+                    (list
+                     ;; (assign-exp
+                     ;;  'x
+                     ;;  (call-exp (var-exp '-) (list (var-exp 'x) (const-exp 1))))
+                     (var-exp 'x))))))))
+            (base-env)
+            (end-cont*))
 
-;; (value-of
+;; (value-of/k
 ;;  (let-exp
 ;;   '(x)
 ;;   (list (const-exp 0))

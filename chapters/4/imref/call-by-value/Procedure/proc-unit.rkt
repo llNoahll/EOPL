@@ -113,7 +113,7 @@
          (cond [(null? bind-exps) (free-binds vars body env)]
                [else
                 (define args-free-binds (free-binds vars (begin-exp bind-exps) env))
-                (define new-env (extend-env-bind+ args-free-binds (empty-env)))
+                (define new-env (extend-env-bind+ args-free-binds env))
                 (define body-free-binds (free-binds (append vars bind-vars) body new-env))
 
                 (append args-free-binds body-free-binds)])]
