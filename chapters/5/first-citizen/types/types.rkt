@@ -28,8 +28,9 @@
 
 
 (define-struct ref
-  ([val : (Boxof DenVal)])
+  ([val : DenVal])
   #:transparent
+  #:mutable
   #:type-name Ref)
 
 
