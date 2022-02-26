@@ -109,8 +109,7 @@
 
 (define-struct env
   ([type : (U 'empty-env 'extend-env 'extend-env-rec)]
-   [has-binding? : [-> Symbol Boolean]]
-   [apply-env-ref : [-> Symbol Ref]])
+   [binds : (Immutable-HashTable Symbol Ref)])
   #:transparent
   #:type-name Env)
 
