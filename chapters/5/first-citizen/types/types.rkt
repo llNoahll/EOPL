@@ -54,17 +54,19 @@
 (: enqueue (All (A) [-> (Queueof A) A (Queueof A)]))
 (define enqueue
   (λ (q arg)
-    (match-define `(,in ,out) q)
-    `(,(cons arg in) ,out)))
+    (match q
+      [`(,in ,out)
+       `(,(cons arg in) ,out)])))
 
 (: dequeue (All (A B) [-> (Queueof A) [-> A (Queueof A) B] B]))
 (define dequeue
   (λ (q f)
-    (match-define `(,in ,out) q)
-    (cond [(null? out)
-           (define l (reverse in))
-           (f (car l) `(() ,(cdr l)))]
-          [else (f (car out) `(,in ,(cdr out)))])))
+    (match q
+      [`(,in ())
+       (define l (reverse in))
+       (f (car l) `(() ,(cdr l)))]
+      [`(,in (,1st . ,out))
+       (f 1st `(,in ,out))])))
 
 
 (define-type Thd [-> ExpVal])
