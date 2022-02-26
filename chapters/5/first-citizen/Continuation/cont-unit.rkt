@@ -1,6 +1,7 @@
 #lang typed/racket
 
 (require "../types/types.rkt"
+         "../Scheduler/sche-sig.rkt"
          "../ExpValues/values-sig.rkt"
          "../Procedure/proc-sig.rkt"
          "cont-sig.rkt")
@@ -9,23 +10,52 @@
 
 
 (define-unit cont@
-  (import values^ proc^)
+  (import sche^ values^ proc^)
   (export cont^)
 
   (: id-cont* [-> Id-Cont*])
-  (define id-cont* (λ () (id-cont 'id-cont #f final-answer)))
+  (define id-cont*
+    (let ([cont (id-cont 'id-cont #f final-answer)])
+      (λ () cont)))
 
   (: end-cont* [-> End-Cont*])
   (define end-cont*
-    (λ ()
-      (end-cont 'end-cont #f
-                (ann (λ (val)
-                       (displayln "End of Computation!")
-                       (final-answer val))
-                     [-> ExpVal FinalAnswer]))))
+    (let ([cont (end-cont 'end-cont #f
+                          (ann (λ (val)
+                                 #;(displayln "End of Computation!")
+                                 (final-answer val))
+                               [-> ExpVal FinalAnswer]))])
+      (λ () cont)))
+
+  (: end-subthread-cont* [-> End-Cont*])
+  (define end-subthread-cont*
+    (let ([cont (end-cont 'end-subthread-cont #f
+                          (ann (λ (val)
+                                 #;(displayln "End subthread!")
+                                 (run-next-thread))
+                               [-> ExpVal FinalAnswer]))])
+      (λ () cont)))
+
+  (: end-main-thread-cont* [-> End-Cont*])
+  (define end-main-thread-cont*
+    (let ([cont (end-cont 'end-main-thread-cont #f
+                          (ann (λ (val)
+                                 (set-final-answer! (final-answer val))
+                                 #;(displayln "End main thread!")
+                                 (run-next-thread))
+                               [-> ExpVal FinalAnswer]))])
+      (λ () cont)))
 
   (: apply-cont [-> Cont ExpVal FinalAnswer])
-  (define apply-cont (λ (cont val) ((cont-func cont) val)))
+  (define apply-cont
+    (λ (cont val)
+      (cond [(time-expired?)
+             (place-on-ready-queue!
+              (λ () (apply-cont cont val)))
+             (run-next-thread)]
+            [else
+             (decrement-timer!)
+             ((cont-func cont) val)])))
 
   (: apply-handler [-> Cont* DenVal FinalAnswer])
   (define apply-handler

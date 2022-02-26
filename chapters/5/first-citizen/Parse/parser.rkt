@@ -86,6 +86,8 @@
                       ,(parser `(begin ,@body-exps)))]
       [`(raise ,(? s-exp? exp)) `(raise-exp ,(parser exp))]
 
+      [`(spawn ,(? s-exp? exp)) `(spawn-exp ,(parser exp))]
+
       [`(let ([,(? symbol? #{bind-vars : (Listof Symbol)})
                ,(? s-exp?  #{bind-exps : S-List})]
               ...)

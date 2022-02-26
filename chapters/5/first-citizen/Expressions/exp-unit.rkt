@@ -3,6 +3,7 @@
 (require "../types/types.rkt"
          "../Reference/ref-sig.rkt"
          "../Continuation/cont-sig.rkt"
+         "../Scheduler/sche-sig.rkt"
          "../ExpValues/values-sig.rkt"
          "../Environment/env-sig.rkt"
          "../Procedure/proc-sig.rkt"
@@ -13,7 +14,7 @@
 
 
 (define-unit exp@
-  (import ref^ cont^ values^ env^ proc^ primitive-proc^)
+  (import ref^ cont^ sche^ values^ env^ proc^ primitive-proc^)
   (export exp^)
 
 
@@ -140,6 +141,29 @@
           (cont 'raise-cont
                 (inherit-handlers-cont* cont*)
                 (ann (λ (val) (apply-handler cont* (expval->denval val)))
+                     [-> ExpVal FinalAnswer])))]
+
+        [(spawn-exp exp)
+         (value-of/k
+          exp env
+          (cont 'spawn-cont
+                (inherit-handlers-cont* cont*)
+                (ann (λ (caller)
+                       (: spawn-thd Thd)
+                       (define spawn-thd
+                         (cond [(proc? caller)
+                                (λ ()
+                                  (apply-procedure/k caller
+                                                     (list undefined)
+                                                     (end-subthread-cont*)))]
+                               [(cont? caller)
+                                (λ ()
+                                  (apply-cont (end-subthread-cont*)
+                                              (apply-cont caller undefined)))]
+                               [else (raise-argument-error 'value-of/k "caller?" caller)]))
+
+                       (place-on-ready-queue! spawn-thd)
+                       (apply-cont cont* (void)))
                      [-> ExpVal FinalAnswer])))]
 
         [(primitive-proc-exp op exps)

@@ -7,8 +7,10 @@
 
 (define-signature cont^
   (
-   [id-cont*  : [-> Id-Cont*]]
-   [end-cont* : [-> End-Cont*]]
+   [id-cont*              : [-> Id-Cont*]]
+   [end-cont*             : [-> End-Cont*]]
+   [end-subthread-cont*   : [-> End-Cont*]]
+   [end-main-thread-cont* : [-> End-Cont*]]
 
    [apply-cont    : [-> Cont  ExpVal FinalAnswer]]
    [apply-handler : [-> Cont* DenVal FinalAnswer]]

@@ -42,9 +42,32 @@
 (define-type ExpVal (U DenVal Void Nothing))
 (define-predicate expval? ExpVal)
 
-
 (define-new-subtype FinalAnswer (final-answer ExpVal))
 (define-predicate final-answer? FinalAnswer)
+
+(define-type (Queueof A) (List (Listof A) (Listof A)))
+(define-predicate empty-queue? (Queueof Nothing))
+
+(: empty-queue [-> (Queueof Nothing)])
+(define empty-queue (let ([empty-q '(() ())]) (λ () empty-q)))
+
+(: enqueue (All (A) [-> (Queueof A) A (Queueof A)]))
+(define enqueue
+  (λ (q arg)
+    (match-define `(,in ,out) q)
+    `(,(cons arg in) ,out)))
+
+(: dequeue (All (A B) [-> (Queueof A) [-> A (Queueof A) B] B]))
+(define dequeue
+  (λ (q f)
+    (match-define `(,in ,out) q)
+    (cond [(null? out)
+           (define l (reverse in))
+           (f (car l) `(() ,(cdr l)))]
+          [else (f (car out) `(,in ,(cdr out)))])))
+
+
+(define-type Thd [-> ExpVal])
 
 (struct cont
   ([type : Symbol]
@@ -221,3 +244,9 @@
   ([exp : Exp])
   #:transparent
   #:type-name Raise-Exp)
+
+
+(define-struct (spawn-exp exp)
+  ([exp : Exp])
+  #:transparent
+  #:type-name Spawn-Exp)

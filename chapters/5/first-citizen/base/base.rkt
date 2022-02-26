@@ -6,6 +6,8 @@
          "../Reference/ref-unit.rkt"
          "../Continuation/cont-sig.rkt"
          "../Continuation/cont-unit.rkt"
+         "../Scheduler/sche-sig.rkt"
+         "../Scheduler/sche-unit.rkt"
          "../ExpValues/values-sig.rkt"
          "../ExpValues/values-unit.rkt"
          "../PrimitiveProc/primitive-proc-sig.rkt"
@@ -35,20 +37,20 @@
 
 (define-compound-unit/infer base@
   (import)
-  (export ref^ cont^ values^ env^ proc^ primitive-proc^ exp^)
-  (link   ref@ cont@ values@ env@ proc@ primitive-proc@ exp@))
+  (export ref^ cont^ sche^ values^ env^ proc^ primitive-proc^ exp^)
+  (link   ref@ cont@ sche@ values@ env@ proc@ primitive-proc@ exp@))
 
 (define-values/invoke-unit base@
   (import)
-  (export ref^ cont^ values^ env^ proc^ primitive-proc^ exp^))
+  (export ref^ cont^ sche^ values^ env^ proc^ primitive-proc^ exp^))
 
 
 (define-namespace-anchor ns-anchor)
 (define eval-ns (namespace-anchor->namespace ns-anchor))
 
-(: *eval* [-> S-Exp Env Cont* ExpVal])
+(: *eval* [->* (S-Exp Env Cont*) (Exact-Positive-Integer) ExpVal])
 (define *eval*
-  (λ (code env cont)
+  (λ (code env cont [timeslice 1])
     (: exp Exp)
     (define exp
       (assert (call-with-values
@@ -56,7 +58,9 @@
                (λ args (car args)))
               exp?))
 
+
     ;; (pretty-print code)
+    (initialize-scheduler! timeslice)
     (value-of/k exp env cont)))
 
 
