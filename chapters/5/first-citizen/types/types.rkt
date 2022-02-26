@@ -56,7 +56,7 @@
   (λ (q arg)
     (match q
       [`(,in ,out)
-       `(,(cons arg in) ,out)])))
+       `((,arg . ,in) ,out)])))
 
 (: dequeue (All (A B) [-> (Queueof A) [-> A (Queueof A) B] B]))
 (define dequeue
