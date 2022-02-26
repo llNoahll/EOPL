@@ -46,7 +46,7 @@
       (make-env 'extend-env
                 (for/fold ([res : (Immutable-HashTable Symbol Ref)
                                 (env-binds saved-env)])
-                          ([var vars] [val vals])
+                          ([var (in-list vars)] [val (in-list vals)])
                   (hash-set res var (newref val))))))
 
   (: extend-env+ [-> (Listof (Pair Symbol DenVal)) Env Env])
@@ -55,7 +55,7 @@
       (make-env 'extend-env
                 (for/fold ([res : (Immutable-HashTable Symbol Ref)
                                 (env-binds saved-env)])
-                          ([bind binds])
+                          ([bind (in-list binds)])
                   (hash-set res (car bind) (newref (cdr bind)))))))
 
   (: extend-env-bind [-> Symbol Ref Env Env])
@@ -69,7 +69,7 @@
       (make-env 'extend-env
                 (for/fold ([res : (Immutable-HashTable Symbol Ref)
                                 (env-binds saved-env)])
-                          ([var vars] [ref refs])
+                          ([var (in-list vars)] [ref (in-list refs)])
                   (hash-set res var ref)))))
 
   (: extend-env-bind+ [-> (Listof (Pair Symbol Ref)) Env Env])
@@ -78,7 +78,7 @@
       (make-env 'extend-env
                 (for/fold ([res : (Immutable-HashTable Symbol Ref)
                                 (env-binds saved-env)])
-                          ([bind binds])
+                          ([bind (in-list binds)])
                   (hash-set res (car bind) (cdr bind))))))
 
 
