@@ -4,6 +4,7 @@
          "../Reference/ref-sig.rkt"
          "../Continuation/cont-sig.rkt"
          "../Scheduler/sche-sig.rkt"
+         "../Mutex/mut-sig.rkt"
          "../ExpValues/values-sig.rkt"
          "../Environment/env-sig.rkt"
          "../Procedure/proc-sig.rkt"
@@ -14,7 +15,7 @@
 
 
 (define-unit exp@
-  (import ref^ cont^ sche^ values^ env^ proc^ primitive-proc^)
+  (import ref^ cont^ sche^ mut^ values^ env^ proc^ primitive-proc^)
   (export exp^)
 
 
@@ -164,6 +165,36 @@
 
                        (place-on-ready-queue! spawn-thd)
                        (apply-cont cont* (void)))
+                     [-> ExpVal FinalAnswer])))]
+
+        [(mutex-exp exp)
+         (value-of/k
+          exp env
+          (cont 'mutex-cont
+                (inherit-handlers-cont* cont*)
+                (ann (λ (keys)
+                       (apply-cont cont*
+                                   (mutex-val (mutex (assert keys natural?) (empty-queue)))))
+                     [-> ExpVal FinalAnswer])))]
+        [(wait-exp exp)
+         (value-of/k
+          exp env
+          (cont 'wait-cont
+                (inherit-handlers-cont* cont*)
+                (ann (λ (mut)
+                       (wait-for-mutex
+                        (expval->mutex mut)
+                        (λ () (apply-cont cont* (void)))))
+                     [-> ExpVal FinalAnswer])))]
+        [(signal-exp exp)
+         (value-of/k
+          exp env
+          (cont 'signal-cont
+                (inherit-handlers-cont* cont*)
+                (ann (λ (mut)
+                       (signal-mutex
+                        (expval->mutex mut)
+                        (λ () (apply-cont cont* (void)))))
                      [-> ExpVal FinalAnswer])))]
 
         [(primitive-proc-exp op exps)

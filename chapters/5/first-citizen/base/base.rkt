@@ -8,6 +8,8 @@
          "../Continuation/cont-unit.rkt"
          "../Scheduler/sche-sig.rkt"
          "../Scheduler/sche-unit.rkt"
+         "../Mutex/mut-sig.rkt"
+         "../Mutex/mut-unit.rkt"
          "../ExpValues/values-sig.rkt"
          "../ExpValues/values-unit.rkt"
          "../PrimitiveProc/primitive-proc-sig.rkt"
@@ -37,12 +39,12 @@
 
 (define-compound-unit/infer base@
   (import)
-  (export ref^ cont^ sche^ values^ env^ proc^ primitive-proc^ exp^)
-  (link   ref@ cont@ sche@ values@ env@ proc@ primitive-proc@ exp@))
+  (export ref^ cont^ sche^ mut^ values^ env^ proc^ primitive-proc^ exp^)
+  (link   ref@ cont@ sche@ mut@ values@ env@ proc@ primitive-proc@ exp@))
 
 (define-values/invoke-unit base@
   (import)
-  (export ref^ cont^ sche^ values^ env^ proc^ primitive-proc^ exp^))
+  (export ref^ cont^ sche^ mut^ values^ env^ proc^ primitive-proc^ exp^))
 
 
 (define-namespace-anchor ns-anchor)

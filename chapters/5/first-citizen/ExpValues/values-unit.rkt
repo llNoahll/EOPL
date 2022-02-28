@@ -34,6 +34,9 @@
   (: proc-val [-> Proc DenVal])
   (define proc-val (λ (proc) proc))
 
+  (: mutex-val [-> Mutex DenVal])
+  (define mutex-val (λ (mut) mut))
+
 
   (: expval->num [-> ExpVal Real])
   (define expval->num (λ (val) (assert val real?)))
@@ -58,6 +61,9 @@
 
   (: expval->proc [-> ExpVal Proc])
   (define expval->proc (λ (val) (assert val proc?)))
+
+  (: expval->mutex [-> ExpVal Mutex])
+  (define expval->mutex (λ (val) (assert val mutex?)))
 
 
   (: expval->denval [-> ExpVal DenVal])
@@ -88,6 +94,7 @@
              (cons (expval->s-expval (car val))
                    (expval->s-expval (cdr val)))]
             [(proc? val) val]
+            [(mutex? val) val]
             [else
              (raise-argument-error 'expval->s-expval "s-expval?" val)])))
 

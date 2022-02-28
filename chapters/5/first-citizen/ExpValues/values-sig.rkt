@@ -15,6 +15,7 @@
    [pair-val   : [-> (Pair DenVal DenVal) DenVal]]
    [list-val   : [-> (Listof DenVal) DenVal]]
    [proc-val   : [-> Proc DenVal]]
+   [mutex-val  : [-> Mutex DenVal]]
 
    [expval->symbol : [-> ExpVal Symbol]]
    [expval->num    : [-> ExpVal Real]]
@@ -24,6 +25,7 @@
    [expval->pair   : [-> ExpVal (Pair DenVal DenVal)]]
    [expval->list   : [-> ExpVal (Listof DenVal)]]
    [expval->proc   : [-> ExpVal Proc]]
+   [expval->mutex  : [-> ExpVal Mutex]]
 
    [expval->denval : [-> ExpVal DenVal]]
    [expval->s-expval : [-> ExpVal Any]]

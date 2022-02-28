@@ -36,7 +36,7 @@
 
 (define-type DenVal (U Literal Undefined
                        Proc Trace-Proc
-                       Cont
+                       Cont Mutex
                        Null (Pair DenVal DenVal)))
 (define-predicate denval? DenVal)
 
@@ -125,6 +125,14 @@
   ()
   #:transparent
   #:type-name Trace-Proc)
+
+
+(define-struct mutex
+  ([keys : Natural]
+   [wait-queue : (Queueof Thd)])
+  #:transparent
+  #:mutable
+  #:type-name Mutex)
 
 
 (define-struct exp ()
@@ -252,3 +260,18 @@
   ([exp : Exp])
   #:transparent
   #:type-name Spawn-Exp)
+
+(define-struct (mutex-exp exp)
+  ([exp : Exp])
+  #:transparent
+  #:type-name Mutex-Exp)
+
+(define-struct (wait-exp exp)
+  ([exp : Exp])
+  #:transparent
+  #:type-name Wait-Exp)
+
+(define-struct (signal-exp exp)
+  ([exp : Exp])
+  #:transparent
+  #:type-name Signal-Exp)

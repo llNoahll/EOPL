@@ -56,11 +56,9 @@
 
       (value-of/k (proc-body proc)
                   (if (symbol? vars)
-                      (extend-env  vars
-                                   vals
+                      (extend-env  vars vals
                                    (proc-saved-env proc))
-                      (extend-env* vars
-                                   vals
+                      (extend-env* vars vals
                                    (proc-saved-env proc)))
                   (cont 'apply-procedure-cont
                         (inherit-handlers-cont* cont*)
@@ -78,7 +76,12 @@
         [(assign-exp var exp)
          (free-binds vars (begin-exp (list (var-exp var) exp)) env)]
 
-        [(or (symbol-exp _) (const-exp _) (bool-exp _) (char-exp _) (string-exp _)) '()]
+        [(or (symbol-exp _)
+             (const-exp _)
+             (bool-exp _)
+             (char-exp _)
+             (string-exp _))
+         '()]
 
         [(var-exp var)
          (if (memq var vars)
@@ -123,6 +126,17 @@
          (free-binds (append vars bind-vars) (begin-exp (cons body bind-exps)) new-env)]
 
         [(let/cc-exp cc-var body) (free-binds (cons cc-var vars) body env)]
+        [(handlers-exp catch-preds catch-handlers body)
+         (if (or (null? catch-preds) (null? catch-handlers))
+             (free-binds vars body env)
+             (free-binds vars
+                         (begin-exp (cons body (append catch-preds catch-handlers)))
+                         env))]
+        [(raise-exp  exp) (free-binds vars exp env)]
+        [(spawn-exp  exp) (free-binds vars exp env)]
+        [(mutex-exp  exp) (free-binds vars exp env)]
+        [(wait-exp   exp) (free-binds vars exp env)]
+        [(signal-exp exp) (free-binds vars exp env)]
 
         [(primitive-proc-exp _ exps)
          (if (null? exps)

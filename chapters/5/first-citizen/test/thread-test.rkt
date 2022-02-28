@@ -12,8 +12,8 @@
                      [else
                       (displayln (car l))
                       (noisy (cdr l))])))
-           (spawn (λ (d) (noisy '(0 1 2 3 4))))
-           (spawn (λ (d) (noisy '(5 6 7 8 9))))
+           (spawn (λ (_) (noisy '(0 1 2 3 4))))
+           (spawn (λ (_) (noisy '(5 6 7 8 9))))
            (displayln 100)
            33)
         (base-env) (end-main-thread-cont*))
@@ -23,13 +23,13 @@
            (define buffer 0)
            (define procedure
              (λ (n)
-               (define wait
+               (define justwait
                  (λ (k)
                    (cond [(zero? k) (set! buffer n)]
                          [else
                           (displayln (- k -200))
-                          (wait (- k 1))])))
-               (wait 5)))
+                          (justwait (- k 1))])))
+               (justwait 5)))
            (define consumer
              (λ (d)
                (define busywait
@@ -40,7 +40,7 @@
                          [else buffer])))
                (busywait 0)))
 
-           (spawn (λ (d) (procedure 44)))
+           (spawn (λ (_) (procedure 44)))
            (displayln 300)
            (consumer 86))
         (base-env) (end-main-thread-cont*))
@@ -53,5 +53,48 @@
            (spawn (incr-x 100))
            (spawn (incr-x 200))
            (spawn (incr-x 300))
+           (spawn (incr-x 400))
+           (spawn (incr-x 500))
+           x)
+        (base-env) (end-main-thread-cont*))
+
+(displayln "\n----------------------------------------------")
+(*eval* '(begin
+           (define x 0)
+           (define mut (mutex))
+           (define incr-x
+             (λ (id)
+               (λ (_)
+                 (wait mut)
+                 (displayln (format "before: x = ~a" x))
+                 (set! x (- x -1))
+                 (displayln (format "after: x = ~a" x))
+                 (signal mut))))
+
+           (spawn (incr-x 100))
+           (spawn (incr-x 200))
+           (spawn (incr-x 300))
+           (spawn (incr-x 400))
+           (spawn (incr-x 500))
+           x)
+        (base-env) (end-main-thread-cont*))
+
+(displayln "\n----------------------------------------------")
+(*eval* '(begin
+           (define x 0)
+           (define mut (mutex 2))
+           (define incr-x
+             (λ (id)
+               (λ (_)
+                 (with-mutex mut
+                   (displayln (format "before: x = ~a" x))
+                   (set! x (- x -1))
+                   (displayln (format "after: x = ~a" x))))))
+
+           (spawn (incr-x 100))
+           (spawn (incr-x 200))
+           (spawn (incr-x 300))
+           (spawn (incr-x 400))
+           (spawn (incr-x 500))
            x)
         (base-env) (end-main-thread-cont*))
