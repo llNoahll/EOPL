@@ -43,10 +43,10 @@
       (if (empty-queue? the-ready-queue)
           the-final-answer
           (dequeue the-ready-queue
-                   (ann (λ (1st-read-thd other-ready-thds)
+                   (ann (λ (1st-ready-thd other-ready-thds)
                           (set! the-ready-queue other-ready-thds)
                           (set! the-time-remaining the-max-time-slice)
-                          (final-answer (1st-read-thd)))
+                          (final-answer (1st-ready-thd)))
                         [-> Thd (Queueof Thd) FinalAnswer])))))
 
   (: set-final-answer! [-> ExpVal Void])
