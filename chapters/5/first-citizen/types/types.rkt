@@ -38,13 +38,17 @@
                        Proc Trace-Proc
                        Cont Mutex
                        Null (Pair DenVal DenVal)))
-(define-predicate denval? DenVal)
+(define-predicate denval?  DenVal)
+(define-predicate denpair? (Pair DenVal DenVal))
+(define-predicate denlist? (Listof DenVal))
 
 (define-type ExpVal (U DenVal Void Nothing))
 (define-predicate expval? ExpVal)
 
 (define-new-subtype FinalAnswer (final-answer ExpVal))
 (define-predicate final-answer? FinalAnswer)
+
+(define-type Thd [-> ExpVal])
 
 (define-type (Queueof A) (List (Listof A) (Listof A)))
 (define-predicate empty-queue? (Queueof Nothing))
@@ -70,52 +74,35 @@
        (f 1st `(,in ,out))])))
 
 
-(define-type Thd [-> ExpVal])
+(define-type Cont (Listof Frame))
+(define-predicate cont? Cont)
 
-(struct cont
+(define-type Handlers-Cont (Pair Handlers-Frame Cont))
+(define-predicate handlers-cont? Handlers-Cont)
+
+(struct frame
   ([type : Symbol]
-   [handlers-cont* : (Option Handlers-Cont*)]
-   [func : [-> ExpVal FinalAnswer]])
-  ;; #:property prop:procedure
-  ;; (ann (λ (self val) ((cont-func self) val))
-  ;;      [-> Cont ExpVal FinalAnswer])
+   [handlers-cont : (Option Handlers-Cont)]
+   [func : [-> Cont [-> ExpVal FinalAnswer]]])
   #:transparent
-  #:type-name Cont)
-;; (define-type Cont* (∩ Cont [-> ExpVal FinalAnswer]))
-(define-type Cont* Cont)
+  #:type-name Frame)
 
-(struct handlers-cont cont
+(struct handlers-frame frame
   ([preds    : (Listof Proc)]
    [handlers : (Listof Proc)])
   #:transparent
-  #:type-name Handlers-Cont)
-;; (define-type Handlers-Cont* (∩ Handlers-Cont [-> ExpVal FinalAnswer]))
-(define-type Handlers-Cont* Handlers-Cont)
-
-(struct id-cont cont
-  ()
-  #:transparent
-  #:type-name Id-Cont)
-;; (define-type Id-Cont* (∩ Id-Cont [-> ExpVal FinalAnswer]))
-(define-type Id-Cont* Id-Cont)
-
-(struct end-cont cont
-  ()
-  #:transparent
-  #:type-name End-Cont)
-;; (define-type End-Cont* (∩ End-Cont [-> ExpVal FinalAnswer]))
-(define-type End-Cont* End-Cont)
+  #:type-name Handlers-Frame)
 
 
 (define-struct env
-  ([type : (U 'empty-env 'extend-env 'extend-env-rec)]
+  ([type  : (U 'empty-env 'extend-env 'extend-env-rec)]
    [binds : (Immutable-HashTable Symbol Ref)])
   #:transparent
   #:type-name Env)
 
 
 (define-struct proc
-  ([vars : (U Symbol (Listof Symbol))]
+  ([vars : (U Symbol (Listof Symbol))]  ; Symbol is used for `apply'.
    [body : Exp]
    [saved-env : Env])
   #:transparent

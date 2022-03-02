@@ -16,7 +16,7 @@
            (spawn (λ (_) (noisy '(5 6 7 8 9))))
            (displayln 100)
            33)
-        (base-env) (end-main-thread-cont*))
+        (base-env) (end-main-thread-cont))
 
 (displayln "\n----------------------------------------------")
 (*eval* '(begin
@@ -43,7 +43,7 @@
            (spawn (λ (_) (procedure 44)))
            (displayln 300)
            (consumer 86))
-        (base-env) (end-main-thread-cont*))
+        (base-env) (end-main-thread-cont))
 
 (displayln "\n----------------------------------------------")
 (*eval* '(begin
@@ -56,7 +56,7 @@
            (spawn (incr-x 400))
            (spawn (incr-x 500))
            x)
-        (base-env) (end-main-thread-cont*))
+        (base-env) (end-main-thread-cont))
 
 (displayln "\n----------------------------------------------")
 (*eval* '(begin
@@ -77,7 +77,7 @@
            (spawn (incr-x 400))
            (spawn (incr-x 500))
            x)
-        (base-env) (end-main-thread-cont*))
+        (base-env) (end-main-thread-cont))
 
 (displayln "\n----------------------------------------------")
 (*eval* '(begin
@@ -97,4 +97,4 @@
            (spawn (incr-x 400))
            (spawn (incr-x 500))
            x)
-        (base-env) (end-main-thread-cont*))
+        (base-env) (end-main-thread-cont))

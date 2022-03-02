@@ -11,6 +11,9 @@
 (pretty-print (parser '#\a))
 (pretty-print (parser '"b"))
 
+(pretty-print (parser '(not #t)))
+(pretty-print (parser '(not #f)))
+
 (pretty-print (parser '(minus -9)))
 (pretty-print (parser '(minus i)))
 (pretty-print (parser '(minus x)))

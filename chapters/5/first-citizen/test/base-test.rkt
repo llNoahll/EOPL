@@ -6,7 +6,7 @@
 ;; (: *check-code* [-> S-Exp Env Namespace Boolean])
 (define *check-code*
   (λ (code env eval-ns)
-    (equal? (*eval* code env (end-cont*))
+    (equal? (*eval* code env (end-cont))
             (eval code eval-ns))))
 
 

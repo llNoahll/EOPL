@@ -27,7 +27,6 @@
    [expval->proc   : [-> ExpVal Proc]]
    [expval->mutex  : [-> ExpVal Mutex]]
 
-   [expval->denval : [-> ExpVal DenVal]]
-   [expval->s-expval : [-> ExpVal Any]]
+   [expval->denval   : [-> ExpVal DenVal]]
    [s-expval->expval : [-> Any ExpVal]]
    ))

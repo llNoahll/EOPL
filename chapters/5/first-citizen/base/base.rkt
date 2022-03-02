@@ -50,7 +50,7 @@
 (define-namespace-anchor ns-anchor)
 (define eval-ns (namespace-anchor->namespace ns-anchor))
 
-(: *eval* [->* (S-Exp Env Cont*) (Exact-Positive-Integer) ExpVal])
+(: *eval* [->* (S-Exp Env Cont) (Exact-Positive-Integer) ExpVal])
 (define *eval*
   (λ (code env cont [timeslice 1])
     (: exp Exp)
@@ -96,7 +96,7 @@
   (λ (func)
     (λ vals
       (match vals
-        [`(,val) (s-expval->expval (func (expval->s-expval val)))]
+        [`(,val) (s-expval->expval (func val))]
         [_ (error 'unary-func "Bad args: ~s" vals)]))))
 
 
@@ -163,7 +163,7 @@
 (add-primitive-proc! 'zero? (unary-arithmetic-pred zero?))
 (add-primitive-proc! 'sub1 (unary-arithmetic-func sub1))
 (add-primitive-proc! 'add1 (unary-arithmetic-func add1))
-(add-primitive-proc! 'not (λ vals
+(add-primitive-proc! 'not (λ [vals : DenVal *] : ExpVal
                             (match vals
                               [`(,val) (bool-val (not (expval->bool val)))]
                               [_ (error 'unary-func "Bad args: ~s" vals)])))
@@ -210,9 +210,9 @@
 
 (add-primitive-proc! 'apply-primitive (λ [vals : DenVal *] : ExpVal
                                         (match vals
-                                          [`(,(? symbol? val-1) ,(? list? val-2))
+                                          [`(,(? symbol? val-1) ,(? denlist? val-2))
                                            (apply (hash-ref primitive-proc-table val-1) val-2)]
-                                          [_ (error 'binary-func "Bad args: ~s" vals)])))
+                                          [_ (error 'n-ary-func "Bad args: ~s" vals)])))
 
 
 (add-primitive-proc! '+ (n-ary-arithmetic-func +))
@@ -245,7 +245,7 @@
                                      (f (λ args
                                           (apply (recur-func recur-func) args))))))
                                (base-env)
-                               (id-cont*)))
+                               (id-cont)))
                       (base-env)))
 
 
@@ -258,7 +258,7 @@
                                            (cons (func (car ls))
                                                  (map func (cdr ls)))))))
                                (base-env)
-                               (id-cont*)))
+                               (id-cont)))
                       (base-env)))
 
 (base-env (extend-env 'Y*
@@ -272,12 +272,12 @@
                                               (apply (apply func (recur-funcs recur-funcs)) args)))
                                           funcs))))
                                (base-env)
-                               (id-cont*)))
+                               (id-cont)))
                       (base-env)))
 
 (base-env (extend-env 'call/cc
                       (expval->denval
                        (*eval* '(λ (cont) (let/cc cc (cont cc)))
                                (base-env)
-                               (id-cont*)))
+                               (id-cont)))
                       (base-env)))

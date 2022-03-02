@@ -40,9 +40,9 @@
                                          (empty-env))
                        )))
 
-  (: apply-procedure/k [-> Proc (Listof DenVal) Cont* FinalAnswer])
+  (: apply-procedure/k [-> Proc (Listof DenVal) Cont FinalAnswer])
   (define apply-procedure/k
-    (λ (proc vals cont*)
+    (λ (proc vals cont)
       (: vars (U Symbol (Listof Symbol)))
       (define vars (proc-vars proc))
 
@@ -60,13 +60,15 @@
                                    (proc-saved-env proc))
                       (extend-env* vars vals
                                    (proc-saved-env proc)))
-                  (cont 'apply-procedure-cont
-                        (inherit-handlers-cont* cont*)
-                        (ann (λ (result)
-                               (when (trace-proc? proc)
-                                 (displayln (format "result: ~a\n" result)))
-                               (apply-cont cont* result))
-                             [-> ExpVal FinalAnswer])))))
+                  (cons (frame 'apply-procedure-frame
+                               (inherit-handlers-cont cont)
+                               (ann (λ (cont)
+                                      (λ (result)
+                                        (when (trace-proc? proc)
+                                          (displayln (format "result: ~a\n" result)))
+                                        (apply-cont cont result)))
+                                    [-> Cont [-> ExpVal FinalAnswer]]))
+                        cont))))
 
 
   (: free-binds [-> (Listof Symbol) Exp Env (Listof (Pair Symbol Ref))])

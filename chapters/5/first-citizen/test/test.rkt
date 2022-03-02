@@ -20,7 +20,7 @@
                      ;;  (call-exp (var-exp '-) (list (var-exp 'x) (const-exp 1))))
                      (var-exp 'x))))))))
             (base-env)
-            (end-cont*))
+            (end-cont))
 
 ;; (value-of/k
 ;;  (let-exp
@@ -62,4 +62,4 @@
 ;;          (assign-exp 'x (const-exp 13))
 ;;          (call-exp (var-exp 'odd) (list))))))))
 ;;  (base-env)
-;;  (end-cont*))
+;;  (end-cont))

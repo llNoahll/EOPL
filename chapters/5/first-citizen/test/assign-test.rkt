@@ -7,7 +7,7 @@
            (set! n (+ n 1))
            n)
         (base-env)
-        (end-cont*))
+        (end-cont))
 
 
 (*eval*
@@ -27,7 +27,7 @@
       (set! x 13)
       (odd)))
  (base-env)
- (end-cont*))
+ (end-cont))
 
 
 (*eval*
@@ -39,7 +39,7 @@
          [b (g)])
     (displayln (format "a = ~a, b = ~a" a b)))
  (base-env)
- (end-cont*))
+ (end-cont))
 
 
 (*eval*
@@ -49,7 +49,7 @@
                          (- (times4 (- x 1)) -4)))])
     (displayln (times4 3)))
  (base-env)
- (end-cont*))
+ (end-cont))
 
 
 (*eval*
@@ -61,7 +61,7 @@
             (- (times4 (- x 1)) -4))))
     (displayln (times4 3)))
  (base-env)
- (end-cont*))
+ (end-cont))
 
 
 (*eval*
@@ -71,11 +71,11 @@
     (set! x 13)
     (displayln (p)))
  (base-env)
- (end-cont*))
+ (end-cont))
 
 
 ;; (*eval*
 ;;  '(let ([n (read)])
 ;;     (displayln n))
 ;;  (base-env)
-;;  (end-cont*))
+;;  (end-cont))

@@ -4,11 +4,11 @@
 
 (value-of/k (if-exp (bool-exp #t) (const-exp 1) (const-exp 2))
             (base-env)
-            (end-cont*))
+            (end-cont))
 
 (value-of/k (if-exp (bool-exp #f) (const-exp 1) (const-exp 2))
             (base-env)
-            (end-cont*))
+            (end-cont))
 
 (value-of/k (proc-exp
              'funcs
@@ -54,4 +54,4 @@
                                   (var-exp 'args)))))))))
                         (var-exp 'funcs)))))))))))
             (base-env)
-            (end-cont*))
+            (end-cont))

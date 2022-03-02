@@ -19,237 +19,309 @@
   (export exp^)
 
 
-  (: value-of/k [-> Exp Env Cont* FinalAnswer])
+  (: value-of/k [-> Exp Env Cont FinalAnswer])
   (define value-of/k
-    (λ (exp env cont*)
-      (match exp
-        [(assign-exp var exp)
-         (value-of/k exp env
-                     (cont 'assign-cont
-                           (inherit-handlers-cont* cont*)
-                           (ann (λ (val) (apply-cont cont* (set-binding! env var (expval->denval val))))
-                                [-> ExpVal FinalAnswer])))]
-        [(symbol-exp sym) (apply-cont cont* (symbol-val sym))]
-        [(const-exp num)  (apply-cont cont* (num-val num))]
-        [(bool-exp bool)  (apply-cont cont* (bool-val bool))]
-        [(char-exp char)  (apply-cont cont* (char-val char))]
-        [(string-exp str) (apply-cont cont* (string-val str))]
-        [(var-exp var)    (apply-cont cont* (apply-env env var))]
+    (let ()
+      (: return [-> Cont [-> ExpVal FinalAnswer]])
+      (define return
+        (λ (cont)
+          (λ (val)
+            (apply-cont cont val))))
 
-        [(begin-exp exps)
-         (let loop : FinalAnswer ([exps exps])
-           (define next (cdr exps))
-           (value-of/k (car exps) env
-                       (if (null? next)
-                           cont*
-                           (cont 'begin-cont
-                                 (inherit-handlers-cont* cont*)
-                                 (ann (λ (val) (loop next))
-                                      [-> ExpVal FinalAnswer])))))]
+      (λ (exp env cont)
+        (match exp
+          [(assign-exp var exp)
+           (value-of/k
+            exp env
+            (cons (frame 'assign-frame
+                          (inherit-handlers-cont cont)
+                          (ann (λ (cont)
+                                 (λ (val)
+                                   (apply-cont cont (set-binding! env var (expval->denval val)))))
+                               [-> Cont [-> ExpVal FinalAnswer]]))
+                  cont))]
+          [(symbol-exp sym) (apply-cont cont (symbol-val sym))]
+          [(const-exp num)  (apply-cont cont (num-val num))]
+          [(bool-exp bool)  (apply-cont cont (bool-val bool))]
+          [(char-exp char)  (apply-cont cont (char-val char))]
+          [(string-exp str) (apply-cont cont (string-val str))]
+          [(var-exp var)    (apply-cont cont (apply-env env var))]
 
-        [(if-exp pred-exp true-exp false-exp)
-         (value-of/k pred-exp env
-                     (cont 'if-cont
-                           (inherit-handlers-cont* cont*)
-                           (ann (λ (pred-val)
-                                  (value-of/k (if (expval->bool pred-val)
-                                                  true-exp
-                                                  false-exp)
-                                              env cont*))
-                                [-> ExpVal FinalAnswer])))]
-        [(cond-exp branches)
-         (let loop : FinalAnswer ([branches branches])
-           (cond [(null? branches) (apply-cont cont* (void))]
+          [(begin-exp exps)
+           (value-of/k
+            (car exps) env
+            (cons (frame 'begin-frame
+                          (inherit-handlers-cont cont)
+                          (ann (λ (cont)
+                                 (λ (val)
+                                   (let ([exps (cdr exps)])
+                                     (if (null? exps)
+                                         (apply-cont cont val)
+                                         (value-of/k (begin-exp exps) env cont)))))
+                               [-> Cont [-> ExpVal FinalAnswer]]))
+                  cont))]
+
+          [(if-exp pred-exp true-exp false-exp)
+           (value-of/k
+            pred-exp env
+            (cons (frame 'if-frame
+                          (inherit-handlers-cont cont)
+                          (ann (λ (cont)
+                                 (λ (pred-val)
+                                   (value-of/k
+                                    (if (expval->bool pred-val)
+                                        true-exp
+                                        false-exp)
+                                    env cont)))
+                               [-> Cont [-> ExpVal FinalAnswer]]))
+                  cont))]
+          [(cond-exp branches)
+           (define branch (car branches))
+           (value-of/k
+            (car branch) env
+            (cons (frame 'cond-frame
+                         (inherit-handlers-cont cont)
+                         (ann (λ (cont)
+                                (λ (pred-val)
+                                  (if (expval->bool pred-val)
+                                      (value-of/k (cadr branch) env cont)
+                                      (let ([next (cdr branches)])
+                                        (if (null? next)
+                                            (apply-cont cont (void))
+                                            (value-of/k (cond-exp next) env cont))))))
+                              [-> Cont [-> ExpVal FinalAnswer]]))
+                  cont))]
+
+          [(let-exp vars exps body)
+           (value-of/k (if (or (null? exps) (null? vars))
+                           body
+                           (call-exp (proc-exp vars body) exps))
+                       env cont)]
+          [(letrec-exp vars exps body)
+           (cond [(or (null? exps) (null? vars))
+                  (value-of/k body env cont)]
                  [else
-                  (define branch (car branches))
-                  (value-of/k (car branch) env
-                              (cont 'cond-cont
-                                    (inherit-handlers-cont* cont*)
-                                    (ann (λ (pred-val)
-                                           (if (expval->bool pred-val)
-                                               (value-of/k (cadr branch) env cont*)
-                                               (loop (cdr branches))))
-                                         [-> ExpVal FinalAnswer])))]))]
+                  (define new-env
+                    (extend-env+ (map (ann (λ (var) (cons var undefined))
+                                           [-> Symbol (Pair Symbol Undefined)])
+                                      vars)
+                                 env))
+                  (value-of/k
+                   (car exps) new-env
+                   (append
+                    (for/list : Cont
+                              ([var (in-list vars)]
+                               [exp (in-list (append (cdr exps) (list body)))])
+                      (frame 'letrec-frame
+                              (inherit-handlers-cont cont)
+                              (ann (λ (cont)
+                                     (λ (val)
+                                       (set-binding! new-env var (expval->denval val))
+                                       (value-of/k exp new-env cont)))
+                                   [-> Cont [-> ExpVal FinalAnswer]])))
+                    cont))])]
 
-        [(let-exp vars exps body)
-         (let loop : FinalAnswer
-              ([exps exps]
-               [vals : (Listof DenVal) '()])
-           (if (null? exps)
-               (value-of/k body
-                           (extend-env* vars (reverse vals) env)
-                           cont*)
-               (value-of/k (car exps) env
-                           (cont 'let-cont
-                                 (inherit-handlers-cont* cont*)
-                                 (ann (λ (val)
-                                        (loop (cdr exps) (cons (expval->denval val) vals)))
-                                      [-> ExpVal FinalAnswer])))))]
-        [(letrec-exp vars exps body)
-         (define new-env
-           (extend-env+ (map (ann (λ (var) (cons var undefined))
-                                  [-> Symbol (Pair Symbol Undefined)])
-                             vars)
-                        env))
+          [(let/cc-exp cc-var body) (value-of/k body (extend-env cc-var cont env) cont)]
 
-         (let loop : FinalAnswer ([exps exps] [vars vars])
-           (if (null? exps)
-               (value-of/k body new-env cont*)
-               (value-of/k (car exps) new-env
-                           (cont 'letrec-cont
-                                 (inherit-handlers-cont* cont*)
-                                 (ann (λ (val)
-                                        (set-binding! new-env (car vars) (expval->denval val))
-                                        (loop (cdr exps) (cdr vars)))
-                                      [-> ExpVal FinalAnswer])))))]
+          [(handlers-exp catch-preds catch-handlers body)
+           (cond
+             [(or (null? catch-preds) (null? catch-handlers))
+              (value-of/k body env cont)]
+             [(= 1 (length catch-preds) (length catch-handlers))
+              (value-of/k
+               (car catch-preds) env
+               (cons
+                (frame
+                 'handlers-frame
+                 (inherit-handlers-cont cont)
+                 (ann (λ (cont)
+                        (λ (val)
+                          (define pred-val (expval->proc val))
+                          (value-of/k
+                           (car catch-handlers) env
+                           (cons
+                            (frame
+                             'handlers-frame
+                             (inherit-handlers-cont cont)
+                             (ann (λ (cont)
+                                    (λ (val)
+                                      (define handler-val (expval->proc val))
+                                      (define frame (car cont))
+                                      (define cont* (cdr cont))
+                                      (value-of/k
+                                       body env
+                                       (cons
+                                        (if (handlers-frame? frame)
+                                            (handlers-frame
+                                             'handlers-frame
+                                             (inherit-handlers-cont cont*)
+                                             (frame-func frame)
+                                             (cons    pred-val (handlers-frame-preds    frame))
+                                             (cons handler-val (handlers-frame-handlers frame)))
+                                            (handlers-frame
+                                             'handlers-frame
+                                             (inherit-handlers-cont cont)
+                                             (frame-func frame)
+                                             (list    pred-val)
+                                             (list handler-val)))
+                                        cont*))))
+                                  [-> Cont [-> ExpVal FinalAnswer]]))
+                            cont))))
+                      [-> Cont [-> ExpVal FinalAnswer]]))
+                cont))]
+             [else
+              (value-of/k
+               (handlers-exp (cdr catch-preds)
+                             (cdr catch-handlers)
+                             (handlers-exp (list (car catch-preds))
+                                           (list (car catch-handlers))
+                                           body))
+               env cont)])]
+          [(raise-exp exp)
+           (value-of/k
+            exp env
+            (cons (frame 'raise-frame
+                          (inherit-handlers-cont cont)
+                          (ann (λ (cont)
+                                 (λ (val)
+                                   (apply-handler cont (expval->denval val))))
+                               [-> Cont [-> ExpVal FinalAnswer]]))
+                  cont))]
 
-        [(let/cc-exp cc-var body) (value-of/k body (extend-env cc-var cont* env) cont*)]
-
-        [(handlers-exp catch-preds catch-handlers body)
-         (let loop : FinalAnswer
-              ([pred-exps    catch-preds]
-               [handler-exps catch-handlers]
-               [pred-vals    : (Listof Proc) '()]
-               [handler-vals : (Listof Proc) '()])
-           (if (or (null? pred-exps) (null? handler-exps))
-               (value-of/k body env
-                           (handlers-cont 'handlers-cont
-                                          (inherit-handlers-cont* cont*)
-                                          (cont-func cont*)
-                                          (reverse pred-vals)
-                                          (reverse handler-vals)))
-               (value-of/k
-                (car pred-exps) env
-                (cont 'handlers-cont
-                      (inherit-handlers-cont* cont*)
-                      (ann (λ (val)
-                             (define pred-val (expval->proc val))
-                             (value-of/k
-                              (car handler-exps) env
-                              (cont 'handlers-cont
-                                    (inherit-handlers-cont* cont*)
-                                    (ann (λ (val)
-                                           (define handler-val (expval->proc val))
-                                           (loop (cdr pred-exps)
-                                                 (cdr handler-exps)
-                                                 (cons pred-val pred-vals)
-                                                 (cons handler-val handler-vals)))
-                                         [-> ExpVal FinalAnswer]))))
-                           [-> ExpVal FinalAnswer])))))]
-        [(raise-exp exp)
-         (value-of/k
-          exp env
-          (cont 'raise-cont
-                (inherit-handlers-cont* cont*)
-                (ann (λ (val) (apply-handler cont* (expval->denval val)))
-                     [-> ExpVal FinalAnswer])))]
-
-        [(spawn-exp exp)
-         (value-of/k
-          exp env
-          (cont 'spawn-cont
-                (inherit-handlers-cont* cont*)
-                (ann (λ (caller)
+          [(spawn-exp exp)
+           (value-of/k
+            exp env
+            (cons
+             (frame
+              'spawn-frame
+              (inherit-handlers-cont cont)
+              (ann (λ (cont)
+                     (λ (op)
                        (: spawn-thd Thd)
                        (define spawn-thd
-                         (cond [(proc? caller)
+                         (cond [(proc? op)
                                 (λ ()
-                                  (apply-procedure/k caller
+                                  (apply-procedure/k op
                                                      (list undefined)
-                                                     (end-subthread-cont*)))]
-                               [(cont? caller)
+                                                     (end-subthread-cont)))]
+                               [(cont? op)
                                 (λ ()
-                                  (apply-cont (end-subthread-cont*)
-                                              (apply-cont caller undefined)))]
-                               [else (raise-argument-error 'value-of/k "caller?" caller)]))
+                                  (apply-cont (end-subthread-cont)
+                                              (apply-cont op undefined)))]
+                               [else (raise-argument-error 'value-of/k "operator?" op)]))
 
                        (place-on-ready-queue! spawn-thd)
-                       (apply-cont cont* (void)))
-                     [-> ExpVal FinalAnswer])))]
+                       (apply-cont cont (void))))
+                   [-> Cont [-> ExpVal FinalAnswer]]))
+             cont))]
 
-        [(mutex-exp exp)
-         (value-of/k
-          exp env
-          (cont 'mutex-cont
-                (inherit-handlers-cont* cont*)
-                (ann (λ (keys)
-                       (apply-cont cont*
-                                   (mutex-val (mutex (assert keys natural?) (empty-queue)))))
-                     [-> ExpVal FinalAnswer])))]
-        [(wait-exp exp)
-         (value-of/k
-          exp env
-          (cont 'wait-cont
-                (inherit-handlers-cont* cont*)
-                (ann (λ (mut)
-                       (wait-for-mutex
-                        (expval->mutex mut)
-                        (λ () (apply-cont cont* (void)))))
-                     [-> ExpVal FinalAnswer])))]
-        [(signal-exp exp)
-         (value-of/k
-          exp env
-          (cont 'signal-cont
-                (inherit-handlers-cont* cont*)
-                (ann (λ (mut)
-                       (signal-mutex
-                        (expval->mutex mut)
-                        (λ () (apply-cont cont* (void)))))
-                     [-> ExpVal FinalAnswer])))]
+          [(mutex-exp exp)
+           (value-of/k
+            exp env
+            (cons (frame 'mutex-frame
+                          (inherit-handlers-cont cont)
+                          (ann (λ (cont)
+                                 (λ (keys)
+                                   (apply-cont cont
+                                               (mutex-val
+                                                (mutex (assert keys natural?)
+                                                       (empty-queue))))))
+                               [-> Cont [-> ExpVal FinalAnswer]]))
+                  cont))]
+          [(wait-exp exp)
+           (value-of/k
+            exp env
+            (cons (frame 'wait-frame
+                          (inherit-handlers-cont cont)
+                          (ann (λ (cont)
+                                 (λ (mut)
+                                   (wait-for-mutex
+                                    (expval->mutex mut)
+                                    (λ () (apply-cont cont (void))))))
+                               [-> Cont [-> ExpVal FinalAnswer]]))
+                  cont))]
+          [(signal-exp exp)
+           (value-of/k
+            exp env
+            (cons (frame 'signal-frame
+                          (inherit-handlers-cont cont)
+                          (ann (λ (cont)
+                                 (λ (mut)
+                                   (signal-mutex
+                                    (expval->mutex mut)
+                                    (λ () (apply-cont cont (void))))))
+                               [-> Cont [-> ExpVal FinalAnswer]]))
+                  cont))]
 
-        [(primitive-proc-exp op exps)
-         (let loop : FinalAnswer
-              ([exps exps]
-               [vals : (Listof DenVal) '()])
-           (if (null? exps)
-               (apply-cont cont*
-                           (apply (hash-ref primitive-proc-table op)
-                                  (reverse vals)))
-               (value-of/k (car exps) env
-                           (cont 'primitive-proc-cont
-                                 (inherit-handlers-cont* cont*)
-                                 (ann (λ (val)
-                                        (loop (cdr exps) (cons (expval->denval val) vals)))
-                                      [-> ExpVal FinalAnswer])))))]
-        [(trace-proc-exp vars body)
-         (apply-cont cont* (proc-val (trace-procedure vars body env)))]
-        [(proc-exp vars body)
-         (apply-cont cont* (proc-val (procedure vars body env)))]
-        [(call-exp rator rands)
-         (value-of/k
-          rator env
-          (cont 'call-rator-cont
-                (inherit-handlers-cont* cont*)
-                (ann (λ (caller)
-                       (unless (or (proc? caller) (cont? caller))
-                         (raise-argument-error 'value-of/k "caller?" caller))
+          [(primitive-proc-exp op exps)
+           (let loop : FinalAnswer
+                ([exps exps]
+                 [vals : (Listof DenVal) '()])
+             (if (null? exps)
+                 (apply-cont cont
+                             (apply (hash-ref primitive-proc-table op)
+                                    (reverse vals)))
+                 (value-of/k (car exps) env
+                             (cons
+                              (frame 'primitive-proc-frame
+                                     (inherit-handlers-cont cont)
+                                     (ann (λ (cont)
+                                            (λ (val)
+                                              (loop (cdr exps)
+                                                    (cons (expval->denval val) vals))))
+                                          [-> Cont [-> ExpVal FinalAnswer]]))
+                              cont))))]
+          [(trace-proc-exp vars body)
+           (apply-cont cont (proc-val (trace-procedure vars body env)))]
+          [(proc-exp vars body)
+           (apply-cont cont (proc-val (procedure vars body env)))]
+          [(call-exp rator rands)
+           (value-of/k
+            rator env
+            (cons
+             (frame
+              'call-rator-frame
+              (inherit-handlers-cont cont)
+              (ann (λ (cont)
+                     (λ (op)
+                       (unless (or (proc? op) (cont? op))
+                         (raise-argument-error 'value-of/k "operator?" op))
 
                        (if (var-exp? rands)
                            (value-of/k
                             rands env
-                            (cont 'call-rator-cont
-                                  (inherit-handlers-cont* cont*)
-                                  (ann (λ (args)
-                                         (cond [(proc? caller)
-                                                (apply-procedure/k caller (cast args (Listof DenVal)) cont*)]
-                                               [(cont? caller)
-                                                (apply-cont caller (car (cast args (Listof DenVal))))]))
-                                       [-> ExpVal FinalAnswer])))
+                            (cons
+                             (frame
+                              'call-rator-frame
+                              (inherit-handlers-cont cont)
+                              (ann (λ (cont)
+                                     (λ (args)
+                                       (cond [(proc? op)
+                                              (apply-procedure/k op (expval->list args) cont)]
+                                             [(cont? op)
+                                              (apply-cont op (car (expval->list args)))])))
+                                   [-> Cont [-> ExpVal FinalAnswer]]))
+                             cont))
                            (let loop : FinalAnswer
                                 ([rands rands] [args : (Listof DenVal) '()])
                              (if (null? rands)
-                                 (cond [(proc? caller)
-                                        (apply-procedure/k caller (reverse args) cont*)]
-                                       [(cont? caller)
-                                        (apply-cont caller (car (last-pair args)))])
+                                 (cond [(proc? op)
+                                        (apply-procedure/k op (reverse args) cont)]
+                                       [(cont? op)
+                                        (apply-cont op (car (last-pair args)))])
                                  (value-of/k
                                   (car rands) env
-                                  (cont 'call-rator-cont
-                                        (inherit-handlers-cont* cont*)
-                                        (ann (λ (arg)
-                                               (loop (cdr rands)
-                                                     (cons (expval->denval arg) args)))
-                                             [-> ExpVal FinalAnswer])))))))
-                     [-> ExpVal FinalAnswer])))])))
+                                  (cons
+                                   (frame
+                                    'call-rator-frame
+                                    (inherit-handlers-cont cont)
+                                    (ann (λ (cont)
+                                           (λ (arg)
+                                             (loop (cdr rands)
+                                                   (cons (expval->denval arg) args))))
+                                         [-> Cont [-> ExpVal FinalAnswer]]))
+                                   cont)))))))
+                   [-> Cont [-> ExpVal FinalAnswer]]))
+             cont))]))))
 
   )

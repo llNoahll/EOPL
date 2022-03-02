@@ -54,10 +54,10 @@
   (define expval->string (λ (val) (assert val string?)))
 
   (: expval->pair [-> ExpVal (Pair DenVal DenVal)])
-  (define expval->pair (λ (val) (cast val (Pair DenVal DenVal))))
+  (define expval->pair (λ (val) (assert val denpair?)))
 
   (: expval->list [-> ExpVal (Listof DenVal)])
-  (define expval->list (λ (val) (cast val (Listof DenVal))))
+  (define expval->list (λ (val) (assert val denlist?)))
 
   (: expval->proc [-> ExpVal Proc])
   (define expval->proc (λ (val) (assert val proc?)))
@@ -71,31 +71,6 @@
 
 
   (: s-expval->expval [-> Any ExpVal])
-  (define s-expval->expval
-    (λ (arg)
-      (if (expval? arg)
-          arg
-          (raise-argument-error 's-expval->expval "expval?" arg))))
-
-  (: expval->s-expval [-> ExpVal Any])
-  (define expval->s-expval
-    (λ (val)
-      (cond [(symbol? val) val]
-            [(real? val) val]
-            [(boolean? val) val]
-            [(char? val) val]
-            [(string? val) val]
-            [(null? val) val]
-            [(list? val)
-             (map (λ (arg)
-                    (expval->s-expval arg))
-                  val)]
-            [(pair? val)
-             (cons (expval->s-expval (car val))
-                   (expval->s-expval (cdr val)))]
-            [(proc? val) val]
-            [(mutex? val) val]
-            [else
-             (raise-argument-error 'expval->s-expval "s-expval?" val)])))
+  (define s-expval->expval (λ (val) (assert val expval?)))
 
   )

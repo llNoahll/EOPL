@@ -18,4 +18,4 @@
                (raise n)
                (displayln "2nd handlers end"))
              (displayln "1st handlers end")))
-        (base-env) (end-cont*))
+        (base-env) (end-cont))

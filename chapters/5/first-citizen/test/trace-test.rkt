@@ -5,7 +5,7 @@
 
 (displayln (*eval* '((trace-lambda (x) x) 0)
                    (base-env)
-                   (end-cont*)))
+                   (end-cont)))
 (displayln (*eval* '(let ([fact
                            (Y (trace-lambda (fact)
                                 (trace-lambda (n)
@@ -14,7 +14,7 @@
                                         [else (* n (fact (- n 1)))]))))])
                       (fact 5))
                    (base-env)
-                   (end-cont*)))
+                   (end-cont)))
 (displayln (*eval* '(letrec ([even? (lambda (num)
                                       (cond [(zero? num) #t]
                                             [(= 1 num) #f]
@@ -32,4 +32,4 @@
                       (displayln (odd? 3))
                       (displayln (odd? 5)))
                    (base-env)
-                   (end-cont*)))
+                   (end-cont)))

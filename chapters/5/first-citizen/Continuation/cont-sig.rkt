@@ -7,13 +7,13 @@
 
 (define-signature cont^
   (
-   [id-cont*              : [-> Id-Cont*]]
-   [end-cont*             : [-> End-Cont*]]
-   [end-subthread-cont*   : [-> End-Cont*]]
-   [end-main-thread-cont* : [-> End-Cont*]]
+   [id-cont              : [-> Null]]
+   [end-cont             : [-> Null]]
+   [end-subthread-cont   : [-> (List Frame)]]
+   [end-main-thread-cont : [-> (List Frame)]]
 
-   [apply-cont    : [-> Cont  ExpVal FinalAnswer]]
-   [apply-handler : [-> Cont* DenVal FinalAnswer]]
+   [apply-cont    : [-> Cont ExpVal FinalAnswer]]
+   [apply-handler : [-> Cont DenVal FinalAnswer]]
 
-   [inherit-handlers-cont* : [-> Cont* (Option Handlers-Cont*)]]
+   [inherit-handlers-cont : [-> Cont (Option Handlers-Cont)]]
    ))
