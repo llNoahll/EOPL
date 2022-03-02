@@ -212,7 +212,7 @@
                                         (match vals
                                           [`(,(? symbol? val-1) ,(? denlist? val-2))
                                            (apply (hash-ref primitive-proc-table val-1) val-2)]
-                                          [_ (error 'n-ary-func "Bad args: ~s" vals)])))
+                                          [_ (error 'binary-func "Bad args: ~s" vals)])))
 
 
 (add-primitive-proc! '+ (n-ary-arithmetic-func +))
