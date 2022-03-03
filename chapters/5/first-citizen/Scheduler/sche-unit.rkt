@@ -35,9 +35,10 @@
   (define place-on-thread-queue
     (λ (thds thk)
       (enqueue thds
-               (thd (if (exact-positive-integer? the-time-remaining)
-                        (assert the-time-remaining exact-positive-integer?)
-                        the-max-time-slice)
+               (thd (let ([the-time the-time-remaining])
+                      (if (exact-positive-integer? the-time)
+                          the-time
+                          the-max-time-slice))
                     (if (thd? thk)
                         (thd-thunk thk)
                         thk)))))
