@@ -59,12 +59,13 @@
 (define dequeue
   (λ (q f)
     (match q
+      ['(() ())
+       (raise-argument-error 'dequeue "non-empty-queue?" q)]
       [`(,in ())
        (define l (reverse in))
        (f (car l) `(() ,(cdr l)))]
       [`(,in (,1st . ,out))
-       (f 1st `(,in ,out))]
-      ['(() ()) (raise-argument-error 'dequeue "non-empty-queue?" q)])))
+       (f 1st `(,in ,out))])))
 
 
 (struct thd
