@@ -136,6 +136,7 @@
                  (with-mutex mut
                    (displayln (format "ptid = ~a, tid = ~a, before: x = ~a"
                                       (get-ptid) (get-tid) x))
+                   (displayln (format "Kill thread ~a: ~a" 5 (kill 5)))
                    (set! x (- x -1))
                    (displayln (format "ptid = ~a, tid = ~a, after: x = ~a"
                                       (get-ptid) (get-tid) x))))))
@@ -147,5 +148,13 @@
            (spawn (incr-x 300))
            (spawn (incr-x 400))
            (spawn (incr-x 500))
+           (displayln (format "Kill thread ~a: ~a" 3 (kill 3)))
            x)
+        (base-env) (end-main-thread-cont))
+
+(displayln "\n----------------------------------------------")
+(*eval* '(begin
+           (displayln "Start")
+           (kill 1)
+           (displayln "End"))
         (base-env) (end-main-thread-cont))

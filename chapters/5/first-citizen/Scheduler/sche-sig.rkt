@@ -8,15 +8,9 @@
 (define-signature sche^
   (
    [initialize-scheduler!  : [-> Exact-Positive-Integer Void]]
-   [place-on-thread-queue  : (case-> [-> (Queueof Thd)
-                                         (U Thd [-> FinalAnswer])
-                                         (Queueof Thd)]
-                                     [-> (Queueof Thd)
-                                         [-> FinalAnswer]
-                                         Natural
-                                         Natural
-                                         (Queueof Thd)])]
-   [place-on-ready-queue!  : (case-> [-> (U Thd [-> FinalAnswer]) Void]
+   [place-on-thread-queue  : (case-> [-> (Queueof Natural) (U Natural [-> FinalAnswer]) (Queueof Natural)]
+                                     [-> (Queueof Natural) [-> FinalAnswer] Natural Natural (Queueof Natural)])]
+   [place-on-ready-queue!  : (case-> [-> (U Natural [-> FinalAnswer]) Void]
                                      [-> [-> FinalAnswer] Natural Natural Void])]
    [run-next-thread        : [-> FinalAnswer]]
    [set-final-answer!      : [-> ExpVal Void]]

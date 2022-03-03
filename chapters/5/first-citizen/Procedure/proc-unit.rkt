@@ -139,6 +139,7 @@
         [(mutex-exp  exp) (free-binds vars exp env)]
         [(wait-exp   exp) (free-binds vars exp env)]
         [(signal-exp exp) (free-binds vars exp env)]
+        [(kill-exp   exp) (free-binds vars exp env)]
         [(yield-exp) '()]
 
         [(primitive-proc-exp _ exps)

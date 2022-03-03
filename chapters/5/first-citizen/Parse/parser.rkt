@@ -83,15 +83,14 @@
        `(handlers-exp (list ,@(map parser pred-exps))
                       (list ,@(map parser handler-exps))
                       ,(parser `(begin ,@body-exps)))]
-      [`(raise ,(? s-exp? exp)) `(raise-exp ,(parser exp))]
-
-      [`(spawn ,(? s-exp? exp)) `(spawn-exp ,(parser exp))]
-
-      ['(mutex) (parser '(mutex 1))]
+      [`(raise  ,(? s-exp? exp)) `(raise-exp  ,(parser exp))]
+      [`(spawn  ,(? s-exp? exp)) `(spawn-exp  ,(parser exp))]
       [`(mutex  ,(? s-exp? exp)) `(mutex-exp  ,(parser exp))]
       [`(wait   ,(? s-exp? exp)) `(wait-exp   ,(parser exp))]
       [`(signal ,(? s-exp? exp)) `(signal-exp ,(parser exp))]
+      [`(kill   ,(? s-exp? exp)) `(kill-exp   ,(parser exp))]
       ['(yield) '(yield-exp)]
+      ['(mutex) (parser '(mutex 1))]
       [`(with-mutex ,(? s-exp? exp)
           ,(? s-exp? #{body-exps : S-List})
           ..1)

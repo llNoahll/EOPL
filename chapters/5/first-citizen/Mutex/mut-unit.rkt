@@ -31,10 +31,10 @@
          (if (empty-queue? wait-queue)
              (set-mutex-keys! mut (add1 keys))
              (dequeue wait-queue
-                      (ann (λ (1st-waiting-thd other-waiting-thds)
-                             (place-on-ready-queue! 1st-waiting-thd)
-                             (set-mutex-wait-queue! mut other-waiting-thds))
-                           [-> Thd (Queueof Thd) Void])))
+                      (ann (λ (1st-waiting-tid other-waiting-tids)
+                             (place-on-ready-queue! 1st-waiting-tid)
+                             (set-mutex-wait-queue! mut other-waiting-tids))
+                           [-> Natural (Queueof Natural) Void])))
          (thk)])))
 
   )

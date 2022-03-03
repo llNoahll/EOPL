@@ -7,7 +7,7 @@
 (provide sche@)
 
 
-(: the-ready-queue (Queueof Thd))
+(: the-ready-queue (Queueof Natural))
 (define the-ready-queue (empty-queue))
 
 (: the-final-answer FinalAnswer)
@@ -33,31 +33,32 @@
       (set! the-time-remaining the-max-time-slice)))
 
   (: place-on-thread-queue
-     (case-> [-> (Queueof Thd) (U Thd [-> FinalAnswer]) (Queueof Thd)]
-             [-> (Queueof Thd) [-> FinalAnswer] Natural Natural (Queueof Thd)]))
+     (case-> [-> (Queueof Natural) (U Natural [-> FinalAnswer]) (Queueof Natural)]
+             [-> (Queueof Natural) [-> FinalAnswer] Natural Natural (Queueof Natural)]))
   (define place-on-thread-queue
     (case-lambda
-      [(thds th)
-       (if (thd? th)
-           (enqueue thds th)
-           (place-on-thread-queue thds th (get-ptid) (get-tid)))]
+      [(thds t)
+       (if (natural? t)
+           (enqueue thds t)
+           (place-on-thread-queue thds t (get-ptid) (get-tid)))]
       [(thds thk ptid tid)
-       (enqueue thds
-                (thd ptid
-                     tid
-                     (let ([the-time the-time-remaining])
-                       (if (exact-positive-integer? the-time)
-                           the-time
-                           the-max-time-slice))
-                     thk))]))
+       (define th
+         (thd ptid tid
+              (let ([the-time the-time-remaining])
+                (if (exact-positive-integer? the-time)
+                    the-time
+                    the-max-time-slice))
+              thk))
+       (add-thread! tid th)
+       (enqueue thds tid)]))
 
   (: place-on-ready-queue!
-     (case-> [-> (U Thd [-> FinalAnswer]) Void]
+     (case-> [-> (U Natural [-> FinalAnswer]) Void]
              [-> [-> FinalAnswer] Natural Natural Void]))
   (define place-on-ready-queue!
     (case-lambda
-      [(th)
-       (set! the-ready-queue (place-on-thread-queue the-ready-queue th))]
+      [(t)
+       (set! the-ready-queue (place-on-thread-queue the-ready-queue t))]
       [(thk ptid tid)
        (set! the-ready-queue (place-on-thread-queue the-ready-queue thk ptid tid))]))
 
@@ -67,11 +68,15 @@
       (if (empty-queue? the-ready-queue)
           the-final-answer
           (dequeue the-ready-queue
-                   (ann (λ (1st-ready-thd other-ready-thds)
-                          (set! the-ready-queue other-ready-thds)
-                          (set! the-time-remaining (thd-time-slice 1st-ready-thd))
-                          (apply-thd 1st-ready-thd))
-                        [-> Thd (Queueof Thd) FinalAnswer])))))
+                   (ann (λ (1st-ready-tid other-ready-tids)
+                          (define th (get-thread 1st-ready-tid))
+
+                          (set! the-ready-queue other-ready-tids)
+                          (cond [(boolean? th) (run-next-thread)]
+                                [(thd? th)
+                                 (set! the-time-remaining (thd-time-slice th))
+                                 (apply-thd th)]))
+                        [-> Natural (Queueof Natural) FinalAnswer])))))
 
   (: set-final-answer! [-> ExpVal Void])
   (define set-final-answer!

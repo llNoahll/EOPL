@@ -257,8 +257,21 @@
                               [-> Cont [-> ExpVal FinalAnswer]]))
                   cont))]
           [(yield-exp)
-           (place-on-ready-queue! (λ () (apply-cont cont (num-val 99))))
+           (place-on-ready-queue! (λ () (apply-cont cont (num-val (get-tid)))))
            (run-next-thread)]
+          [(kill-exp exp)
+           (value-of/k
+            exp env
+            (cons (frame 'kill-frame
+                         (inherit-handlers-cont cont)
+                         (ann (λ (cont)
+                                (λ (tid)
+                                  (define res (kill-thread! (assert tid natural?)))
+                                  (if (boolean? res)
+                                      (apply-cont cont (bool-val res))
+                                      (run-next-thread))))
+                              [-> Cont [-> ExpVal FinalAnswer]]))
+                  cont))]
 
           [(primitive-proc-exp op exps)
            (let loop : FinalAnswer

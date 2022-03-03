@@ -130,7 +130,7 @@
 
 (define-struct mutex
   ([keys : Natural]
-   [wait-queue : (Queueof Thd)])
+   [wait-queue : (Queueof Natural)])
   #:transparent
   #:mutable
   #:type-name Mutex)
@@ -276,6 +276,11 @@
   ([exp : Exp])
   #:transparent
   #:type-name Signal-Exp)
+
+(define-struct (kill-exp exp)
+  ([exp : Exp])
+  #:transparent
+  #:type-name Kill-Exp)
 
 (define-struct (yield-exp exp)
   ()
