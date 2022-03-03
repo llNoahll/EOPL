@@ -3,6 +3,7 @@
 (require "../types/types.rkt"
          "../Reference/ref-sig.rkt"
          "../Continuation/cont-sig.rkt"
+         "../Thread/thd-sig.rkt"
          "../Scheduler/sche-sig.rkt"
          "../Mutex/mut-sig.rkt"
          "../ExpValues/values-sig.rkt"
@@ -15,7 +16,7 @@
 
 
 (define-unit exp@
-  (import ref^ cont^ sche^ mut^ values^ env^ proc^ primitive-proc^)
+  (import ref^ cont^ thd^ sche^ mut^ values^ env^ proc^ primitive-proc^)
   (export exp^)
 
 
@@ -197,21 +198,24 @@
               (inherit-handlers-cont cont)
               (ann (λ (cont)
                      (λ (op)
+                       (: spawn-tid Natural)
+                       (define spawn-tid (get-nid))
+
                        (: spawn-thk [-> FinalAnswer])
                        (define spawn-thk
                          (cond [(proc? op)
                                 (λ ()
                                   (apply-procedure/k op
-                                                     (list undefined)
+                                                     (list (num-val spawn-tid))
                                                      (end-subthread-cont)))]
                                [(cont? op)
                                 (λ ()
                                   (apply-cont (end-subthread-cont)
-                                              (apply-cont op undefined)))]
+                                              (apply-cont op (num-val spawn-tid))))]
                                [else (raise-argument-error 'value-of/k "operator?" op)]))
 
-                       (place-on-ready-queue! spawn-thk)
-                       (apply-cont cont (void))))
+                       (place-on-ready-queue! spawn-thk (get-tid) spawn-tid)
+                       (apply-cont cont (num-val spawn-tid))))
                    [-> Cont [-> ExpVal FinalAnswer]]))
              cont))]
 

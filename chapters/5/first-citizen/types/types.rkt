@@ -36,7 +36,7 @@
 
 (define-type DenVal (U Literal Undefined
                        Proc Trace-Proc
-                       Cont Mutex
+                       Cont Mutex Thread-Identifier
                        Null (Pair DenVal DenVal)))
 (define-predicate denval?  DenVal)
 (define-predicate denpair? (Pair DenVal DenVal))
@@ -74,14 +74,18 @@
 
 
 (struct thd
-  ([time-slice : Exact-Positive-Integer]
+  ([ptid : Natural]
+   [tid  : Natural]
+   [time-slice : Exact-Positive-Integer]
    [thunk : [-> FinalAnswer]])
-  #:property prop:procedure
-  (ann (λ (self) ((thd-thunk self)))
-       [-> Thd FinalAnswer])
   #:transparent
   #:type-name Thd)
-(define-type Thd* (∩ Thd [-> FinalAnswer]))
+
+(struct thread-identifier
+  ([tid  : Natural]
+   [ptid : Natural])
+  #:transparent
+  #:type-name Thread-Identifier)
 
 
 (define-type Cont (Listof Frame))
@@ -126,7 +130,7 @@
 
 (define-struct mutex
   ([keys : Natural]
-   [wait-queue : (Queueof Thd*)])
+   [wait-queue : (Queueof Thd)])
   #:transparent
   #:mutable
   #:type-name Mutex)

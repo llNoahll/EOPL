@@ -6,6 +6,8 @@
          "../Reference/ref-unit.rkt"
          "../Continuation/cont-sig.rkt"
          "../Continuation/cont-unit.rkt"
+         "../Thread/thd-sig.rkt"
+         "../Thread/thd-unit.rkt"
          "../Scheduler/sche-sig.rkt"
          "../Scheduler/sche-unit.rkt"
          "../Mutex/mut-sig.rkt"
@@ -23,9 +25,11 @@
 
 (provide (all-from-out "../types/types.rkt")
          (except-out (all-defined-out)
+                     nullary-func
+
                      unary-arithmetic-pred
                      unary-arithmetic-func
-                     unary-IO-func
+                     unary-func
 
                      binary-equal-relation
                      binary-arithmetic-relation
@@ -39,12 +43,12 @@
 
 (define-compound-unit/infer base@
   (import)
-  (export ref^ cont^ sche^ mut^ values^ env^ proc^ primitive-proc^ exp^)
-  (link   ref@ cont@ sche@ mut@ values@ env@ proc@ primitive-proc@ exp@))
+  (export ref^ cont^ thd^ sche^ mut^ values^ env^ proc^ primitive-proc^ exp^)
+  (link   ref@ cont@ thd@ sche@ mut@ values@ env@ proc@ primitive-proc@ exp@))
 
 (define-values/invoke-unit base@
   (import)
-  (export ref^ cont^ sche^ mut^ values^ env^ proc^ primitive-proc^ exp^))
+  (export ref^ cont^ thd^ sche^ mut^ values^ env^ proc^ primitive-proc^ exp^))
 
 
 (define-namespace-anchor ns-anchor)
@@ -63,11 +67,12 @@
 
     ;; (pretty-print code)
     (initialize-scheduler! timeslice)
+    (initialize-thread-identifier!)
     (value-of/k exp env cont)))
 
 
-(: nullary-IO-func [-> [-> Any] [-> DenVal * ExpVal]])
-(define nullary-IO-func
+(: nullary-func [-> [-> Any] [-> DenVal * ExpVal]])
+(define nullary-func
   (λ (func)
     (λ vals
       (match vals
@@ -91,8 +96,8 @@
         [`(,val) (num-val (func (expval->num val)))]
         [_ (error 'unary-func "Bad args: ~s" vals)]))))
 
-(: unary-IO-func [-> [-> Any Void] [-> DenVal * ExpVal]])
-(define unary-IO-func
+(: unary-func [-> [-> Any Void] [-> DenVal * ExpVal]])
+(define unary-func
   (λ (func)
     (λ vals
       (match vals
@@ -157,6 +162,10 @@
                           (base-env)))))
 
 
+(add-primitive-proc! 'get-tid  (nullary-func get-tid))
+(add-primitive-proc! 'get-ptid (nullary-func get-ptid))
+
+
 (add-primitive-proc! 'empty-list (λ [vals : DenVal *] : ExpVal '()))
 
 
@@ -181,15 +190,15 @@
                                 [_ (error 'unary-func "Bad args: ~s" vals)])))
 
 
-(add-primitive-proc! 'read (nullary-IO-func read))
+(add-primitive-proc! 'read (nullary-func read))
 
-(add-primitive-proc! 'display (unary-IO-func display))
-(add-primitive-proc! 'print (unary-IO-func print))
-(add-primitive-proc! 'write (unary-IO-func write))
+(add-primitive-proc! 'display (unary-func display))
+(add-primitive-proc! 'print (unary-func print))
+(add-primitive-proc! 'write (unary-func write))
 
-(add-primitive-proc! 'displayln (unary-IO-func displayln))
-(add-primitive-proc! 'println (unary-IO-func println))
-(add-primitive-proc! 'writeln (unary-IO-func writeln))
+(add-primitive-proc! 'displayln (unary-func displayln))
+(add-primitive-proc! 'println (unary-func println))
+(add-primitive-proc! 'writeln (unary-func writeln))
 
 
 (add-primitive-proc! '=  (binary-arithmetic-relation =))

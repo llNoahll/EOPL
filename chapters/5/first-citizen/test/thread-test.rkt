@@ -107,13 +107,17 @@
            (define mut (mutex))
            (define incr-x
              (λ (id)
-               (λ (_)
+               (λ (tid)
                  (wait mut)
-                 (displayln (format "before: x = ~a" x))
+                 (displayln (format "ptid = ~a, tid = ~a, before: x = ~a"
+                                    (get-ptid) tid x))
                  (set! x (- x -1))
-                 (displayln (format "after: x = ~a" x))
+                 (displayln (format "ptid = ~a, tid = ~a, after: x = ~a"
+                                    (get-ptid) tid x))
                  (signal mut))))
 
+           (displayln (format "main thread: ptid = ~a, tid = ~a"
+                              (get-ptid) (get-tid)))
            (spawn (incr-x 100))
            (spawn (incr-x 200))
            (spawn (incr-x 300))
@@ -130,10 +134,14 @@
              (λ (id)
                (λ (_)
                  (with-mutex mut
-                   (displayln (format "before: x = ~a" x))
+                   (displayln (format "ptid = ~a, tid = ~a, before: x = ~a"
+                                      (get-ptid) (get-tid) x))
                    (set! x (- x -1))
-                   (displayln (format "after: x = ~a" x))))))
+                   (displayln (format "ptid = ~a, tid = ~a, after: x = ~a"
+                                      (get-ptid) (get-tid) x))))))
 
+           (displayln (format "main thread: ptid = ~a, tid = ~a"
+                              (get-ptid) (get-tid)))
            (spawn (incr-x 100))
            (spawn (incr-x 200))
            (spawn (incr-x 300))

@@ -34,7 +34,7 @@
                       (ann (λ (1st-waiting-thd other-waiting-thds)
                              (place-on-ready-queue! 1st-waiting-thd)
                              (set-mutex-wait-queue! mut other-waiting-thds))
-                           [-> Thd* (Queueof Thd*) Void])))
+                           [-> Thd (Queueof Thd) Void])))
          (thk)])))
 
   )
