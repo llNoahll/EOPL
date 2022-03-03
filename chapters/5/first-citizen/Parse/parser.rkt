@@ -88,7 +88,9 @@
       [`(mutex  ,(? s-exp? exp)) `(mutex-exp  ,(parser exp))]
       [`(wait   ,(? s-exp? exp)) `(wait-exp   ,(parser exp))]
       [`(signal ,(? s-exp? exp)) `(signal-exp ,(parser exp))]
-      [`(kill   ,(? s-exp? exp)) `(kill-exp   ,(parser exp))]
+
+      [`(kill-thread ,(? s-exp? exp)) `(kill-exp   ,(parser exp))]
+
       ['(yield) '(yield-exp)]
       ['(mutex) (parser '(mutex 1))]
       [`(with-mutex ,(? s-exp? exp)
