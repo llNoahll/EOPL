@@ -262,3 +262,8 @@
   ([exp : Exp])
   #:transparent
   #:type-name Signal-Exp)
+
+(define-struct (yield-exp exp)
+  ()
+  #:transparent
+  #:type-name Yield-Exp)

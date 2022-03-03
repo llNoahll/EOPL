@@ -91,6 +91,7 @@
       [`(mutex  ,(? s-exp? exp)) `(mutex-exp  ,(parser exp))]
       [`(wait   ,(? s-exp? exp)) `(wait-exp   ,(parser exp))]
       [`(signal ,(? s-exp? exp)) `(signal-exp ,(parser exp))]
+      ['(yield) '(yield-exp)]
       [`(with-mutex ,(? s-exp? exp)
           ,(? s-exp? #{body-exps : S-List})
           ..1)

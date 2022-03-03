@@ -244,14 +244,17 @@
            (value-of/k
             exp env
             (cons (frame 'signal-frame
-                          (inherit-handlers-cont cont)
-                          (ann (λ (cont)
-                                 (λ (mut)
-                                   (signal-mutex
-                                    (expval->mutex mut)
-                                    (λ () (apply-cont cont (void))))))
-                               [-> Cont [-> ExpVal FinalAnswer]]))
+                         (inherit-handlers-cont cont)
+                         (ann (λ (cont)
+                                (λ (mut)
+                                  (signal-mutex
+                                   (expval->mutex mut)
+                                   (λ () (apply-cont cont (void))))))
+                              [-> Cont [-> ExpVal FinalAnswer]]))
                   cont))]
+          [(yield-exp)
+           (place-on-ready-queue! (λ () (apply-cont cont (num-val 99))))
+           (run-next-thread)]
 
           [(primitive-proc-exp op exps)
            (let loop : FinalAnswer
