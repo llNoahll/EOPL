@@ -6,7 +6,7 @@
 (provide sche@)
 
 
-(: the-ready-queue (Queueof Thd))
+(: the-ready-queue (Queueof Thd*))
 (define the-ready-queue (empty-queue))
 
 (: the-final-answer FinalAnswer)
@@ -31,11 +31,22 @@
       (set! the-max-time-slice ticks)
       (set! the-time-remaining the-max-time-slice)))
 
-  (: place-on-ready-queue! [-> Thd Void])
+  (: place-on-thread-queue [-> (Queueof Thd*) [-> FinalAnswer] (Queueof Thd*)])
+  (define place-on-thread-queue
+    (λ (thds thk)
+      (enqueue thds
+               (thd (if (exact-positive-integer? the-time-remaining)
+                        (assert the-time-remaining exact-positive-integer?)
+                        the-max-time-slice)
+                    (if (thd? thk)
+                        (thd-thunk thk)
+                        thk)))))
+
+  (: place-on-ready-queue! [-> [-> FinalAnswer] Void])
   (define place-on-ready-queue!
-    (λ (th)
+    (λ (thk)
       (set! the-ready-queue
-            (enqueue the-ready-queue th))))
+            (place-on-thread-queue the-ready-queue thk))))
 
   (: run-next-thread [-> FinalAnswer])
   (define run-next-thread
@@ -45,9 +56,9 @@
           (dequeue the-ready-queue
                    (ann (λ (1st-ready-thd other-ready-thds)
                           (set! the-ready-queue other-ready-thds)
-                          (set! the-time-remaining the-max-time-slice)
+                          (set! the-time-remaining (thd-time-slice 1st-ready-thd))
                           (final-answer (1st-ready-thd)))
-                        [-> Thd (Queueof Thd) FinalAnswer])))))
+                        [-> Thd* (Queueof Thd*) FinalAnswer])))))
 
   (: set-final-answer! [-> ExpVal Void])
   (define set-final-answer!

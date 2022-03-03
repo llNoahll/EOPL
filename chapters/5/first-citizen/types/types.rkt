@@ -48,7 +48,6 @@
 (define-new-subtype FinalAnswer (final-answer ExpVal))
 (define-predicate final-answer? FinalAnswer)
 
-(define-type Thd [-> ExpVal])
 
 (define-type (Queueof A) (List (Listof A) (Listof A)))
 (define-predicate empty-queue? (Queueof Nothing))
@@ -72,6 +71,17 @@
        (f (car l) `(() ,(cdr l)))]
       [`(,in (,1st . ,out))
        (f 1st `(,in ,out))])))
+
+
+(struct thd
+  ([time-slice : Exact-Positive-Integer]
+   [thunk : [-> FinalAnswer]])
+  #:property prop:procedure
+  (ann (λ (self) ((thd-thunk self)))
+       [-> Thd FinalAnswer])
+  #:transparent
+  #:type-name Thd)
+(define-type Thd* (∩ Thd [-> FinalAnswer]))
 
 
 (define-type Cont (Listof Frame))
@@ -116,7 +126,7 @@
 
 (define-struct mutex
   ([keys : Natural]
-   [wait-queue : (Queueof Thd)])
+   [wait-queue : (Queueof Thd*)])
   #:transparent
   #:mutable
   #:type-name Mutex)

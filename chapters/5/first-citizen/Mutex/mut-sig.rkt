@@ -7,6 +7,6 @@
 
 (define-signature mut^
   (
-   [wait-for-mutex : [-> Mutex Thd FinalAnswer]]
-   [signal-mutex   : [-> Mutex Thd FinalAnswer]]
+   [wait-for-mutex : [-> Mutex [-> FinalAnswer] FinalAnswer]]
+   [signal-mutex   : [-> Mutex [-> FinalAnswer] FinalAnswer]]
    ))

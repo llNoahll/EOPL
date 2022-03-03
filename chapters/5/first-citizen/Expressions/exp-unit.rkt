@@ -197,8 +197,8 @@
               (inherit-handlers-cont cont)
               (ann (λ (cont)
                      (λ (op)
-                       (: spawn-thd Thd)
-                       (define spawn-thd
+                       (: spawn-thk [-> FinalAnswer])
+                       (define spawn-thk
                          (cond [(proc? op)
                                 (λ ()
                                   (apply-procedure/k op
@@ -210,7 +210,7 @@
                                               (apply-cont op undefined)))]
                                [else (raise-argument-error 'value-of/k "operator?" op)]))
 
-                       (place-on-ready-queue! spawn-thd)
+                       (place-on-ready-queue! spawn-thk)
                        (apply-cont cont (void))))
                    [-> Cont [-> ExpVal FinalAnswer]]))
              cont))]

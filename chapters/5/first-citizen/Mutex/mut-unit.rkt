@@ -11,21 +11,21 @@
   (import sche^)
   (export mut^)
 
-  (: wait-for-mutex [-> Mutex Thd FinalAnswer])
+  (: wait-for-mutex [-> Mutex [-> FinalAnswer] FinalAnswer])
   (define wait-for-mutex
-    (λ (mut thd)
+    (λ (mut thk)
       (match mut
         [(mutex keys wait-queue)
          (cond [(zero? keys)
-                (set-mutex-wait-queue! mut (enqueue wait-queue thd))
+                (set-mutex-wait-queue! mut (place-on-thread-queue wait-queue thk))
                 (run-next-thread)]
                [else
                 (set-mutex-keys! mut (sub1 keys))
-                (final-answer (thd))])])))
+                (thk)])])))
 
-  (: signal-mutex [-> Mutex Thd FinalAnswer])
+  (: signal-mutex [-> Mutex [-> FinalAnswer] FinalAnswer])
   (define signal-mutex
-    (λ (mut thd)
+    (λ (mut thk)
       (match mut
         [(mutex keys wait-queue)
          (if (empty-queue? wait-queue)
@@ -34,7 +34,7 @@
                       (ann (λ (1st-waiting-thd other-waiting-thds)
                              (place-on-ready-queue! 1st-waiting-thd)
                              (set-mutex-wait-queue! mut other-waiting-thds))
-                           [-> Thd (Queueof Thd) Void])))
-         (final-answer (thd))])))
+                           [-> Thd* (Queueof Thd*) Void])))
+         (thk)])))
 
   )
