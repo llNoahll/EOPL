@@ -27,13 +27,6 @@
 (define-predicate trace-lambda? Trace-Lambda)
 
 
-(define-struct ref
-  ([val : DenVal])
-  #:transparent
-  #:mutable
-  #:type-name Ref)
-
-
 (define-type DenVal (U Literal Undefined
                        Proc Trace-Proc
                        Cont Mutex Thread-Identifier
@@ -70,12 +63,14 @@
        (define l (reverse in))
        (f (car l) `(() ,(cdr l)))]
       [`(,in (,1st . ,out))
-       (f 1st `(,in ,out))])))
+       (f 1st `(,in ,out))]
+      ['(() ()) (raise-argument-error 'dequeue "non-empty-queue?" q)])))
 
 
 (struct thd
   ([ptid : Natural]
    [tid  : Natural]
+   [mail : (Boxof (Queueof DenVal))]
    [time-slice : Exact-Positive-Integer]
    [thunk : [-> FinalAnswer]])
   #:transparent
@@ -107,6 +102,12 @@
   #:transparent
   #:type-name Handlers-Frame)
 
+
+(define-struct ref
+  ([val : DenVal])
+  #:mutable
+  #:transparent
+  #:type-name Ref)
 
 (define-struct env
   ([type  : (U 'empty-env 'extend-env 'extend-env-rec)]
