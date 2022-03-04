@@ -83,15 +83,19 @@
        `(handlers-exp (list ,@(map parser pred-exps))
                       (list ,@(map parser handler-exps))
                       ,(parser `(begin ,@body-exps)))]
-      [`(raise  ,(? s-exp? exp)) `(raise-exp  ,(parser exp))]
-      [`(spawn  ,(? s-exp? exp)) `(spawn-exp  ,(parser exp))]
-      [`(mutex  ,(? s-exp? exp)) `(mutex-exp  ,(parser exp))]
-      [`(wait   ,(? s-exp? exp)) `(wait-exp   ,(parser exp))]
-      [`(signal ,(? s-exp? exp)) `(signal-exp ,(parser exp))]
-
+      [`(raise       ,(? s-exp? exp)) `(raise-exp  ,(parser exp))]
+      [`(spawn       ,(? s-exp? exp)) `(spawn-exp  ,(parser exp))]
+      [`(mutex       ,(? s-exp? exp)) `(mutex-exp  ,(parser exp))]
+      [`(wait        ,(? s-exp? exp)) `(wait-exp   ,(parser exp))]
+      [`(signal      ,(? s-exp? exp)) `(signal-exp ,(parser exp))]
       [`(kill-thread ,(? s-exp? exp)) `(kill-exp   ,(parser exp))]
 
-      ['(yield) '(yield-exp)]
+      [`(thread-send ,(? s-exp? tid-exp) ,(? s-exp? value-exp))
+       `(send-exp ,(parser tid-exp) ,(parser value-exp))]
+      ['(thread-receive)     '(receive-exp)]
+      ['(thread-try-receive) '(try-receive-exp)]
+      ['(yield)              '(yield-exp)]
+
       ['(mutex) (parser '(mutex 1))]
       [`(with-mutex ,(? s-exp? exp)
           ,(? s-exp? #{body-exps : S-List})

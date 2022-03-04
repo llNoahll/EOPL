@@ -284,6 +284,22 @@
   #:transparent
   #:type-name Kill-Exp)
 
+(define-struct (send-exp exp)
+  ([tid-exp   : Exp]
+   [value-exp : Exp])
+  #:transparent
+  #:type-name Send-Exp)
+
+(define-struct (receive-exp exp)
+  ()
+  #:transparent
+  #:type-name Receive-Exp)
+
+(define-struct (try-receive-exp exp)
+  ()
+  #:transparent
+  #:type-name Try-Receive-Exp)
+
 (define-struct (yield-exp exp)
   ()
   #:transparent

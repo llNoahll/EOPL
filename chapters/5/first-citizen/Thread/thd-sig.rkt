@@ -12,10 +12,12 @@
 
    [kill-thread! : [-> Natural (U Void Boolean)]]
 
+   [get-mail : [-> (Boxof (Queueof DenVal))]]
    [get-ptid : [-> Natural]]
    [get-tid  : [-> Natural]]
    [get-nid  : [-> Natural]]
 
+   [has-thread? : [-> Natural Boolean]]
    [get-thread  : [-> Natural (U Boolean Thd)]]
    [add-thread! : [-> Natural Thd Void]]
 

@@ -34,13 +34,15 @@
           [(assign-exp var exp)
            (value-of/k
             exp env
-            (cons (frame 'assign-frame
-                          (inherit-handlers-cont cont)
-                          (ann (λ (cont)
-                                 (λ (val)
-                                   (apply-cont cont (set-binding! env var (expval->denval val)))))
-                               [-> Cont [-> ExpVal FinalAnswer]]))
-                  cont))]
+            (cons
+             (frame
+              'assign-frame
+              (inherit-handlers-cont cont)
+              (ann (λ (cont)
+                     (λ (val)
+                       (apply-cont cont (set-binding! env var (expval->denval val)))))
+                   [-> Cont [-> ExpVal FinalAnswer]]))
+             cont))]
           [(symbol-exp sym) (apply-cont cont (symbol-val sym))]
           [(const-exp num)  (apply-cont cont (num-val num))]
           [(bool-exp bool)  (apply-cont cont (bool-val bool))]
@@ -51,47 +53,53 @@
           [(begin-exp exps)
            (value-of/k
             (car exps) env
-            (cons (frame 'begin-frame
-                          (inherit-handlers-cont cont)
-                          (ann (λ (cont)
-                                 (λ (val)
-                                   (let ([exps (cdr exps)])
-                                     (if (null? exps)
-                                         (apply-cont cont val)
-                                         (value-of/k (begin-exp exps) env cont)))))
-                               [-> Cont [-> ExpVal FinalAnswer]]))
-                  cont))]
+            (cons
+             (frame
+              'begin-frame
+              (inherit-handlers-cont cont)
+              (ann (λ (cont)
+                     (λ (val)
+                       (let ([exps (cdr exps)])
+                         (if (null? exps)
+                             (apply-cont cont val)
+                             (value-of/k (begin-exp exps) env cont)))))
+                   [-> Cont [-> ExpVal FinalAnswer]]))
+             cont))]
 
           [(if-exp pred-exp true-exp false-exp)
            (value-of/k
             pred-exp env
-            (cons (frame 'if-frame
-                          (inherit-handlers-cont cont)
-                          (ann (λ (cont)
-                                 (λ (pred-val)
-                                   (value-of/k
-                                    (if (expval->bool pred-val)
-                                        true-exp
-                                        false-exp)
-                                    env cont)))
-                               [-> Cont [-> ExpVal FinalAnswer]]))
-                  cont))]
+            (cons
+             (frame
+              'if-frame
+              (inherit-handlers-cont cont)
+              (ann (λ (cont)
+                     (λ (pred-val)
+                       (value-of/k
+                        (if (expval->bool pred-val)
+                            true-exp
+                            false-exp)
+                        env cont)))
+                   [-> Cont [-> ExpVal FinalAnswer]]))
+             cont))]
           [(cond-exp branches)
            (define branch (car branches))
            (value-of/k
             (car branch) env
-            (cons (frame 'cond-frame
-                         (inherit-handlers-cont cont)
-                         (ann (λ (cont)
-                                (λ (pred-val)
-                                  (if (expval->bool pred-val)
-                                      (value-of/k (cadr branch) env cont)
-                                      (let ([next (cdr branches)])
-                                        (if (null? next)
-                                            (apply-cont cont (void))
-                                            (value-of/k (cond-exp next) env cont))))))
-                              [-> Cont [-> ExpVal FinalAnswer]]))
-                  cont))]
+            (cons
+             (frame
+              'cond-frame
+              (inherit-handlers-cont cont)
+              (ann (λ (cont)
+                     (λ (pred-val)
+                       (if (expval->bool pred-val)
+                           (value-of/k (cadr branch) env cont)
+                           (let ([next (cdr branches)])
+                             (if (null? next)
+                                 (apply-cont cont (void))
+                                 (value-of/k (cond-exp next) env cont))))))
+                   [-> Cont [-> ExpVal FinalAnswer]]))
+             cont))]
 
           [(let-exp vars exps body)
            (value-of/k (if (or (null? exps) (null? vars))
@@ -103,23 +111,25 @@
                   (value-of/k body env cont)]
                  [else
                   (define new-env
-                    (extend-env+ (map (ann (λ (var) (cons var undefined))
-                                           [-> Symbol (Pair Symbol Undefined)])
-                                      vars)
-                                 env))
+                    (extend-env+
+                     (map (ann (λ (var) (cons var undefined))
+                               [-> Symbol (Pair Symbol Undefined)])
+                          vars)
+                     env))
                   (value-of/k
                    (car exps) new-env
                    (append
                     (for/list : Cont
                               ([var (in-list vars)]
                                [exp (in-list (append (cdr exps) (list body)))])
-                      (frame 'letrec-frame
-                              (inherit-handlers-cont cont)
-                              (ann (λ (cont)
-                                     (λ (val)
-                                       (set-binding! new-env var (expval->denval val))
-                                       (value-of/k exp new-env cont)))
-                                   [-> Cont [-> ExpVal FinalAnswer]])))
+                      (frame
+                       'letrec-frame
+                       (inherit-handlers-cont cont)
+                       (ann (λ (cont)
+                              (λ (val)
+                                (set-binding! new-env var (expval->denval val))
+                                (value-of/k exp new-env cont)))
+                            [-> Cont [-> ExpVal FinalAnswer]])))
                     cont))])]
 
           [(let/cc-exp cc-var body) (value-of/k body (extend-env cc-var cont env) cont)]
@@ -181,13 +191,15 @@
           [(raise-exp exp)
            (value-of/k
             exp env
-            (cons (frame 'raise-frame
-                          (inherit-handlers-cont cont)
-                          (ann (λ (cont)
-                                 (λ (val)
-                                   (apply-handler cont (expval->denval val))))
-                               [-> Cont [-> ExpVal FinalAnswer]]))
-                  cont))]
+            (cons
+             (frame
+              'raise-frame
+              (inherit-handlers-cont cont)
+              (ann (λ (cont)
+                     (λ (val)
+                       (apply-handler cont (expval->denval val))))
+                   [-> Cont [-> ExpVal FinalAnswer]]))
+             cont))]
 
           [(spawn-exp exp)
            (value-of/k
@@ -222,75 +234,131 @@
           [(mutex-exp exp)
            (value-of/k
             exp env
-            (cons (frame 'mutex-frame
-                          (inherit-handlers-cont cont)
-                          (ann (λ (cont)
-                                 (λ (keys)
-                                   (apply-cont cont
-                                               (mutex-val
-                                                (mutex (assert keys natural?)
-                                                       (empty-queue))))))
-                               [-> Cont [-> ExpVal FinalAnswer]]))
-                  cont))]
+            (cons
+             (frame
+              'mutex-frame
+              (inherit-handlers-cont cont)
+              (ann (λ (cont)
+                     (λ (keys)
+                       (apply-cont cont
+                                   (mutex-val
+                                    (mutex (assert keys natural?)
+                                           (empty-queue))))))
+                   [-> Cont [-> ExpVal FinalAnswer]]))
+             cont))]
           [(wait-exp exp)
            (value-of/k
             exp env
-            (cons (frame 'wait-frame
-                          (inherit-handlers-cont cont)
-                          (ann (λ (cont)
-                                 (λ (mut)
-                                   (wait-for-mutex
-                                    (expval->mutex mut)
-                                    (λ () (apply-cont cont (void))))))
-                               [-> Cont [-> ExpVal FinalAnswer]]))
-                  cont))]
+            (cons
+             (frame
+              'wait-frame
+              (inherit-handlers-cont cont)
+              (ann (λ (cont)
+                     (λ (mut)
+                       (wait-for-mutex
+                        (expval->mutex mut)
+                        (λ () (apply-cont cont (void))))))
+                   [-> Cont [-> ExpVal FinalAnswer]]))
+             cont))]
           [(signal-exp exp)
            (value-of/k
             exp env
-            (cons (frame 'signal-frame
-                         (inherit-handlers-cont cont)
-                         (ann (λ (cont)
-                                (λ (mut)
-                                  (signal-mutex
-                                   (expval->mutex mut)
-                                   (λ () (apply-cont cont (void))))))
-                              [-> Cont [-> ExpVal FinalAnswer]]))
-                  cont))]
+            (cons
+             (frame
+              'signal-frame
+              (inherit-handlers-cont cont)
+              (ann (λ (cont)
+                     (λ (mut)
+                       (signal-mutex
+                        (expval->mutex mut)
+                        (λ () (apply-cont cont (void))))))
+                   [-> Cont [-> ExpVal FinalAnswer]]))
+             cont))]
           [(yield-exp)
            (place-on-ready-queue! (λ () (apply-cont cont (num-val (get-tid)))))
            (run-next-thread)]
           [(kill-exp exp)
            (value-of/k
             exp env
-            (cons (frame 'kill-frame
-                         (inherit-handlers-cont cont)
-                         (ann (λ (cont)
-                                (λ (tid)
-                                  (define res (kill-thread! (assert tid natural?)))
-                                  (if (boolean? res)
-                                      (apply-cont cont (bool-val res))
-                                      (run-next-thread))))
-                              [-> Cont [-> ExpVal FinalAnswer]]))
-                  cont))]
+            (cons
+             (frame
+              'kill-frame
+              (inherit-handlers-cont cont)
+              (ann (λ (cont)
+                     (λ (tid)
+                       (define res (kill-thread! (assert tid natural?)))
+                       (if (boolean? res)
+                           (apply-cont cont (bool-val res))
+                           (run-next-thread))))
+                   [-> Cont [-> ExpVal FinalAnswer]]))
+             cont))]
+
+          [(send-exp tid-exp value-exp)
+           (value-of/k
+            tid-exp env
+            (cons
+             (frame
+              'send-frame
+              (inherit-handlers-cont cont)
+              (ann (λ (cont)
+                     (λ (tid)
+                       (if (has-thread? (assert tid natural?))
+                           (value-of/k
+                            value-exp env
+                            (cons
+                             (frame
+                              'send-frame
+                              (inherit-handlers-cont cont)
+                              (ann (λ (cont)
+                                     (λ (val)
+                                       (define th (get-thread (assert tid natural?)))
+                                       (let ([mail (if (thd? th) (thd-mail th) (get-mail))])
+                                         (set-box! mail (enqueue (unbox mail) (expval->denval val)))
+                                         (apply-cont cont (num-val (get-tid))))))
+                                   [-> Cont [-> ExpVal FinalAnswer]]))
+                             cont))
+                           (apply-cont cont (num-val (get-tid))))))
+                   [-> Cont [-> ExpVal FinalAnswer]]))
+             cont))]
+          [(receive-exp)
+           (cond [(empty-queue? (unbox (get-mail)))
+                  (place-on-ready-queue! (λ () (value-of/k (receive-exp) env cont)))
+                  (run-next-thread)]
+                 [else (value-of/k (try-receive-exp) env cont)])]
+          [(try-receive-exp)
+           (define mail (get-mail))
+           (define value-queue (unbox mail))
+           (apply-cont
+            cont
+            (if (empty-queue? value-queue)
+                (bool-val #f)
+                (dequeue value-queue
+                         (ann (λ (1st-value other-values)
+                                (set-box! mail other-values)
+                                1st-value)
+                              [-> DenVal (Queueof DenVal) DenVal]))))]
 
           [(primitive-proc-exp op exps)
            (let loop : FinalAnswer
                 ([exps exps]
                  [vals : (Listof DenVal) '()])
              (if (null? exps)
-                 (apply-cont cont
-                             (apply (hash-ref primitive-proc-table op)
-                                    (reverse vals)))
-                 (value-of/k (car exps) env
-                             (cons
-                              (frame 'primitive-proc-frame
-                                     (inherit-handlers-cont cont)
-                                     (ann (λ (cont)
-                                            (λ (val)
-                                              (loop (cdr exps)
-                                                    (cons (expval->denval val) vals))))
-                                          [-> Cont [-> ExpVal FinalAnswer]]))
-                              cont))))]
+                 (apply-cont
+                  cont
+                  (apply (hash-ref primitive-proc-table op)
+                         (reverse vals)))
+                 (value-of/k
+                  (car exps) env
+                  (cons
+                   (frame
+                    'primitive-proc-frame
+                    (inherit-handlers-cont cont)
+                    (ann (λ (cont)
+                           (λ (val)
+                             (loop (cdr exps)
+                                   (cons (expval->denval val) vals))))
+                         [-> Cont [-> ExpVal FinalAnswer]]))
+                   cont))))]
           [(trace-proc-exp vars body)
            (apply-cont cont (proc-val (trace-procedure vars body env)))]
           [(proc-exp vars body)

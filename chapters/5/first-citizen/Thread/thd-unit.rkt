@@ -10,6 +10,9 @@
 (define thread-table (make-hasheq '([0 . #t] [1 . #t])))
 
 
+(: mail (Boxof (Queueof DenVal)))
+(define mail (box (empty-queue)))
+
 (: ptid Natural)
 (define ptid 0)
 
@@ -29,7 +32,8 @@
   (define initialize-thread-identifier!
     (λ ()
       (hash-clear! thread-table)
-      (hash-set*! thread-table 0 #t 1 #t)
+      (hash-set*!  thread-table 0 #t 1 #t)
+      (set-box! mail (empty-queue))
       (set! ptid 0)
       (set! tid  1)
       (set! ntid 2)))
@@ -39,6 +43,7 @@
     (λ (th)
       (set! ptid (thd-ptid th))
       (set! tid  (thd-tid  th))
+      (set! mail (thd-mail th))
       (hash-set! thread-table tid #t)))
 
   (: kill-thread! [-> Natural (U Void Boolean)])
@@ -51,6 +56,9 @@
              (if (thd? th) #t (void))])))
 
 
+  (: get-mail [-> (Boxof (Queueof DenVal))])
+  (define get-mail (λ () mail))
+
   (: get-ptid [-> Natural])
   (define get-ptid (λ () ptid))
 
@@ -60,6 +68,11 @@
   (: get-nid [-> Natural])
   (define get-nid (λ () (begin0 ntid (set! ntid (add1 ntid)))))
 
+
+  (: has-thread? [-> Natural Boolean])
+  (define has-thread?
+    (λ (tid)
+      (hash-has-key? thread-table tid)))
 
   (: get-thread [-> Natural (U Boolean Thd)])
   (define get-thread

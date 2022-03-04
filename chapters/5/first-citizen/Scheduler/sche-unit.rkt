@@ -43,7 +43,7 @@
            (place-on-thread-queue thds t (get-ptid) (get-tid)))]
       [(thds thk ptid tid)
        (define th
-         (thd ptid tid
+         (thd ptid tid (box (empty-queue))
               (let ([the-time the-time-remaining])
                 (if (exact-positive-integer? the-time)
                     the-time

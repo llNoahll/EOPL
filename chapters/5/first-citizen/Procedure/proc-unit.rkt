@@ -140,7 +140,15 @@
         [(wait-exp   exp) (free-binds vars exp env)]
         [(signal-exp exp) (free-binds vars exp env)]
         [(kill-exp   exp) (free-binds vars exp env)]
-        [(yield-exp) '()]
+
+        [(send-exp tid-exp value-exp)
+         (free-binds vars
+                     (begin-exp (list tid-exp value-exp))
+                     env)]
+
+        [(receive-exp)     '()]
+        [(try-receive-exp) '()]
+        [(yield-exp)       '()]
 
         [(primitive-proc-exp _ exps)
          (if (null? exps)
