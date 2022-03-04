@@ -6,25 +6,33 @@
 #;(: *check-code* [-> S-Exp Env Namespace Boolean])
 (define *check-code*
   (λ (code env eval-ns)
-    (define-values (res output)
-      (let ()
-        (define o (open-output-bytes))
-        (values (parameterize ([current-output-port o])
-                  (eval code eval-ns))
-                (get-output-bytes o))))
+    (with-handlers ([false? (λ (_)
+                              (displayln "Not Equal:")
+                              (pretty-print code)
+                              (raise #f))]
+                    [exn:fail? (λ (ex)
+                                 (displayln "Raise Error:")
+                                 (pretty-print code)
+                                 (raise ex))])
+      (define-values (res output)
+        (let ()
+          (define o (open-output-bytes))
+          (values (parameterize ([current-output-port o])
+                    (eval code eval-ns))
+                  (get-output-bytes o))))
 
-    (define-values (*res* *output*)
-      (let ()
-        (define *o* (open-output-bytes))
-        (values (parameterize ([current-output-port *o*])
-                  (*eval* code env (end-cont)))
-                (get-output-bytes *o*))))
+      (define-values (*res* *output*)
+        (let ()
+          (define *o* (open-output-bytes))
+          (values (parameterize ([current-output-port *o*])
+                    (*eval* code env (end-cont)))
+                  (get-output-bytes *o*))))
 
 
-    (if (and (equal?  res    *res*)
-             (bytes=? output *output*))
-        #t
-        (raise code))))
+      (if (and (equal?  res    *res*)
+               (bytes=? output *output*))
+          #t
+          (raise #f)))))
 
 
 #;(: init-env [-> Env])

@@ -113,4 +113,12 @@
     (λ (env var new-val)
       (setref! (apply-env-ref env var) new-val)))
 
+  (: copy-env [-> Env Env])
+  (define copy-env
+    (λ (saved-env)
+      (make-env (env-type saved-env)
+                (for/hasheq : (Immutable-HashTable Symbol Ref)
+                            ([(k v) (in-hash (env-binds saved-env))])
+                  (values k (newref (deref v)))))))
+
   )

@@ -83,6 +83,9 @@
   #:transparent
   #:type-name Thread-Identifier)
 
+(: thread-share-memory? (Parameter Boolean))
+(define thread-share-memory? (make-parameter #f))
+
 
 (define-type Cont (Listof Frame))
 (define-predicate cont? Cont)

@@ -217,7 +217,11 @@
                        (define spawn-thk
                          (cond [(proc? op)
                                 (λ ()
-                                  (apply-procedure/k op
+                                  (apply-procedure/k (if (thread-share-memory?)
+                                                         op
+                                                         (proc (proc-vars op)
+                                                               (proc-body op)
+                                                               (copy-env (proc-saved-env op))))
                                                      (list (num-val spawn-tid))
                                                      (end-subthread-cont)))]
                                [(cont? op)
