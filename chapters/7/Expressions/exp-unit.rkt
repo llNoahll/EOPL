@@ -36,12 +36,13 @@
                      (apply-cont cont (set-binding! env var (expval->denval val)))))
                  [-> Cont [-> ExpVal FinalAnswer]]))
            cont))]
-        [(symbol-exp sym) (apply-cont cont (symbol-val sym))]
-        [(const-exp num)  (apply-cont cont (num-val num))]
-        [(bool-exp bool)  (apply-cont cont (bool-val bool))]
-        [(char-exp char)  (apply-cont cont (char-val char))]
-        [(string-exp str) (apply-cont cont (string-val str))]
-        [(var-exp var)    (apply-cont cont (apply-env env var))]
+        [(symbol-exp sym)  (apply-cont cont (symbol-val sym))]
+        [(const-exp  num)  (apply-cont cont (num-val    num))]
+        [(bool-exp   bool) (apply-cont cont (bool-val   bool))]
+        [(char-exp   char) (apply-cont cont (char-val   char))]
+        [(string-exp str)  (apply-cont cont (string-val str))]
+
+        [(var-exp    var)  (apply-cont cont (apply-env env var))]
 
         [(begin-exp exps)
          (value-of/k
@@ -210,13 +211,14 @@
                      (define spawn-thk
                        (cond [(proc? op)
                               (λ ()
-                                (apply-procedure/k (if (thread-share-memory?)
-                                                       op
-                                                       (proc (proc-vars op)
-                                                             (proc-body op)
-                                                             (copy-env (proc-saved-env op))))
-                                                   (list (num-val spawn-tid))
-                                                   (end-subthread-cont)))]
+                                (apply-procedure/k
+                                 (if (thread-share-memory?)
+                                     op
+                                     (proc (proc-vars op)
+                                           (proc-body op)
+                                           (copy-env (proc-saved-env op))))
+                                 (list (num-val spawn-tid))
+                                 (end-subthread-cont)))]
                              [(cont? op)
                               (λ ()
                                 (apply-cont (end-subthread-cont)
