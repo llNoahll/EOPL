@@ -10,19 +10,17 @@
   (λ (code)
     (match code
       [`(quote ,(? symbol? symbol)) `(symbol-exp ',symbol)]
-      [`(quote ,(? boolean? bool)) `(bool-exp ,bool)]
-      [`(quote ,(? real? num)) `(const-exp ,num)]
-      [`(quote ,(? string? str)) `(string-exp ,str)]
-      [`(quote ,(? char? ch)) `(char-exp ,ch)]
+      [`(quote ,(? boolean? bool))  `(bool-exp ,bool)]
+      [`(quote ,(? real? num))      `(const-exp ,num)]
+      [`(quote ,(? string? str))    `(string-exp ,str)]
+      [`(quote ,(? char? ch))       `(char-exp ,ch)]
       [`(quote ,(? s-list? ls))
-       (parser `(list ,@(map (λ ([arg : S-Exp]) : S-Exp
-                                 `(quote ,arg))
-                             ls)))]
+       (parser `(list ,@(map (ann (λ (arg) `(quote ,arg)) [-> S-Exp S-Exp]) ls)))]
 
       [(? boolean? bool) `(bool-exp ,bool)]
-      [(? real? num) `(const-exp ,num)]
-      [(? string? str) `(string-exp ,str)]
-      [(? char? ch) `(char-exp ,ch)]
+      [(? real? num)     `(const-exp ,num)]
+      [(? string? str)   `(string-exp ,str)]
+      [(? char? ch)      `(char-exp ,ch)]
 
       [(? symbol? var) `(var-exp ',var)]
 
@@ -53,11 +51,12 @@
                ..1]
               ..1)
        `(cond-exp
-         (list ,@(map (λ ([pred-exp : S-Exp] [body-exps : S-List]) : S-Exp
-                          `(list ,(parser (if (eq? pred-exp 'else)
-                                              #t
-                                              pred-exp))
-                                 ,(parser `(begin ,@body-exps))))
+         (list ,@(map (ann (λ (pred-exp body-exps)
+                             `(list ,(parser (if (eq? pred-exp 'else)
+                                                 #t
+                                                 pred-exp))
+                                    ,(parser `(begin ,@body-exps))))
+                           [-> S-Exp S-List S-Exp])
                       pred-exps
                       (cast body-exps
                             (Pair (Pair S-Exp S-List)
@@ -76,6 +75,38 @@
                         #t
                         (or ,@(cdr exps)))))]
 
+      [`(with-handlers ([,(? s-exp? #{pred-exps : S-List})
+                         ,(? s-exp? #{handler-exps : S-List})]
+                        ...)
+          ,(? s-exp? #{body-exps : S-List})
+          ..1)
+       `(handlers-exp (list ,@(map parser pred-exps))
+                      (list ,@(map parser handler-exps))
+                      ,(parser `(begin ,@body-exps)))]
+      [`(raise       ,(? s-exp? exp)) `(raise-exp  ,(parser exp))]
+      [`(spawn       ,(? s-exp? exp)) `(spawn-exp  ,(parser exp))]
+      [`(mutex       ,(? s-exp? exp)) `(mutex-exp  ,(parser exp))]
+      [`(wait        ,(? s-exp? exp)) `(wait-exp   ,(parser exp))]
+      [`(signal      ,(? s-exp? exp)) `(signal-exp ,(parser exp))]
+      [`(kill-thread ,(? s-exp? exp)) `(kill-exp   ,(parser exp))]
+
+      [`(thread-send ,(? s-exp? tid-exp) ,(? s-exp? value-exp))
+       `(send-exp ,(parser tid-exp) ,(parser value-exp))]
+      ['(thread-receive)     '(receive-exp)]
+      ['(thread-try-receive) '(try-receive-exp)]
+      ['(yield)              '(yield-exp)]
+
+      ['(mutex) (parser '(mutex 1))]
+      [`(with-mutex ,(? s-exp? exp)
+          ,(? s-exp? #{body-exps : S-List})
+          ..1)
+       (define mut (gensym 'mut))
+       (parser
+        `(let ([,mut ,exp])
+           (wait ,mut)
+           ,@body-exps
+           (signal ,mut)))]
+
       [`(let ([,(? symbol? #{bind-vars : (Listof Symbol)})
                ,(? s-exp?  #{bind-exps : S-List})]
               ...)
@@ -93,8 +124,8 @@
         (if (and (null? bind-vars) (null? bind-exps))
             `(let () ,@body-exps)
             `(let ([,(car bind-vars) ,(car bind-exps)])
-               (let* (,@(map (λ ([var : Symbol] [exp : S-Exp]) : (List Symbol S-Exp)
-                                 (list var exp))
+               (let* (,@(map (ann (λ (var exp) (list var exp))
+                                  [-> Symbol S-Exp (List Symbol S-Exp)])
                              (cdr bind-vars)
                              (cdr bind-exps)))
                  ,@body-exps))))]
@@ -115,11 +146,17 @@
         (if (and (null? bind-vars) (null? bind-exps))
             `(letrec () ,@body-exps)
             `(letrec ([,(car bind-vars) ,(car bind-exps)])
-               (letrec* (,@(map (λ ([var : Symbol] [exp : S-Exp]) : (List Symbol S-Exp)
-                                    (list var exp))
+               (letrec* (,@(map (ann (λ (var exp) (list var exp))
+                                     [-> Symbol S-Exp (List Symbol S-Exp)])
                                 (cdr bind-vars)
                                 (cdr bind-exps)))
                  ,@body-exps))))]
+
+
+      [`(let/cc ,(? symbol? cc-var)
+          ,(? s-exp? #{body-exps : S-List})
+          ..1)
+       `(let/cc-exp ',cc-var ,(parser `(begin ,@body-exps)))]
 
 
       [`(,(? λ?) ,(? symbol? args)

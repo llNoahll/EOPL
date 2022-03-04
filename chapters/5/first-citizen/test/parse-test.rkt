@@ -11,6 +11,9 @@
 (pretty-print (parser '#\a))
 (pretty-print (parser '"b"))
 
+(pretty-print (parser '(not #t)))
+(pretty-print (parser '(not #f)))
+
 (pretty-print (parser '(minus -9)))
 (pretty-print (parser '(minus i)))
 (pretty-print (parser '(minus x)))
@@ -164,3 +167,10 @@
 (pretty-print (parser '(let ([n 0])
                          (set! n (+ n 1))
                          n)))
+
+(pretty-print (parser '(let ([n 1])
+                         (with-handlers ([(λ (arg) (eq? arg 0))
+                                          (λ (arg) (displayln "raise a value: ZERO."))]
+                                         [(λ (arg) (eq? arg 1))
+                                          (λ (arg) (displayln "raise a value: ONE."))])
+                           (raise n)))))

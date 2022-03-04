@@ -11,13 +11,13 @@
   (export ref^)
 
   (: newref [-> DenVal Ref])
-  (define newref (λ (val) (make-ref (box val))))
+  (define newref (λ (val) (make-ref val)))
 
   (: deref [-> Ref DenVal])
-  (define deref (λ (ref) (unbox (ref-val ref))))
+  (define deref (λ (ref) (ref-val ref)))
 
   (: setref! [-> Ref DenVal Void])
-  (define setref! (λ (ref val) (set-box! (ref-val ref) val)))
+  (define setref! (λ (ref val) (set-ref-val! ref val)))
 
   (: ref? [-> Any Boolean : Ref])
   (define-predicate ref? Ref)

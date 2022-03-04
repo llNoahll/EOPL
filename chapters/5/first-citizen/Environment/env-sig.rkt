@@ -25,4 +25,5 @@
    [apply-env     : [-> Env Symbol DenVal]]
    [has-binding?  : [-> Env Symbol Boolean]]
    [set-binding!  : [-> Env Symbol DenVal Void]]
+   [copy-env      : [-> Env Env]]
    ))
