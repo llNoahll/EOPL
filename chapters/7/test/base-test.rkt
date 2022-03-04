@@ -97,21 +97,12 @@
 (namespace-set-variable-value! 'x 10 #t init-eval-ns)
 
 
-(*check-code* '2 (base-env) base-eval-ns)
-(*check-code* '-9 (base-env) base-eval-ns)
-
-(*check-code* '(not #t) (base-env) base-eval-ns)
-(*check-code* '(not #f) (base-env) base-eval-ns)
-
 (*check-code* 'x (init-env) init-eval-ns)
 (*check-code* 'i (init-env) init-eval-ns)
 
-(*check-code* '#\a (base-env) base-eval-ns)
-(*check-code* '"b" (base-env) base-eval-ns)
-
 (*check-code* '(sub1 -9) (init-env) init-eval-ns)
-(*check-code* '(sub1 i) (init-env) init-eval-ns)
-(*check-code* '(add1 x) (init-env) init-eval-ns)
+(*check-code* '(sub1 i)  (init-env) init-eval-ns)
+(*check-code* '(add1 x)  (init-env) init-eval-ns)
 
 (*check-code* '(> i x) (init-env) init-eval-ns)
 (*check-code* '(< i x) (init-env) init-eval-ns)
@@ -121,6 +112,21 @@
 (*check-code* '(car (cons i x)) (init-env) init-eval-ns)
 (*check-code* '(list x i i) (init-env) init-eval-ns)
 (*check-code* '(null? (empty-list)) (init-env) init-eval-ns)
+
+
+(*check-code* '2 (base-env) base-eval-ns)
+(*check-code* '-9 (base-env) base-eval-ns)
+
+(*check-code* '(not #t) (base-env) base-eval-ns)
+(*check-code* '(not #f) (base-env) base-eval-ns)
+
+(*check-code* '#\a (base-env) base-eval-ns)
+(*check-code* '"b" (base-env) base-eval-ns)
+
+(*check-code* '(void)     (base-env) base-eval-ns)
+(*check-code* '(void 1)   (base-env) base-eval-ns)
+(*check-code* '(void 1 2) (base-env) base-eval-ns)
+
 (*check-code* '(cond [(null? (list 1 2 3)) 'cond-1]
                      [(null? (list 9 0 8)) 'cond-2]
                      [else 'else-cons])

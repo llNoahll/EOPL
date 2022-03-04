@@ -232,6 +232,13 @@
                                              (empty-env)))
                         (base-env)))
 
+  (base-env (extend-env 'void
+                        (expval->denval
+                         (*eval* '(λ _ (cond [#f _]))
+                                 (base-env)
+                                 (id-cont)))
+                        (base-env)))
+
   (base-env (extend-env 'Y
                         (expval->denval
                          (*eval* '(λ (f)
