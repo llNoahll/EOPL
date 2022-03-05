@@ -313,7 +313,7 @@
                                      (define th (get-thread (assert tid natural?)))
                                      (let ([mail (if (thd? th) (thd-mail th) (get-mail))])
                                        (set-box! mail (enqueue (unbox mail) (expval->denval val)))
-                                       (apply-cont cont (num-val (get-tid))))))
+                                       (apply-cont cont (void)))))
                                  [-> Cont [-> ExpVal FinalAnswer]]))
                            cont))
                          (apply-cont cont (num-val (get-tid))))))
