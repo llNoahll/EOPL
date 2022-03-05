@@ -2,11 +2,11 @@
 
 (require "../base/base.rkt")
 
-(value-of/k (if-exp (bool-exp #t) (const-exp 1) (const-exp 2))
+(value-of/k (if-exp (bool-exp #t) (real-exp 1) (real-exp 2))
             (base-env)
             (end-cont))
 
-(value-of/k (if-exp (bool-exp #f) (const-exp 1) (const-exp 2))
+(value-of/k (if-exp (bool-exp #f) (real-exp 1) (real-exp 2))
             (base-env)
             (end-cont))
 

@@ -79,7 +79,7 @@
          (free-binds vars (begin-exp (list (var-exp var) exp)) env)]
 
         [(or (symbol-exp _)
-             (const-exp _)
+             (real-exp _)
              (bool-exp _)
              (char-exp _)
              (string-exp _))

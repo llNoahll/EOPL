@@ -143,9 +143,9 @@
   ([symbol : Symbol])
   #:type-name Symbol-Exp)
 
-(define-struct (const-exp exp)
+(define-struct (real-exp exp)
   ([num : Real])
-  #:type-name Const-Exp)
+  #:type-name Real-Exp)
 
 (define-struct (bool-exp exp)
   ([bool : Boolean])

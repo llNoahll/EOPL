@@ -11,14 +11,14 @@
     (match code
       [`(quote ,(? symbol? symbol)) `(symbol-exp ',symbol)]
       [`(quote ,(? boolean? bool))  `(bool-exp ,bool)]
-      [`(quote ,(? real? num))      `(const-exp ,num)]
+      [`(quote ,(? real? num))      `(real-exp ,num)]
       [`(quote ,(? string? str))    `(string-exp ,str)]
       [`(quote ,(? char? ch))       `(char-exp ,ch)]
       [`(quote ,(? s-list? ls))
        (parser `(list ,@(map (ann (λ (arg) `(quote ,arg)) [-> S-Exp S-Exp]) ls)))]
 
       [(? boolean? bool) `(bool-exp ,bool)]
-      [(? real? num)     `(const-exp ,num)]
+      [(? real? num)     `(real-exp ,num)]
       [(? string? str)   `(string-exp ,str)]
       [(? char? ch)      `(char-exp ,ch)]
 

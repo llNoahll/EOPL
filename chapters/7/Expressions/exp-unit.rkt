@@ -37,7 +37,7 @@
                  [-> Cont [-> ExpVal FinalAnswer]]))
            cont))]
         [(symbol-exp sym)  (apply-cont cont (symbol-val sym))]
-        [(const-exp  num)  (apply-cont cont (num-val    num))]
+        [(real-exp  num)   (apply-cont cont (num-val    num))]
         [(bool-exp   bool) (apply-cont cont (bool-val   bool))]
         [(char-exp   char) (apply-cont cont (char-val   char))]
         [(string-exp str)  (apply-cont cont (string-val str))]
