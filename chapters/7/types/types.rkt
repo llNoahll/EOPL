@@ -197,9 +197,6 @@
            (andmap pred arg)))))
 
 
-(: type=? [-> Type Type Boolean])
-(define type=? (λ (t1 t2) (equal? t1 t2)))
-
 (: λ-args-type
    (case-> [-> (List* '->  Type (Listof Type))
                (Listof Type)]
@@ -252,13 +249,29 @@
               (and (any-type? t2) t2)
               (and (nothing-type? t1) t2)
               (and (nothing-type? t2) t1)
-              (and (type=? t1 t2) t1)
+              (and (=: t1 t2) t1)
               'Any))]
     [(t1 t2 . ts)
      (and t1 t2 (types? ts)
           (for/fold ([res : Type (type-union t1 t2)])
                     ([t (in-list ts)])
             (type-union res t)))]))
+
+
+(: =: [-> Type Type Boolean])
+(define =: (λ (t1 t2) (equal? t1 t2)))
+
+(: <=: [-> Type Type Boolean])
+(define <=: (λ (t1 t2) (or (=: t1 t2) (<: t1 t2))))
+
+(: >=: [-> Type Type Boolean])
+(define >=: (λ (t1 t2) (or (=: t1 t2) (>: t1 t2))))
+
+(: <: [-> Type Type Boolean])           ; TODO
+(define <: (const #f))
+
+(: >: [-> Type Type Boolean])           ; TODO
+(define >: (const #f))
 
 
 (define-struct exp () #:type-name Exp)

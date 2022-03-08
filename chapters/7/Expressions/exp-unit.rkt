@@ -421,7 +421,7 @@
       #f
 
       #;(match exp
-          [(ann-exp exp type) (and (<: (type-of exp tenv) type) type)]
+          [(ann-exp exp type) (and (<=: (type-of exp tenv) type) type)]
           [(assign-exp var exp) 'Void]
           [(symbol-exp sym)     'Symbol]
           [(real-exp  num)      'Real]
