@@ -3,7 +3,28 @@
 (require/typed racket/undefined
   [undefined Undefined])
 
-(provide undefined (all-defined-out))
+(require typed/racket/unsafe)
+
+(unsafe-require/typed
+ racket/contract/base
+ [or/c
+  (All (A B C D E)
+       (case-> [-> (pred Any)]
+               [-> (pred A) (pred A)]
+               [-> (pred A) (pred B) (pred (U A B))]
+               [-> (pred A) (pred B) (pred C) (pred (U A B C))]
+               [-> (pred A) (pred B) (pred C) (pred D) (pred (U A B C D))]
+               [-> (pred A) (pred B) (pred C) (pred D) (pred E) (pred (U A B C D E))]))]
+ [and/c
+  (All (A B C D E)
+       (case-> [-> (pred Nothing)]
+               [-> (pred A) (pred A)]
+               [-> (pred A) (pred B) (pred (∩ A B))]
+               [-> (pred A) (pred B) (pred C) (pred (∩ A B C))]
+               [-> (pred A) (pred B) (pred C) (pred D) (pred (∩ A B C D))]
+               [-> (pred A) (pred B) (pred C) (pred D) (pred E) (pred (∩ A B C D E))]))])
+
+(provide undefined or/c and/c (all-defined-out))
 
 
 (define-predicate undefined? Undefined)
@@ -168,7 +189,7 @@
 
 (define-predicate mutex-type?   'Mutex)
 
-(: listof? (All (A) [-> [-> Any Boolean : A] [-> Any Boolean : (Listof A)]]))
+(: listof? (All (A) [-> (pred A) (pred (Listof A))]))
 (define listof?
   (λ (pred)
     (λ (arg)

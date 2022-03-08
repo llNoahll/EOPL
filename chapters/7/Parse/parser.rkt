@@ -163,20 +163,12 @@
 
 
       [`(,(? λ?)
-         ,(? (ann (λ (arg)
-                    (or (symbol? arg)
-                        ((listof? symbol?) arg)))
-                  [-> Any Boolean : (U Symbol (Listof Symbol))])
-             args)
+         ,(? (or/c symbol? (listof? symbol?)) args)
          ,(? s-exp? #{body-exps : S-List})
          ..1)
        `(proc-exp ',args ,(parser `(begin ,@body-exps)))]
       [`(,(? trace-λ?)
-         ,(? (ann (λ (arg)
-                    (or (symbol? arg)
-                        ((listof? symbol?) arg)))
-                  [-> Any Boolean : (U Symbol (Listof Symbol))])
-             args)
+         ,(? (or/c symbol? (listof? symbol?)) args)
          ,(? s-exp? #{body-exps : S-List})
          ..1)
        `(trace-proc-exp ',args ,(parser `(begin ,@body-exps)))]

@@ -170,11 +170,7 @@
 
 
       [`(,(and λ-op (or (? λ?) (? trace-λ?)))
-         ,(? (ann (λ (arg)
-                    (or (symbol? arg)
-                        ((listof? symbol?) arg)))
-                  [-> Any Boolean : (U Symbol (Listof Symbol))])
-             args)
+         ,(? (or/c symbol? (listof? symbol?)) args)
          ,(? s-exp? #{body-exps : S-List})
          ..1)
        `(,λ-op ,args ,@(map auto-ann body-exps))]
