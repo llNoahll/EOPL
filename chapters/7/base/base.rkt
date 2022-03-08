@@ -20,6 +20,8 @@
          "../Procedure/proc-unit.rkt"
          "../Environment/env-sig.rkt"
          "../Environment/env-unit.rkt"
+         "../TypeEnvironment/tenv-sig.rkt"
+         "../TypeEnvironment/tenv-unit.rkt"
          "../Expressions/exp-sig.rkt"
          "../Expressions/exp-unit.rkt")
 
@@ -29,12 +31,12 @@
 
 (define-compound-unit/infer base@
   (import)
-  (export ref^ cont^ thd^ sche^ mut^ values^ env^ proc^ primitive-proc^ exp^)
-  (link   ref@ cont@ thd@ sche@ mut@ values@ env@ proc@ primitive-proc@ exp@))
+  (export ref^ cont^ thd^ sche^ mut^ values^ env^ tenv^ proc^ primitive-proc^ exp^)
+  (link   ref@ cont@ thd@ sche@ mut@ values@ env@ tenv@ proc@ primitive-proc@ exp@))
 
 (define-values/invoke-unit base@
   (import)
-  (export ref^ cont^ thd^ sche^ mut^ values^ env^ proc^ primitive-proc^ exp^))
+  (export ref^ cont^ thd^ sche^ mut^ values^ env^ tenv^ proc^ primitive-proc^ exp^))
 
 
 (define-namespace-anchor ns-anchor)

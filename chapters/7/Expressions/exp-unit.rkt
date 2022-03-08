@@ -8,6 +8,7 @@
          "../Mutex/mut-sig.rkt"
          "../ExpValues/values-sig.rkt"
          "../Environment/env-sig.rkt"
+         "../TypeEnvironment/tenv-sig.rkt"
          "../Procedure/proc-sig.rkt"
          "../PrimitiveProc/primitive-proc-sig.rkt"
          "exp-sig.rkt")
@@ -16,7 +17,7 @@
 
 
 (define-unit exp@
-  (import ref^ cont^ thd^ sche^ mut^ values^ env^ proc^ primitive-proc^)
+  (import ref^ cont^ thd^ sche^ mut^ values^ env^ tenv^ proc^ primitive-proc^)
   (export exp^)
 
 
@@ -24,6 +25,8 @@
   (define value-of/k
     (λ (exp env cont)
       (match exp
+        [(ann-exp exp type) (value-of/k exp env cont)]
+
         [(assign-exp var exp)
          (value-of/k
           exp env
@@ -410,5 +413,143 @@
                                  cont)))))))
                  [-> Cont [-> ExpVal FinalAnswer]]))
            cont))])))
+
+
+  (: type-of [-> Exp TEnv (Option Type)])
+  (define type-of
+    (λ (exp tenv)
+      #f
+
+      #;(match exp
+          [(ann-exp exp type) (and (<: (type-of exp tenv) type) type)]
+          [(assign-exp var exp) 'Void]
+          [(symbol-exp sym)     'Symbol]
+          [(real-exp  num)      'Real]
+          [(bool-exp   #t)      'True]
+          [(bool-exp   #f)      'False]
+          [(char-exp   char)    'Char]
+          [(string-exp str)     'String]
+
+          [(var-exp var) (apply-tenv tenv var)]
+
+          [(begin-exp exps)
+           (for/last ([exp (in-list exps)])
+             (type-of exp tenv))]
+
+          [(if-exp pred-exp true-exp false-exp)
+           (define pred-exp-type  (assert (type-of pred-exp tenv) bool-type?))
+           (define true-exp-type  (type-of true-exp tenv))
+           (define false-exp-type (type-of false-exp tenv))
+           (case pred-exp-type
+             [(True)    true-exp-type]
+             [(False)   false-exp-type]
+             [(Boolean) (type-union true-exp-type false-exp-type)])]
+          [(cond-exp branches)
+           (for/fold ([1st-true-branch-type : (Option Type) #f]
+                      [union-branches-type  : (Option Type) #f]
+                      #:result (or 1st-true-branch-type union-branches-type))
+                     ([branch (in-list branches)])
+             (define pred-exp-type (assert (type-of (car branch) tenv) bool-type?))
+             (define body-exp-type (type-of (cdr branch) tenv))
+             (case pred-exp-type
+               [(True)
+                (values (or 1st-true-branch-type body-exp-type)
+                        (type-union union-branches-type body-exp-type))]
+               [(False)
+                (values 1st-true-branch-type
+                        (type-union union-branches-type 'Void))]
+               [(Boolean)
+                (values 1st-true-branch-type
+                        (type-union union-branches-type body-exp-type))]))]
+
+          [(let-exp vars exps body)
+           (type-of (if (or (null? exps) (null? vars))
+                        body
+                        (call-exp (proc-exp vars body) exps))
+                    tenv)]
+          [(letrec-exp vars exps body)
+           (cond [(or (null? exps) (null? vars))
+                  (type-of body tenv)]
+                 [else
+                  (define init-tenv
+                    (for/fold ([res : TEnv tenv])
+                              ([var (in-list vars)])
+                      (extend-tenv res var #f)))
+
+                  (let loop ([tenv ini-tenv])
+                    (define new-tenv
+                      (for/fold ([res : TEnv tenv])
+                                ([var (in-list vars)]
+                                 [exp (in-list exps)])
+                        (extend-tenv res var (type-of exp res))))
+
+                    (if (for/and ([var (in-list vars)])
+                          (equal? (apply-tenv tenv var)
+                                  (apply-tenv new-tenv var)))
+                        (type-of body tenv)
+                        (loop new-tenv)))])]
+
+          [(let/cc-exp cc-var body)
+           (let loop ([tenv (extend-tenv tenv cc-var #f)])
+             (define body-type (type-of body tenv))
+             (if (equal? body-type (apply-tenv tenv cc-var))
+                 body-type
+                 (loop (extend-tenv tenv cc-var body-type))))]
+
+          [(handlers-exp catch-preds catch-handlers body)
+           (if (or (null? catch-preds) (null? catch-handlers))
+               (type-of body tenv)
+               (for/fold ([handler-return-type : (Option Type) 'Nothing]
+                          #:result (type-union handler-return-type (type-of body tenv)))
+                         ([catch-pred    (in-list catch-preds)]
+                          [catch-handler (in-list catch-handlers)])
+                 (assert (type-of catch-pred tenv) λ-type?)
+                 (type-union handler-return-type
+                             (λ-return-type
+                              (assert (type-of catch-handler tenv) λ-type?)))))]
+          [(raise-exp exp)  (type-of exp tenv) 'Nothing]
+          [(spawn-exp exp)  (type-of exp tenv) 'Natural]
+          [(mutex-exp exp)  (type-of exp tenv) 'Mutex]
+          [(wait-exp exp)   (type-of exp tenv) 'Void]
+          [(signal-exp exp) (type-of exp tenv) 'Void]
+          [(yield-exp)      (type-of exp tenv) 'Natural]
+          [(kill-exp exp)   (type-of exp tenv) 'Boolean]
+
+          [(send-exp tid-exp value-exp)
+           (type-of tid-exp tenv)
+           (type-of value-exp tenv)
+           'Void]
+          [(receive-exp)     'Any]
+          [(try-receive-exp) 'Any]
+
+          [(primitive-proc-exp op exps)
+           (define args-type
+             (for/list ([exp (in-list exps)])
+               (type-of exp tenv)))
+           ;; TODO
+           #;(apply (hash-ref primitive-proc-type-table op)
+                    (reverse args-type))
+           'Any]
+          [(trace-proc-exp vars body) (type-of (proc-exp vars body) tenv)]
+          [(proc-exp vars body)
+           (cond [(symbol? vars)
+                  (define proc-tenv
+                    ;; TODO
+                    (extend-tenv tenv vars '(Listof Any)))
+                  `[-> Any * ,(type-of body proc-tenv)]]
+                 [else
+                  (define proc-tenv
+                    (for/fold ([res : TEnv tenv])
+                              ([var (in-list vars)])
+                      ;; TODO
+                      (extend-tenv res var 'Any)))
+                  `[-> ,@(map (const 'Any) vars) ,(type-of body proc-tenv)]])]
+          [(call-exp rator rands)
+           (match rator
+             [(proc-exp vars body)
+              ]
+             [_
+              ])])))
+
 
   )

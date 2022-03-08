@@ -9,6 +9,9 @@
 (define parser
   (λ (code)
     (match code
+      [`(ann ,(? s-exp? exp) ,(? type? type))
+       `(ann-exp ,(parser exp) ,type)]
+
       [`(quote ,(? symbol? symbol)) `(symbol-exp ',symbol)]
       [`(quote ,(? boolean? bool))  `(bool-exp ,bool)]
       [`(quote ,(? real? num))      `(real-exp ,num)]
@@ -22,7 +25,7 @@
       [(? string? str)   `(string-exp ,str)]
       [(? char? ch)      `(char-exp ,ch)]
 
-      [(? symbol? var) `(var-exp ',var)]
+      [(? symbol? var)   `(var-exp ',var)]
 
       [`(set! ,(? symbol? var) ,(? s-exp? exp))
        `(assign-exp ',var ,(parser exp))]
@@ -34,7 +37,7 @@
        (if (null? vars)
            `(begin-exp
               (list ,@(map parser exps)))
-           (parser `(letrec ,(map (ann (λ (var val) (list var val))
+           (parser `(letrec ,(map (ann (λ (var val) `[,var ,val])
                                        [-> Symbol S-Exp (List Symbol S-Exp)])
                                   (cast vars (Listof Symbol))
                                   (cast vals S-List))
@@ -159,22 +162,23 @@
        `(let/cc-exp ',cc-var ,(parser `(begin ,@body-exps)))]
 
 
-      [`(,(? λ?) ,(? symbol? args)
-                  ,(? s-exp? #{body-exps : S-List})
-                  ..1)
+      [`(,(? λ?)
+         ,(? (ann (λ (arg)
+                    (or (symbol? arg)
+                        ((listof? symbol?) arg)))
+                  [-> Any Boolean : (U Symbol (Listof Symbol))])
+             args)
+         ,(? s-exp? #{body-exps : S-List})
+         ..1)
        `(proc-exp ',args ,(parser `(begin ,@body-exps)))]
-      [`(,(? λ?) (,(? symbol? #{args : (Listof Symbol)}) ...)
-                  ,(? s-exp? #{body-exps : S-List})
-                  ..1)
-       `(proc-exp ',args ,(parser `(begin ,@body-exps)))]
-
-      [`(,(? trace-λ?) ,(? symbol? args)
-                        ,(? s-exp? #{body-exps : S-List})
-                        ..1)
-       `(trace-proc-exp ',args ,(parser `(begin ,@body-exps)))]
-      [`(,(? trace-λ?) (,(? symbol? #{args : (Listof Symbol)}) ...)
-                        ,(? s-exp? #{body-exps : S-List})
-                        ..1)
+      [`(,(? trace-λ?)
+         ,(? (ann (λ (arg)
+                    (or (symbol? arg)
+                        ((listof? symbol?) arg)))
+                  [-> Any Boolean : (U Symbol (Listof Symbol))])
+             args)
+         ,(? s-exp? #{body-exps : S-List})
+         ..1)
        `(trace-proc-exp ',args ,(parser `(begin ,@body-exps)))]
 
       [`(,(? s-exp? op) ,(? s-exp? #{exps : S-List}) ...)

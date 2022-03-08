@@ -75,6 +75,8 @@
   (define free-binds
     (λ (vars exp env)
       (match exp
+        [(ann-exp exp type) (free-binds vars exp env)]
+
         [(assign-exp var exp)
          (free-binds vars (begin-exp (list (var-exp var) exp)) env)]
 

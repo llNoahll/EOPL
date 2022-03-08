@@ -12,11 +12,15 @@
 
 (define-type Literal (U Boolean Real Symbol Char String))
 
-(define-type S-List (Listof S-Exp))
-(define-type S-Exp (U Literal S-List))
 
+(define-type S-Exp  (U Literal S-List))
 (define-predicate s-exp?  S-Exp)
+(define-type S-List (Listof S-Exp))
 (define-predicate s-list? S-List)
+
+(define-type Ann-S-Exp  (U Literal (List 'ann S-Exp Type)))
+(define-predicate ann-s-exp?  Ann-S-Exp)
+
 
 (define-type Lambda (U 'lambda 'λ))
 (define-predicate λ? Lambda)
@@ -113,6 +117,11 @@
    [binds : (Immutable-HashTable Symbol Ref)])
   #:type-name Env)
 
+(define-struct tenv
+  ([type  : (U 'empty-tenv 'extend-tenv 'extend-tenv-rec)]
+   [binds : (Immutable-HashTable Symbol (Option Type))])
+  #:type-name TEnv)
+
 
 (define-struct proc
   ([vars : (U Symbol (Listof Symbol))]  ; Symbol is used for `apply'.
@@ -130,7 +139,114 @@
   #:type-name Mutex)
 
 
+(define-type Type
+  (U Symbol
+     (List* '->  Type (Listof Type))
+     (List  '->* (Listof Type) (Listof Type) Type)
+     (Listof Type)))
+(define-predicate type?  Type)
+
+(define-type Types (Listof Type))
+(define-predicate types? Types)
+
+(define-predicate λ-type?
+  (U (List* '->  Type (Listof Type))
+     (List  '->* (Listof Type) (Listof Type) Type)))
+
+(define-predicate any-type?     'Any)
+(define-predicate nothing-type? 'Nothing)
+
+(define-predicate void-type?    'Void)
+(define-predicate symbol-type?  'Symbol)
+(define-predicate natural-type? 'Natural)
+(define-predicate real-type?    (U 'Natural 'Real))
+(define-predicate true-type?    'True)
+(define-predicate false-type    'False)
+(define-predicate bool-type?    (U 'True 'False 'Boolean))
+(define-predicate char-type?    'Char)
+(define-predicate string-type?  'String)
+
+(define-predicate mutex-type?   'Mutex)
+
+(: listof? (All (A) [-> [-> Any Boolean : A] [-> Any Boolean : (Listof A)]]))
+(define listof?
+  (λ (pred)
+    (λ (arg)
+      (and (list? arg)
+           (andmap pred arg)))))
+
+
+(: type=? [-> Type Type Boolean])
+(define type=? (λ (t1 t2) (equal? t1 t2)))
+
+(: λ-args-type
+   (case-> [-> (List* '->  Type (Listof Type))
+               (Listof Type)]
+           [-> (List  '->* (Listof Type) (Listof Type) Type)
+               (List (Listof Type) (Listof Type))]))
+(define λ-args-type
+  (λ (λ-type)
+    (match λ-type
+      [`[-> ,(? type? #{args-type : (Listof Any)}) ...
+            ,(? type? return-type)]
+       (assert args-type types?)]
+      [`[->* ,args-type ,(? type? return-type)]
+       args-type])))
+
+(: λ-return-type
+   (case-> [-> (List* '->  Type (Listof Type))
+               Type]
+           [-> (List  '->* (Listof Type) (Listof Type) Type)
+               Type]))
+(define λ-return-type
+  (λ (λ-type)
+    (match λ-type
+      [`[-> ,(? type? #{args-type : (Listof Any)}) ...
+            ,(? type? return-type)]
+       return-type]
+      [`[->* ,args-type ,(? type? return-type)]
+       return-type])))
+
+(: type-union
+   (case-> [-> 'Nothing]
+
+           [-> False False]
+           [-> Type Type]
+
+           [-> False (Option Type) False]
+           [-> (Option Type) False False]
+           [-> Type Type Type]
+
+           [-> False (Option Type) (Option Type) (Option Type) * False]
+           [-> (Option Type) False (Option Type) (Option Type) * False]
+           [-> Type Type Type Type * Type]
+           [-> Type Type (Option Type) (Option Type) * (Option Type)]))
+(define type-union
+  (case-lambda
+    [()  'Nothing]
+    [(t) t]
+    [(t1 t2)
+     (and t1 t2
+          (or (and (any-type? t1) t1)
+              (and (any-type? t2) t2)
+              (and (nothing-type? t1) t2)
+              (and (nothing-type? t2) t1)
+              (and (type=? t1 t2) t1)
+              'Any))]
+    [(t1 t2 . ts)
+     (and t1 t2 (types? ts)
+          (for/fold ([res : Type (type-union t1 t2)])
+                    ([t (in-list ts)])
+            (type-union res t)))]))
+
+
 (define-struct exp () #:type-name Exp)
+
+
+(define-struct (ann-exp exp)
+  ([exp  : Exp]
+   [type : Type])
+  #:type-name Ann-Exp)
 
 
 (define-struct (assign-exp exp)
@@ -161,8 +277,8 @@
 
 
 (define-struct (if-exp exp)
-  ([pred-exp : Exp]
-   [true-exp : Exp]
+  ([pred-exp  : Exp]
+   [true-exp  : Exp]
    [false-exp : Exp])
   #:type-name If-Exp)
 
