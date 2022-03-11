@@ -97,6 +97,9 @@
 (namespace-set-variable-value! 'x 10 #t init-eval-ns)
 
 
+(displayln "Start thread test.\n")
+
+
 (*check-code* 'x (init-env) init-eval-ns)
 (*check-code* 'i (init-env) init-eval-ns)
 

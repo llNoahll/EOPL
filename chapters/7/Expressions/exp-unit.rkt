@@ -78,30 +78,7 @@
                       env cont)))
                  [-> Cont [-> ExpVal FinalAnswer]]))
            cont))]
-        [(cond-exp branches)
-         (define branch (car branches))
-         (value-of/k
-          (car branch) env
-          (cons
-           (frame
-            'cond-frame
-            (inherit-handlers-cont cont)
-            (ann (λ (cont)
-                   (λ (pred-val)
-                     (if (expval->bool pred-val)
-                         (value-of/k (cadr branch) env cont)
-                         (let ([next (cdr branches)])
-                           (if (null? next)
-                               (apply-cont cont (void))
-                               (value-of/k (cond-exp next) env cont))))))
-                 [-> Cont [-> ExpVal FinalAnswer]]))
-           cont))]
 
-        [(let-exp vars exps body)
-         (value-of/k (if (or (null? exps) (null? vars))
-                         body
-                         (call-exp (proc-exp vars body) exps))
-                     env cont)]
         [(letrec-exp vars exps body)
          (cond [(or (null? exps) (null? vars))
                 (value-of/k body env cont)]
@@ -459,28 +436,7 @@
                                    "expected" 'Boolean
                                    "given"    tp
                                    "in"       pred-exp)])]
-        [(cond-exp branches)
-         (for/fold ([t1 : (Option Type) #f]
-                    #:result
-                    (and (or t1 (check 'Void)) (assert t0)))
-                   ([branch (in-list branches)])
-           (define tp (type-of (car  branch) tenv 'Boolean))
-           (define tb (type-of (cadr branch) tenv t0))
-           (case tp
-             [(True) (or t1 tb)]
-             [(False)    t1]
-             [(Boolean)  t1]
-             [else
-              (raise-arguments-error 'type-of "type mismatch"
-                                     "expected" 'Boolean
-                                     "given"    tp
-                                     "in"       (car branch))]))]
 
-        [(let-exp vars exps body)
-         (type-of (if (or (null? exps) (null? vars))
-                      body
-                      (call-exp (proc-exp vars body) exps))
-                  tenv t0)]
         [(letrec-exp vars exps body)
          (cond [(or (null? exps) (null? vars))
                 (type-of body tenv t0)]

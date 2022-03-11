@@ -106,20 +106,7 @@
          (free-binds vars
                      (begin-exp (list pred-exp true-exp false-exp))
                      env)]
-        [(cond-exp branches)
-         (free-binds vars
-                     (begin-exp (apply append branches))
-                     env)]
 
-        [(let-exp bind-vars bind-exps body)
-         (cond [(or (null? bind-vars) (null? bind-exps))
-                (free-binds vars body env)]
-               [else
-                (define args-free-binds (free-binds vars (begin-exp bind-exps) env))
-                (define new-env (extend-env-bind+ args-free-binds env))
-                (define body-free-binds (free-binds (append vars bind-vars) body new-env))
-
-                (append args-free-binds body-free-binds)])]
         [(letrec-exp bind-vars bind-exps body)
          (define new-env
            (extend-env+ (map (ann (λ (var) (cons var undefined))

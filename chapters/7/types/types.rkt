@@ -165,17 +165,26 @@
   #:type-name Mutex)
 
 
-(define-type Type (U Symbol λ-Type List-Type))
+(define-type Type (U Symbol Poly-Type λ-Type Pair-Type List-Type Listof-Type))
 (define-predicate type? Type)
 
 (define-type Types (Listof Type))
 (define-predicate types? Types)
 
-(define-type λ-Type (Pair '-> (Listof Type) #;(Rec End (U (List Type) (List Type '* Type) (Pair Type End)))))
+(define-type Poly-Type (List 'All (Listof Symbol) Type))
+(define-predicate poly-type? Poly-Type)
+
+(define-type λ-Type (List* '-> Type (Listof Type) #;(Rec End (U (List Type) (List Type '* Type) (Pair Type End)))))
 (define-predicate λ-type? λ-Type)
+
+(define-type Pair-Type (List 'Pair Type Type))
+(define-predicate pair-type? Pair-Type)
 
 (define-type List-Type (Pair 'List Types))
 (define-predicate list-type? List-Type)
+
+(define-type Listof-Type (Pair 'Listof Types))
+(define-predicate listof-type? Listof-Type)
 
 (define-predicate any-type?     'Any)
 (define-predicate nothing-type? 'Nothing)
@@ -330,23 +339,11 @@
   #:transparent
   #:type-name If-Exp)
 
-(define-struct (cond-exp exp)
-  ([branches : (Pair (List Exp Exp) (Listof (List Exp Exp)))])
-  #:transparent
-  #:type-name Cond-Exp)
-
 
 (define-struct (var-exp exp)
   ([var : Symbol])
   #:transparent
   #:type-name Var-Exp)
-
-(define-struct (let-exp exp)
-  ([bind-vars : (Listof Symbol)]
-   [bind-exps : (Listof Exp)]
-   [body : Exp])
-  #:transparent
-  #:type-name Let-Exp)
 
 (define-struct (letrec-exp exp)
   ([bind-vars : (Listof Symbol)]

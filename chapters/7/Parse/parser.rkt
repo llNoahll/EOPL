@@ -9,8 +9,9 @@
 (define parser
   (λ (code)
     (match code
-      [`(ann ,(? s-exp? exp) ,(? type? type))
-       `(ann-exp ,(parser exp) ',type)]
+      [`(ann ,v ,t)
+       #:when (and (s-exp? v) (type? t))
+       `(ann-exp ,(parser v) ',t)]
 
       [`(quote ,(? symbol? symbol)) `(symbol-exp ',symbol)]
       [`(quote ,(? boolean? bool))  `(bool-exp ,bool)]
@@ -27,21 +28,16 @@
 
       [(? symbol? var)   `(var-exp ',var)]
 
-      [`(set! ,(? symbol? var) ,(? s-exp? exp))
+      [`(set! ,var ,exp)
+       #:when (and (symbol? var) (s-exp? exp))
        `(assign-exp ',var ,(parser exp))]
 
-      [`(begin
-          (define ,vars ,vals) ...
-          ,(? s-exp? #{exps : S-List}) ..1)
-       #:when (and ((listof? symbol?) vars)
-                   ((listof? s-exp?)  vals))
-       (if (null? vars)
-           `(begin-exp
-              (list ,@(map parser exps)))
-           (parser `(letrec ,(map (ann (λ (var val) `[,var ,val])
-                                       [-> Symbol S-Exp (List Symbol S-Exp)])
-                                  vars vals)
-                      ,@exps)))]
+      [`(begin ,exp ,exps ..1)
+       #:when (and (s-exp? exp)
+                   ((listof? s-exp?) exps))
+       (if (null? exps)
+           (parser exp)
+           `(begin-exp (list ,@(map parser (cons exp exps)))))]
 
       [`(if ,(? s-exp? pred-exp)
             ,(? s-exp? true-exp)
@@ -49,42 +45,15 @@
        `(if-exp ,(parser pred-exp)
                 ,(parser true-exp)
                 ,(parser false-exp))]
-      [`(cond [,(? s-exp? #{pred-exps : S-List})
-               ,body-exps
-               ..1]
-              ..1)
-       #:when ((listof? (listof? s-exp?)) body-exps)
-       `(cond-exp
-         (list ,@(map (ann (λ (pred-exp body-exps)
-                             `(list ,(parser (if (eq? pred-exp 'else)
-                                                 #t
-                                                 pred-exp))
-                                    ,(parser `(begin ,@body-exps))))
-                           [-> S-Exp S-List S-Exp])
-                      pred-exps
-                      body-exps)))]
 
-      [`(and ,(? s-exp? #{exps : S-List}) ...)
-       (if (null? exps)
-           `(bool-exp #t)
-           (parser `(if ,(car exps)
-                        (and ,@(cdr exps))
-                        #f)))]
-      [`(or ,(? s-exp? #{exps : S-List}) ...)
-       (if (null? exps)
-           `(bool-exp #f)
-           (parser `(if ,(car exps)
-                        #t
-                        (or ,@(cdr exps)))))]
-
-      [`(with-handlers ([,(? s-exp? #{pred-exps : S-List})
-                         ,(? s-exp? #{handler-exps : S-List})]
-                        ...)
-          ,(? s-exp? #{body-exps : S-List})
-          ..1)
+      [`(with-handlers ([,pred-exps ,handler-exps] ...)
+          ,body-exp)
+       #:when (and ((listof? s-exp?) pred-exps)
+                   ((listof? s-exp?) handler-exps)
+                   (s-exp? body-exp))
        `(handlers-exp (list ,@(map parser pred-exps))
                       (list ,@(map parser handler-exps))
-                      ,(parser `(begin ,@body-exps)))]
+                      ,(parser body-exp))]
       [`(raise       ,(? s-exp? exp)) `(raise-exp  ,(parser exp))]
       [`(spawn       ,(? s-exp? exp)) `(spawn-exp  ,(parser exp))]
       [`(mutex       ,(? s-exp? exp)) `(mutex-exp  ,(parser exp))]
@@ -98,81 +67,31 @@
       ['(thread-try-receive) '(try-receive-exp)]
       ['(yield)              '(yield-exp)]
 
-      ['(mutex) (parser '(mutex 1))]
-      [`(with-mutex ,(? s-exp? exp)
-          ,(? s-exp? #{body-exps : S-List})
-          ..1)
-       (define mut (gensym 'mut))
-       (parser
-        `(let ([,mut ,exp])
-           (wait ,mut)
-           ,@body-exps
-           (signal ,mut)))]
 
-      [`(let ([,(? symbol? #{bind-vars : (Listof Symbol)})
-               ,(? s-exp?  #{bind-exps : S-List})]
-              ...)
-          ,(? s-exp? #{body-exps : S-List})
-          ..1)
-       `(let-exp ',bind-vars
-                 (list ,@(map parser bind-exps))
-                 ,(parser `(begin ,@body-exps)))]
-      [`(let* ([,(? symbol? #{bind-vars : (Listof Symbol)})
-                ,(? s-exp?  #{bind-exps : S-List})]
-               ...)
-          ,(? s-exp? #{body-exps : S-List})
-          ..1)
-       (parser
-        (if (and (null? bind-vars) (null? bind-exps))
-            `(let () ,@body-exps)
-            `(let ([,(car bind-vars) ,(car bind-exps)])
-               (let* (,@(map (ann (λ (var exp) (list var exp))
-                                  [-> Symbol S-Exp (List Symbol S-Exp)])
-                             (cdr bind-vars)
-                             (cdr bind-exps)))
-                 ,@body-exps))))]
-      [`(letrec ([,(? symbol? #{bind-vars : (Listof Symbol)})
-                  ,(? s-exp?  #{bind-exps : S-List})]
-                 ...)
-          ,(? s-exp? #{body-exps : S-List})
-          ..1)
+      [`(letrec ([,bind-vars ,bind-exps] ...) ,body-exp)
+       #:when (and ((listof? symbol?) bind-vars)
+                   ((listof? s-exp?)  bind-exps)
+                   (s-exp? body-exp))
        `(letrec-exp ',bind-vars
                     (list ,@(map parser bind-exps))
-                    ,(parser `(begin ,@body-exps)))]
-      [`(letrec* ([,(? symbol? #{bind-vars : (Listof Symbol)})
-                   ,(? s-exp?  #{bind-exps : S-List})]
-                  ...)
-          ,(? s-exp? #{body-exps : S-List})
-          ..1)
-       (parser
-        (if (and (null? bind-vars) (null? bind-exps))
-            `(letrec () ,@body-exps)
-            `(letrec ([,(car bind-vars) ,(car bind-exps)])
-               (letrec* (,@(map (ann (λ (var exp) (list var exp))
-                                     [-> Symbol S-Exp (List Symbol S-Exp)])
-                                (cdr bind-vars)
-                                (cdr bind-exps)))
-                 ,@body-exps))))]
+                    ,(parser body-exp))]
+
+      [`(let/cc ,cc-var ,body-exp)
+       #:when (and (symbol? cc-var) (s-exp? body-exp))
+       `(let/cc-exp ',cc-var ,(parser body-exp))]
 
 
-      [`(let/cc ,(? symbol? cc-var)
-          ,(? s-exp? #{body-exps : S-List})
-          ..1)
-       `(let/cc-exp ',cc-var ,(parser `(begin ,@body-exps)))]
+      [`(,(? λ?) ,args ,body-exp)
+       #:when (and ((or/c symbol? (listof? symbol?)) args)
+                   (s-exp? body-exp))
+       `(proc-exp ',args ,(parser body-exp))]
+      [`(,(? trace-λ?) ,args ,body-exp)
+       #:when (and ((or/c symbol? (listof? symbol?)) args)
+                   (s-exp? body-exp))
+       `(trace-proc-exp ',args ,(parser body-exp))]
 
-
-      [`(,(? λ?)
-         ,(? (or/c symbol? (listof? symbol?)) args)
-         ,(? s-exp? #{body-exps : S-List})
-         ..1)
-       `(proc-exp ',args ,(parser `(begin ,@body-exps)))]
-      [`(,(? trace-λ?)
-         ,(? (or/c symbol? (listof? symbol?)) args)
-         ,(? s-exp? #{body-exps : S-List})
-         ..1)
-       `(trace-proc-exp ',args ,(parser `(begin ,@body-exps)))]
-
-      [`(,(? s-exp? op) ,(? s-exp? #{exps : S-List}) ...)
+      [`(,op ,exps ...)
+       #:when (and (s-exp? op) ((listof? s-exp?) exps))
        `(call-exp ,(parser op) (list ,@(map parser exps)))]
 
       )))

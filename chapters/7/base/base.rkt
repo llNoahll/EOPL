@@ -2,6 +2,7 @@
 
 (require "../types/types.rkt"
          "../Parse/parser.rkt"
+         "../Parse/desugar.rkt"
          "../Parse/auto-ann.rkt"
          #;"../Parse/auto-cps.rkt"
          "../Reference/ref-sig.rkt"
@@ -27,6 +28,7 @@
 
 (provide (all-from-out "../types/types.rkt")
          (all-from-out "../Parse/parser.rkt")
+         (all-from-out "../Parse/desugar.rkt")
          (all-from-out "../Parse/auto-ann.rkt")
          #;(all-from-out "../Parse/auto-cps.rkt")
          (all-defined-out))
@@ -51,7 +53,7 @@
     (: exp Exp)
     (define exp
       (assert (call-with-values
-               (λ () (eval (parser code) eval-ns))
+               (λ () (eval (parser (desugar (auto-ann code))) eval-ns))
                (λ args (car args)))
               exp?))
 
@@ -144,8 +146,13 @@
   (: add-primitive-proc! [-> Symbol Type [-> DenVal * ExpVal] Void])
   (define add-primitive-proc!
     (λ (op-name op-type op-val)
-      (base-tenv (extend-tenv op-name op-type (base-tenv)))
-      (base-env  (extend-env  op-name (primitive-proc op-val) (base-env)))))
+      (add-denval! op-name op-type (primitive-proc op-val))))
+
+  (: add-denval! [-> Symbol Type DenVal Void])
+  (define add-denval!
+    (λ (name type val)
+      (base-tenv (extend-tenv name type (base-tenv)))
+      (base-env  (extend-env  name val  (base-env)))))
 
 
   (add-primitive-proc! 'get-tid  '[-> Natural] (nullary-func get-tid))
@@ -170,18 +177,18 @@
                          (match vals
                            [`(,val) (bool-val (null? val))]
                            [_ (error 'unary-func "Bad args: ~s" vals)])))
-  #;(add-primitive-proc! 'car
-                         '(All (A B) [-> (Pair A B) A])
-                         (λ [vals : DenVal *] : ExpVal
-                           (match vals
-                             [`(,val) (car (expval->pair val))]
-                             [_ (error 'unary-func "Bad args: ~s" vals)])))
-  #;(add-primitive-proc! 'cdr
-                         '(All (A B) [-> (Pair A B) B])
-                         (λ [vals : DenVal *] : ExpVal
-                           (match vals
-                             [`(,val) (cdr (expval->pair val))]
-                             [_ (error 'unary-func "Bad args: ~s" vals)])))
+  (add-primitive-proc! 'car
+                       '(All (A B) [-> (Pair A B) A])
+                       (λ [vals : DenVal *] : ExpVal
+                         (match vals
+                           [`(,val) (car (expval->pair val))]
+                           [_ (error 'unary-func "Bad args: ~s" vals)])))
+  (add-primitive-proc! 'cdr
+                       '(All (A B) [-> (Pair A B) B])
+                       (λ [vals : DenVal *] : ExpVal
+                         (match vals
+                           [`(,val) (cdr (expval->pair val))]
+                           [_ (error 'unary-func "Bad args: ~s" vals)])))
 
 
   (add-primitive-proc! 'read '[-> Any] (nullary-func read))
@@ -206,21 +213,24 @@
   (add-primitive-proc! 'equal? '[-> Any Any Boolean] (binary-equal-relation equal?))
 
 
-  #;(add-primitive-proc! 'cons
-                         '(All (A B) [-> A B (Pair A B)])
-                         (λ [vals : DenVal *] : ExpVal
-                           (match vals
-                             [`(,val-1 ,val-2) (pair-val (cons val-1 val-2))]
-                             [_ (error 'binary-func "Bad args: ~s" vals)])))
+  (add-primitive-proc! 'cons
+                       '(All (A B) [-> A B (Pair A B)])
+                       (λ [vals : DenVal *] : ExpVal
+                         (match vals
+                           [`(,val-1 ,val-2) (pair-val (cons val-1 val-2))]
+                           [_ (error 'binary-func "Bad args: ~s" vals)])))
 
   (add-primitive-proc! '+ '[-> Number * Number] (n-ary-arithmetic-func +))
   (add-primitive-proc! '* '[-> Number * Number] (n-ary-arithmetic-func *))
   (add-primitive-proc! '- '[-> Number Number * Number] (n-ary-arithmetic-func -))
   (add-primitive-proc! '/ '[-> Number Number * Number] (n-ary-arithmetic-func /))
 
-  #;(add-primitive-proc! 'list
-                         '(All (A) [-> A * (Listof A)])
-                         (λ [vals : DenVal *] : ExpVal (list-val vals)))
+  (add-primitive-proc! 'void
+                       '[-> Any * Void]
+                       (λ [vals : DenVal *] : ExpVal (void)))
+  (add-primitive-proc! 'list
+                       '(All (A) [-> A * (Listof A)])
+                       (λ [vals : DenVal *] : ExpVal (list-val vals)))
   (add-primitive-proc! 'format
                        '[-> String Any * String]
                        (λ [vals : DenVal *] : ExpVal
@@ -232,68 +242,58 @@
                            [_ (error 'n-ary-func "Bad args: ~s" vals)])))
 
 
-  #;(base-env (extend-env 'apply
-                          '(All (A B) [-> [-> A * B] (Listof A) B])
-                          (proc-val (procedure '(func args)
-                                               (call-exp (var-exp 'func) (var-exp 'args))
-                                               (empty-env)))
-                          (base-env)))
+  (add-denval! 'apply
+               '(All (A B) [-> [-> A * B] (Listof A) B])
+               (proc-val (procedure '(func args)
+                                    (call-exp (var-exp 'func) (var-exp 'args))
+                                    (empty-env))))
 
-  #;(base-env (extend-env 'void
-                          '[-> Any * Void]
-                          (expval->denval
-                           (*eval* '(λ _ (cond [#f _]))
-                                   (base-env)
-                                   (id-cont)))
-                          (base-env)))
-
-  #;(base-env (extend-env 'Y
-                          '(All (A B) [-> [-> [-> A B] [-> A B]]
-                                          [-> A B]])
-                          (expval->denval
-                           (*eval* '(λ (f)
-                                      ((λ (recur-func)
-                                         (recur-func recur-func))
-                                       (λ (recur-func)
-                                         (f (λ args
-                                              (apply (recur-func recur-func) args))))))
-                                   (base-env)
-                                   (id-cont)))
-                          (base-env)))
+  (add-denval! 'Y
+               '(All (A B) [-> [-> [-> A B] [-> A B]] [-> A B]])
+               (expval->denval
+                (*eval* '(λ (f)
+                           ((λ (recur-func)
+                              (recur-func recur-func))
+                            (λ (recur-func)
+                              (f (λ args
+                                   (apply (recur-func recur-func) args))))))
+                        (base-env)
+                        (id-cont))))
 
 
-  #;(base-env (extend-env 'map
-                          (expval->denval
-                           (*eval* '(Y (λ (map)
-                                         (λ (func ls)
-                                           (if (null? ls)
-                                               '()
-                                               (cons (func (car ls))
-                                                     (map func (cdr ls)))))))
-                                   (base-env)
-                                   (id-cont)))
-                          (base-env)))
+  (add-denval! 'map
+               '(All (B A) [-> [-> A B] (Listof A) (Listof B)])
+               (expval->denval
+                (*eval* '(Y (λ (map)
+                              (λ (func ls)
+                                (if (null? ls)
+                                    '()
+                                    (cons (func (car ls))
+                                          (map func (cdr ls)))))))
+                        (base-env)
+                        (id-cont))))
 
-  #;(base-env (extend-env 'Y*
-                          (expval->denval
-                           (*eval* '(λ funcs
-                                      ((λ (recur-funcs)
-                                         (recur-funcs recur-funcs))
-                                       (λ (recur-funcs)
-                                         (map (λ (func)
-                                                (λ args
-                                                  (apply (apply func (recur-funcs recur-funcs)) args)))
-                                              funcs))))
-                                   (base-env)
-                                   (id-cont)))
-                          (base-env)))
+  (add-denval! 'Y*
+               '(All (A B) [-> [-> [-> A B] [-> A B] * [-> A B]]
+                               [-> [-> A B] [-> A B] * [-> A B]] *
+                               (Listof [-> A B])])
+               (expval->denval
+                (*eval* '(λ funcs
+                           ((λ (recur-funcs)
+                              (recur-funcs recur-funcs))
+                            (λ (recur-funcs)
+                              (map (λ (func)
+                                     (λ args
+                                       (apply (apply func (recur-funcs recur-funcs)) args)))
+                                   funcs))))
+                        (base-env)
+                        (id-cont))))
 
-  #;(base-env (extend-env 'call/cc
-                          (expval->denval
-                           (*eval* '(λ (cont) (let/cc cc (cont cc)))
-                                   (base-env)
-                                   (id-cont)))
-                          (base-env)))
+  (add-denval! 'call/cc
+               '(All (A) [-> [-> [-> A Nothing] A] A])
+               (expval->denval
+                (*eval* '(λ (cont) (let/cc cc (cont cc)))
+                        (base-env)
+                        (id-cont))))
 
-
-  (void))
+  )
