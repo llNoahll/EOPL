@@ -6,7 +6,9 @@
 
 
 (define-signature env^
-  ([empty-env   : [-> Env]]
+  (
+   [base-env    : (Parameter Env)]
+   [empty-env   : [-> Env]]
    [empty-env?  : [-> Env Boolean]]
 
 

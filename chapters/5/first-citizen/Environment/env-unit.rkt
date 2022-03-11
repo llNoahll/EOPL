@@ -26,10 +26,12 @@
   (export env^)
 
 
+  (: base-env (Parameter Env))
   (: empty-env [-> Env])
-  (define empty-env
+  (define-values (base-env empty-env)
     (let ([empty-environment (make-env 'empty-env #hasheq())])
-      (λ () empty-environment)))
+      (values (make-parameter empty-environment)
+              (λ () empty-environment))))
 
   (: empty-env? [-> Env Boolean])
   (define empty-env? (λ (env) (eqv? (env-type env) 'empty-env)))

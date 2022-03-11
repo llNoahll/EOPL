@@ -14,8 +14,6 @@
          "../Mutex/mut-unit.rkt"
          "../ExpValues/values-sig.rkt"
          "../ExpValues/values-unit.rkt"
-         "../PrimitiveProc/primitive-proc-sig.rkt"
-         "../PrimitiveProc/primitive-proc-unit.rkt"
          "../Procedure/proc-sig.rkt"
          "../Procedure/proc-unit.rkt"
          "../Environment/env-sig.rkt"
@@ -29,12 +27,12 @@
 
 (define-compound-unit/infer base@
   (import)
-  (export ref^ cont^ thd^ sche^ mut^ values^ env^ proc^ primitive-proc^ exp^)
-  (link   ref@ cont@ thd@ sche@ mut@ values@ env@ proc@ primitive-proc@ exp@))
+  (export ref^ cont^ thd^ sche^ mut^ values^ env^ proc^ exp^)
+  (link   ref@ cont@ thd@ sche@ mut@ values@ env@ proc@ exp@))
 
 (define-values/invoke-unit base@
   (import)
-  (export ref^ cont^ thd^ sche^ mut^ values^ env^ proc^ primitive-proc^ exp^))
+  (export ref^ cont^ thd^ sche^ mut^ values^ env^ proc^ exp^))
 
 
 (define-namespace-anchor ns-anchor)
@@ -138,15 +136,8 @@
 
   (: add-primitive-proc! [-> Symbol [-> DenVal * ExpVal] Void])
   (define add-primitive-proc!
-    (λ (op-name op)
-      (hash-set! primitive-proc-table op-name op)
-      (base-env (extend-env op-name
-                            (proc-val (procedure 'args
-                                                 (primitive-proc-exp 'apply-primitive
-                                                                     (list (symbol-exp op-name)
-                                                                           (var-exp 'args)))
-                                                 (empty-env)))
-                            (base-env)))))
+    (λ (op-name op-val)
+      (base-env (extend-env op-name (primitive-proc op-val) (base-env)))))
 
 
   (add-primitive-proc! 'get-tid  (nullary-func get-tid))
@@ -203,12 +194,6 @@
                                (match vals
                                  [`(,val-1 ,val-2) (pair-val (cons val-1 val-2))]
                                  [_ (error 'binary-func "Bad args: ~s" vals)])))
-
-  (add-primitive-proc! 'apply-primitive (λ [vals : DenVal *] : ExpVal
-                                          (match vals
-                                            [`(,(? symbol? val-1) ,(? denlist? val-2))
-                                             (apply (hash-ref primitive-proc-table val-1) val-2)]
-                                            [_ (error 'binary-func "Bad args: ~s" vals)])))
 
 
   (add-primitive-proc! '+ (n-ary-arithmetic-func +))

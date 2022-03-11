@@ -28,6 +28,7 @@
 
 
 (define-type DenVal (U Literal Undefined
+                       Primitive-Proc
                        Proc Trace-Proc
                        Cont Mutex Thread-Identifier
                        Null (Pair DenVal DenVal)))
@@ -114,6 +115,10 @@
   #:type-name Env)
 
 
+(define-struct primitive-proc
+  ([λ : [-> DenVal * ExpVal]])
+  #:type-name Primitive-Proc)
+
 (define-struct proc
   ([vars : (U Symbol (Listof Symbol))]  ; Symbol is used for `apply'.
    [body : Exp]
@@ -198,11 +203,6 @@
   ([exps : (Pair Exp (Listof Exp))])
   #:type-name Begin-Exp)
 
-
-(define-struct (primitive-proc-exp exp)
-  ([op : Symbol]
-   [exps : (Listof Exp)])
-  #:type-name Primitive-Proc-Exp)
 
 (define-struct (proc-exp exp)
   ([vars : (U Symbol (Listof Symbol))]

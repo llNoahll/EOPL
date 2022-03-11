@@ -9,14 +9,13 @@
          "../ExpValues/values-sig.rkt"
          "../Environment/env-sig.rkt"
          "../Procedure/proc-sig.rkt"
-         "../PrimitiveProc/primitive-proc-sig.rkt"
          "exp-sig.rkt")
 
 (provide exp@)
 
 
 (define-unit exp@
-  (import ref^ cont^ thd^ sche^ mut^ values^ env^ proc^ primitive-proc^)
+  (import ref^ cont^ thd^ sche^ mut^ values^ env^ proc^)
   (export exp^)
 
 
@@ -223,6 +222,10 @@
                               (λ ()
                                 (apply-cont (end-subthread-cont)
                                             (apply-cont op (num-val spawn-tid))))]
+                             [(primitive-proc? op)
+                              (λ ()
+                                (apply-cont (end-subthread-cont)
+                                            (apply-cont cont ((primitive-proc-λ op) (num-val spawn-tid)))))]
                              [else (raise-argument-error 'value-of/k "operator?" op)]))
 
                      (place-on-ready-queue! spawn-thk (get-tid) spawn-tid)
@@ -337,27 +340,6 @@
                               1st-value)
                             [-> DenVal (Queueof DenVal) DenVal]))))]
 
-        [(primitive-proc-exp op exps)
-         (let loop : FinalAnswer
-              ([exps exps]
-               [vals : (Listof DenVal) '()])
-           (if (null? exps)
-               (apply-cont
-                cont
-                (apply (hash-ref primitive-proc-table op)
-                       (reverse vals)))
-               (value-of/k
-                (car exps) env
-                (cons
-                 (frame
-                  'primitive-proc-frame
-                  (inherit-handlers-cont cont)
-                  (ann (λ (cont)
-                         (λ (val)
-                           (loop (cdr exps)
-                                 (cons (expval->denval val) vals))))
-                       [-> Cont [-> ExpVal FinalAnswer]]))
-                 cont))))]
         [(trace-proc-exp vars body)
          (apply-cont cont (proc-val (trace-procedure vars body env)))]
         [(proc-exp vars body)
@@ -371,7 +353,7 @@
             (inherit-handlers-cont cont)
             (ann (λ (cont)
                    (λ (op)
-                     (unless (or (proc? op) (cont? op))
+                     (unless (or (proc? op) (cont? op) (primitive-proc? op))
                        (raise-argument-error 'value-of/k "operator?" op))
 
                      (if (var-exp? rands)
@@ -386,7 +368,9 @@
                                      (cond [(proc? op)
                                             (apply-procedure/k op (expval->list args) cont)]
                                            [(cont? op)
-                                            (apply-cont op (car (expval->list args)))])))
+                                            (apply-cont op (car (expval->list args)))]
+                                           [(primitive-proc? op)
+                                            (apply-cont cont (apply (primitive-proc-λ op) (reverse (expval->list args))))])))
                                  [-> Cont [-> ExpVal FinalAnswer]]))
                            cont))
                          (let loop : FinalAnswer
@@ -395,7 +379,9 @@
                                (cond [(proc? op)
                                       (apply-procedure/k op (reverse args) cont)]
                                      [(cont? op)
-                                      (apply-cont op (car (last-pair args)))])
+                                      (apply-cont op (car (last-pair args)))]
+                                     [(primitive-proc? op)
+                                      (apply-cont cont (apply (primitive-proc-λ op) (reverse args)))])
                                (value-of/k
                                 (car rands) env
                                 (cons
