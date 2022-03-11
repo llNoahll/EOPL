@@ -409,7 +409,10 @@
         (λ (t1)
           (if (or (false? t0) (<=: t1 t0))
               t1
-              (raise-argument-error 'type-of (format "'~a" t0) t1))))
+              (raise-arguments-error 'type-of "type mismatch"
+                                     "expected" t0
+                                     "given"    t1
+                                     "in"       exp))))
 
       (match exp
         [(ann-exp exp type)
@@ -451,7 +454,11 @@
            [(True)    tt]
            [(False)   tf]
            [(Boolean) (check (type-union tt tf))]
-           [else (raise-argument-error 'type-of (format "'~a" 'Boolean) tp)])]
+           [else
+            (raise-arguments-error 'type-of "type mismatch"
+                                   "expected" 'Boolean
+                                   "given"    tp
+                                   "in"       pred-exp)])]
         [(cond-exp branches)
          (for/fold ([t1 : (Option Type) #f]
                     #:result
@@ -463,7 +470,11 @@
              [(True) (or t1 tb)]
              [(False)    t1]
              [(Boolean)  t1]
-             [else (raise-argument-error 'type-of (format "'~a" 'Boolean) tp)]))]
+             [else
+              (raise-arguments-error 'type-of "type mismatch"
+                                     "expected" 'Boolean
+                                     "given"    tp
+                                     "in"       (car branch))]))]
 
         [(let-exp vars exps body)
          (type-of (if (or (null? exps) (null? vars))
@@ -558,13 +569,19 @@
                                 (define t0 (car ts0))
                                 (if (<=: t0 t*)
                                     (loop (cdr ts0) ts)
-                                    (raise-argument-error 'type-of (format "'~a" t*) t0))]
+                                    (raise-arguments-error 'type-of "type mismatch"
+                                                           "expected" t*
+                                                           "given"    t0
+                                                           "in"       exp))]
                                [else
                                 (define t0 (car ts0))
                                 (define t  (car ts))
                                 (if (<=: t0 t)
                                     (loop (cdr ts0) (cdr ts))
-                                    (raise-argument-error 'type-of (format "'~a" t)  t0))])))]))
+                                    (raise-arguments-error 'type-of "type mismatch"
+                                                           "expected" t
+                                                           "given"    t0
+                                                           "in"       exp))])))]))
                   (check t1))]
                 [`[-> ,ts ... ,t1]
                  #:when (and (types? ts) (type? t1))
