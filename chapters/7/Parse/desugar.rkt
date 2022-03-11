@@ -111,6 +111,22 @@
                    ((listof? s-exp?) body-exps))
        (desugar `(,op ,binds (begin ,@body-exps)))]
 
+      [`(with-handlers ([,pred-exps0 ,handler-exps0] ...)
+          (with-handlers ([,pred-exps1 ,handler-exps1] ...)
+            ,body-exps ..1))
+       #:when (and ((listof? s-exp?) pred-exps0)
+                   ((listof? s-exp?) handler-exps0)
+                   ((listof? s-exp?) pred-exps1)
+                   ((listof? s-exp?) handler-exps1)
+                   ((listof? s-exp?) body-exps))
+       (desugar
+        `(with-handlers
+           ,(map (ann (λ (pred-exp handler-exp)
+                        `[,(desugar pred-exp) ,(desugar handler-exp)])
+                      [-> S-Exp S-Exp (List S-Exp S-Exp)])
+                 (append pred-exps0 pred-exps1)
+                 (append handler-exps0 handler-exps1))
+           ,@body-exps))]
 
       ['(mutex) '(mutex 1)]
       [`(with-mutex ,exp ,body-exps ..1)
