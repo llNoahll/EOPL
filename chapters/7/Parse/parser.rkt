@@ -10,7 +10,7 @@
   (λ (code)
     (match code
       [`(ann ,(? s-exp? exp) ,(? type? type))
-       `(ann-exp ,(parser exp) ,type)]
+       `(ann-exp ,(parser exp) ',type)]
 
       [`(quote ,(? symbol? symbol)) `(symbol-exp ',symbol)]
       [`(quote ,(? boolean? bool))  `(bool-exp ,bool)]
@@ -31,16 +31,16 @@
        `(assign-exp ',var ,(parser exp))]
 
       [`(begin
-          (define ,(? symbol? #{vars : (Listof Any)})
-            ,(? s-exp? #{vals : (Listof Any)})) ...
+          (define ,vars ,vals) ...
           ,(? s-exp? #{exps : S-List}) ..1)
+       #:when (and ((listof? symbol?) vars)
+                   ((listof? s-exp?)  vals))
        (if (null? vars)
            `(begin-exp
               (list ,@(map parser exps)))
            (parser `(letrec ,(map (ann (λ (var val) `[,var ,val])
                                        [-> Symbol S-Exp (List Symbol S-Exp)])
-                                  (cast vars (Listof Symbol))
-                                  (cast vals S-List))
+                                  vars vals)
                       ,@exps)))]
 
       [`(if ,(? s-exp? pred-exp)
@@ -50,9 +50,10 @@
                 ,(parser true-exp)
                 ,(parser false-exp))]
       [`(cond [,(? s-exp? #{pred-exps : S-List})
-               ,(? s-exp? #{body-exps : (Listof (Listof Any))})
+               ,body-exps
                ..1]
               ..1)
+       #:when ((listof? (listof? s-exp?)) body-exps)
        `(cond-exp
          (list ,@(map (ann (λ (pred-exp body-exps)
                              `(list ,(parser (if (eq? pred-exp 'else)
@@ -61,9 +62,7 @@
                                     ,(parser `(begin ,@body-exps))))
                            [-> S-Exp S-List S-Exp])
                       pred-exps
-                      (cast body-exps
-                            (Pair (Pair S-Exp S-List)
-                                  (Listof (Pair S-Exp S-List)))))))]
+                      body-exps)))]
 
       [`(and ,(? s-exp? #{exps : S-List}) ...)
        (if (null? exps)

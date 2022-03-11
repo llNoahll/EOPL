@@ -22,10 +22,12 @@
   (export tenv^)
 
 
+  (: base-tenv  (Parameter TEnv))
   (: empty-tenv [-> TEnv])
-  (define empty-tenv
+  (define-values (base-tenv empty-tenv)
     (let ([empty-type-environment (make-tenv 'empty-tenv #hasheq())])
-      (λ () empty-type-environment)))
+      (values (make-parameter empty-type-environment)
+              (λ () empty-type-environment))))
 
   (: empty-tenv? [-> TEnv Boolean])
   (define empty-tenv? (λ (tenv) (eqv? (tenv-type tenv) 'empty-tenv)))

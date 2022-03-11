@@ -34,6 +34,9 @@
   (: proc-val [-> Proc DenVal])
   (define proc-val (λ (proc) proc))
 
+  (: primitive-proc-val [-> Primitive-Proc DenVal])
+  (define primitive-proc-val (λ (primitive-proc) primitive-proc))
+
   (: mutex-val [-> Mutex DenVal])
   (define mutex-val (λ (mut) mut))
 
@@ -61,6 +64,9 @@
 
   (: expval->proc [-> ExpVal Proc])
   (define expval->proc (λ (val) (assert val proc?)))
+
+  (: expval->primitive-proc [-> ExpVal Primitive-Proc])
+  (define expval->primitive-proc (λ (val) (assert val primitive-proc?)))
 
   (: expval->mutex [-> ExpVal Mutex])
   (define expval->mutex (λ (val) (assert val mutex?)))

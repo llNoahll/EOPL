@@ -152,10 +152,6 @@
         [(try-receive-exp) '()]
         [(yield-exp)       '()]
 
-        [(primitive-proc-exp _ exps)
-         (if (null? exps)
-             '()
-             (free-binds vars (begin-exp exps) env))]
         [(or (trace-proc-exp proc-vars body)
              (proc-exp proc-vars body))
          #:when (not (false? body))

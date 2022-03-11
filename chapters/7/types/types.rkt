@@ -53,6 +53,7 @@
 
 
 (define-type DenVal (U Literal Undefined
+                       Primitive-Proc
                        Proc Trace-Proc
                        Cont Mutex Thread-Identifier
                        Null (Pair DenVal DenVal)))
@@ -144,8 +145,12 @@
   #:type-name TEnv)
 
 
+(define-struct primitive-proc
+  ([λ : [-> DenVal * ExpVal]])
+  #:type-name Primitive-Proc)
+
 (define-struct proc
-  ([vars : (U Symbol (Listof Symbol))]  ; Symbol is used for `apply'.
+  ([vars : (U Symbol (Listof Symbol))]  ; Symbol is used for `apply-primitive'.
    [body : Exp]
    [saved-env : Env])
   #:type-name Proc)
@@ -160,29 +165,29 @@
   #:type-name Mutex)
 
 
-(define-type Type
-  (U Symbol
-     (List* '->  Type (Listof Type))
-     (List  '->* (Listof Type) (Listof Type) Type)
-     (Listof Type)))
-(define-predicate type?  Type)
+(define-type Type (U Symbol λ-Type List-Type))
+(define-predicate type? Type)
 
 (define-type Types (Listof Type))
 (define-predicate types? Types)
 
-(define-predicate λ-type?
-  (U (List* '->  Type (Listof Type))
-     (List  '->* (Listof Type) (Listof Type) Type)))
+(define-type λ-Type (Pair '-> (Listof Type) #;(Rec End (U (List Type) (List Type '* Type) (Pair Type End)))))
+(define-predicate λ-type? λ-Type)
+
+(define-type List-Type (Pair 'List Types))
+(define-predicate list-type? List-Type)
 
 (define-predicate any-type?     'Any)
 (define-predicate nothing-type? 'Nothing)
 
 (define-predicate void-type?    'Void)
+(define-predicate null-type?    'Null)
 (define-predicate symbol-type?  'Symbol)
 (define-predicate natural-type? 'Natural)
 (define-predicate real-type?    (U 'Natural 'Real))
+(define-predicate number-type?  (U 'Number 'Natural 'Real))
 (define-predicate true-type?    'True)
-(define-predicate false-type    'False)
+(define-predicate false-type?   'False)
 (define-predicate bool-type?    (U 'True 'False 'Boolean))
 (define-predicate char-type?    'Char)
 (define-predicate string-type?  'String)
@@ -197,33 +202,27 @@
            (andmap pred arg)))))
 
 
-(: λ-args-type
-   (case-> [-> (List* '->  Type (Listof Type))
-               (Listof Type)]
-           [-> (List  '->* (Listof Type) (Listof Type) Type)
-               (List (Listof Type) (Listof Type))]))
-(define λ-args-type
-  (λ (λ-type)
-    (match λ-type
-      [`[-> ,(? type? #{args-type : (Listof Any)}) ...
-            ,(? type? return-type)]
-       (assert args-type types?)]
-      [`[->* ,args-type ,(? type? return-type)]
-       args-type])))
+#;(: λ-args-type [-> λ-Type (U (Listof Type) (Pair (Listof Type) Type))])
+#;(define λ-args-type
+    (λ (λ-type)
+      (match λ-type
+        [`[-> ,ts ... ,t1]
+         #:when (and (types? ts) (type? t1))
+         ts]
+        [`[-> ,ts ... ,t* * ,t1]
+         #:when (and (types? ts) (type? t*) (type? t1))
+         (list ts t*)])))
 
-(: λ-return-type
-   (case-> [-> (List* '->  Type (Listof Type))
-               Type]
-           [-> (List  '->* (Listof Type) (Listof Type) Type)
-               Type]))
+(: λ-return-type [-> λ-Type Type])
 (define λ-return-type
   (λ (λ-type)
     (match λ-type
-      [`[-> ,(? type? #{args-type : (Listof Any)}) ...
-            ,(? type? return-type)]
-       return-type]
-      [`[->* ,args-type ,(? type? return-type)]
-       return-type])))
+      [`[-> ,ts ... ,t* * ,t1]
+       #:when (and (types? ts) (type? t*) (type? t1))
+       t1]
+      [`[-> ,ts ... ,t1]
+       #:when (and (types? ts) (type? t1))
+       t1])))
 
 (: type-union
    (case-> [-> 'Nothing]
@@ -245,11 +244,18 @@
     [(t) t]
     [(t1 t2)
      (and t1 t2
-          (or (and (any-type? t1) t1)
+          (or (and (=: t1 t2) t1)
+              (and (any-type? t1) t1)
               (and (any-type? t2) t2)
               (and (nothing-type? t1) t2)
               (and (nothing-type? t2) t1)
-              (and (=: t1 t2) t1)
+
+              (and (true-type?  t1) (false-type? t2) 'Boolean)
+              (and (false-type? t1) (true-type?  t2) 'Boolean)
+
+              (and (natural-type? t1) (real-type? t2) 'Real)
+              (and (real-type? t1) (natural-type? t2) 'Real)
+
               'Any))]
     [(t1 t2 . ts)
      (and t1 t2 (types? ts)
@@ -349,11 +355,6 @@
   #:type-name Begin-Exp)
 
 
-(define-struct (primitive-proc-exp exp)
-  ([op : Symbol]
-   [exps : (Listof Exp)])
-  #:type-name Primitive-Proc-Exp)
-
 (define-struct (proc-exp exp)
   ([vars : (U Symbol (Listof Symbol))]
    [body : Exp])
@@ -365,7 +366,7 @@
 
 (define-struct (call-exp exp)
   ([rator : Exp]
-   [rands : (U Var-Exp (Listof Exp))])
+   [rands : (U Var-Exp (Listof Exp))])  ; Symbol is used for `apply'.
   #:type-name Call-Exp)
 
 

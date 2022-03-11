@@ -10,14 +10,13 @@
          "../Environment/env-sig.rkt"
          "../TypeEnvironment/tenv-sig.rkt"
          "../Procedure/proc-sig.rkt"
-         "../PrimitiveProc/primitive-proc-sig.rkt"
          "exp-sig.rkt")
 
 (provide exp@)
 
 
 (define-unit exp@
-  (import ref^ cont^ thd^ sche^ mut^ values^ env^ tenv^ proc^ primitive-proc^)
+  (import ref^ cont^ thd^ sche^ mut^ values^ env^ tenv^ proc^)
   (export exp^)
 
 
@@ -40,7 +39,7 @@
                  [-> Cont [-> ExpVal FinalAnswer]]))
            cont))]
         [(symbol-exp sym)  (apply-cont cont (symbol-val sym))]
-        [(real-exp  num)   (apply-cont cont (num-val    num))]
+        [(real-exp   num)  (apply-cont cont (num-val    num))]
         [(bool-exp   bool) (apply-cont cont (bool-val   bool))]
         [(char-exp   char) (apply-cont cont (char-val   char))]
         [(string-exp str)  (apply-cont cont (string-val str))]
@@ -226,6 +225,10 @@
                               (λ ()
                                 (apply-cont (end-subthread-cont)
                                             (apply-cont op (num-val spawn-tid))))]
+                             [(primitive-proc? op)
+                              (λ ()
+                                (apply-cont (end-subthread-cont)
+                                            (apply-cont cont ((primitive-proc-λ op) (num-val spawn-tid)))))]
                              [else (raise-argument-error 'value-of/k "operator?" op)]))
 
                      (place-on-ready-queue! spawn-thk (get-tid) spawn-tid)
@@ -340,27 +343,6 @@
                               1st-value)
                             [-> DenVal (Queueof DenVal) DenVal]))))]
 
-        [(primitive-proc-exp op exps)
-         (let loop : FinalAnswer
-              ([exps exps]
-               [vals : (Listof DenVal) '()])
-           (if (null? exps)
-               (apply-cont
-                cont
-                (apply (hash-ref primitive-proc-table op)
-                       (reverse vals)))
-               (value-of/k
-                (car exps) env
-                (cons
-                 (frame
-                  'primitive-proc-frame
-                  (inherit-handlers-cont cont)
-                  (ann (λ (cont)
-                         (λ (val)
-                           (loop (cdr exps)
-                                 (cons (expval->denval val) vals))))
-                       [-> Cont [-> ExpVal FinalAnswer]]))
-                 cont))))]
         [(trace-proc-exp vars body)
          (apply-cont cont (proc-val (trace-procedure vars body env)))]
         [(proc-exp vars body)
@@ -374,7 +356,7 @@
             (inherit-handlers-cont cont)
             (ann (λ (cont)
                    (λ (op)
-                     (unless (or (proc? op) (cont? op))
+                     (unless (or (proc? op) (cont? op) (primitive-proc? op))
                        (raise-argument-error 'value-of/k "operator?" op))
 
                      (if (var-exp? rands)
@@ -389,7 +371,9 @@
                                      (cond [(proc? op)
                                             (apply-procedure/k op (expval->list args) cont)]
                                            [(cont? op)
-                                            (apply-cont op (car (expval->list args)))])))
+                                            (apply-cont op (car (expval->list args)))]
+                                           [(primitive-proc? op)
+                                            (apply-cont cont (apply (primitive-proc-λ op) (reverse (expval->list args))))])))
                                  [-> Cont [-> ExpVal FinalAnswer]]))
                            cont))
                          (let loop : FinalAnswer
@@ -398,7 +382,9 @@
                                (cond [(proc? op)
                                       (apply-procedure/k op (reverse args) cont)]
                                      [(cont? op)
-                                      (apply-cont op (car (last-pair args)))])
+                                      (apply-cont op (car (last-pair args)))]
+                                     [(primitive-proc? op)
+                                      (apply-cont cont (apply (primitive-proc-λ op) (reverse args)))])
                                (value-of/k
                                 (car rands) env
                                 (cons
@@ -415,141 +401,181 @@
            cont))])))
 
 
-  (: type-of [-> Exp TEnv (Option Type)])
+  (: type-of [-> Exp TEnv (Option Type) [#:safe? Boolean] Type])
   (define type-of
-    (λ (exp tenv)
-      #f
+    (λ (exp tenv t0 #:safe? [safe? #t])
+      (: check [-> Type Type])
+      (define check
+        (λ (t1)
+          (if (or (false? t0) (<=: t1 t0))
+              t1
+              (raise-argument-error 'type-of (format "'~a" t0) t1))))
 
-      #;(match exp
-          [(ann-exp exp type) (and (<=: (type-of exp tenv) type) type)]
-          [(assign-exp var exp) 'Void]
-          [(symbol-exp sym)     'Symbol]
-          [(real-exp  num)      'Real]
-          [(bool-exp   #t)      'True]
-          [(bool-exp   #f)      'False]
-          [(char-exp   char)    'Char]
-          [(string-exp str)     'String]
+      (match exp
+        [(ann-exp exp type)
+         (begin0 (check type)
+           (when safe? (type-of exp tenv type)))]
 
-          [(var-exp var) (apply-tenv tenv var)]
+        [(assign-exp var exp)
+         (begin0 (check 'Void)
+           (when safe? (type-of exp tenv (apply-tenv tenv var))))]
 
-          [(begin-exp exps)
-           (for/last ([exp (in-list exps)])
-             (type-of exp tenv))]
+        [(symbol-exp sym)  (check 'Symbol)]
+        [(real-exp   num)  (check 'Real)]
+        [(bool-exp   #t)   (check 'True)]
+        [(bool-exp   #f)   (check 'False)]
+        [(char-exp   char) (check 'Char)]
+        [(string-exp str)  (check 'String)]
 
-          [(if-exp pred-exp true-exp false-exp)
-           (define pred-exp-type  (assert (type-of pred-exp tenv) bool-type?))
-           (define true-exp-type  (type-of true-exp tenv))
-           (define false-exp-type (type-of false-exp tenv))
-           (case pred-exp-type
-             [(True)    true-exp-type]
-             [(False)   false-exp-type]
-             [(Boolean) (type-union true-exp-type false-exp-type)])]
-          [(cond-exp branches)
-           (for/fold ([1st-true-branch-type : (Option Type) #f]
-                      [union-branches-type  : (Option Type) #f]
-                      #:result (or 1st-true-branch-type union-branches-type))
-                     ([branch (in-list branches)])
-             (define pred-exp-type (assert (type-of (car branch) tenv) bool-type?))
-             (define body-exp-type (type-of (cdr branch) tenv))
-             (case pred-exp-type
-               [(True)
-                (values (or 1st-true-branch-type body-exp-type)
-                        (type-union union-branches-type body-exp-type))]
-               [(False)
-                (values 1st-true-branch-type
-                        (type-union union-branches-type 'Void))]
-               [(Boolean)
-                (values 1st-true-branch-type
-                        (type-union union-branches-type body-exp-type))]))]
+        [(var-exp var)
+         (define t1 (apply-tenv tenv var))
+         (if safe?
+             (check (assert t1))
+             (or (and t1 (check t1)) t0 'Any))]
 
-          [(let-exp vars exps body)
-           (type-of (if (or (null? exps) (null? vars))
-                        body
-                        (call-exp (proc-exp vars body) exps))
-                    tenv)]
-          [(letrec-exp vars exps body)
-           (cond [(or (null? exps) (null? vars))
-                  (type-of body tenv)]
-                 [else
-                  (define init-tenv
-                    (for/fold ([res : TEnv tenv])
-                              ([var (in-list vars)])
-                      (extend-tenv res var #f)))
+        [(begin-exp exps)
+         (if safe?
+             (let loop ([exp (car exps)] [next (cdr exps)])
+               (cond [(null? next) (type-of exp tenv t0)]
+                     [else
+                      (type-of exp tenv 'Void)
+                      (loop (car next) (cdr next))]))
+             (type-of (car (last-pair exps))
+                      tenv t0 #:safe? safe?))]
 
-                  (let loop ([tenv ini-tenv])
-                    (define new-tenv
-                      (for/fold ([res : TEnv tenv])
-                                ([var (in-list vars)]
-                                 [exp (in-list exps)])
-                        (extend-tenv res var (type-of exp res))))
+        [(if-exp pred-exp true-exp false-exp)
+         (define tp (type-of pred-exp  tenv 'Boolean))
+         (define tt (type-of true-exp  tenv t0))
+         (define tf (type-of false-exp tenv t0))
+         (case tp
+           [(True)    tt]
+           [(False)   tf]
+           [(Boolean) (check (type-union tt tf))]
+           [else (raise-argument-error 'type-of (format "'~a" 'Boolean) tp)])]
+        [(cond-exp branches)
+         (for/fold ([t1 : (Option Type) #f]
+                    #:result
+                    (and (or t1 (check 'Void)) (assert t0)))
+                   ([branch (in-list branches)])
+           (define tp (type-of (car  branch) tenv 'Boolean))
+           (define tb (type-of (cadr branch) tenv t0))
+           (case tp
+             [(True) (or t1 tb)]
+             [(False)    t1]
+             [(Boolean)  t1]
+             [else (raise-argument-error 'type-of (format "'~a" 'Boolean) tp)]))]
 
-                    (if (for/and ([var (in-list vars)])
-                          (equal? (apply-tenv tenv var)
-                                  (apply-tenv new-tenv var)))
-                        (type-of body tenv)
-                        (loop new-tenv)))])]
+        [(let-exp vars exps body)
+         (type-of (if (or (null? exps) (null? vars))
+                      body
+                      (call-exp (proc-exp vars body) exps))
+                  tenv t0)]
+        [(letrec-exp vars exps body)
+         (cond [(or (null? exps) (null? vars))
+                (type-of body tenv t0)]
+               [else
+                (define tenv0
+                  (for/fold ([res : TEnv tenv])
+                            ([var (in-list vars)]
+                             [exp (in-list exps)])
+                    (extend-tenv var #f res)))
 
-          [(let/cc-exp cc-var body)
-           (let loop ([tenv (extend-tenv tenv cc-var #f)])
-             (define body-type (type-of body tenv))
-             (if (equal? body-type (apply-tenv tenv cc-var))
-                 body-type
-                 (loop (extend-tenv tenv cc-var body-type))))]
+                (define tenv1
+                  (for/fold ([res : TEnv tenv0])
+                            ([var (in-list vars)]
+                             [exp (in-list exps)])
+                    (define t1 (type-of exp res #f #:safe? #f))
+                    (extend-tenv var t1 res)))
 
-          [(handlers-exp catch-preds catch-handlers body)
-           (if (or (null? catch-preds) (null? catch-handlers))
-               (type-of body tenv)
-               (for/fold ([handler-return-type : (Option Type) 'Nothing]
-                          #:result (type-union handler-return-type (type-of body tenv)))
-                         ([catch-pred    (in-list catch-preds)]
-                          [catch-handler (in-list catch-handlers)])
-                 (assert (type-of catch-pred tenv) λ-type?)
-                 (type-union handler-return-type
-                             (λ-return-type
-                              (assert (type-of catch-handler tenv) λ-type?)))))]
-          [(raise-exp exp)  (type-of exp tenv) 'Nothing]
-          [(spawn-exp exp)  (type-of exp tenv) 'Natural]
-          [(mutex-exp exp)  (type-of exp tenv) 'Mutex]
-          [(wait-exp exp)   (type-of exp tenv) 'Void]
-          [(signal-exp exp) (type-of exp tenv) 'Void]
-          [(yield-exp)      (type-of exp tenv) 'Natural]
-          [(kill-exp exp)   (type-of exp tenv) 'Boolean]
+                (for ([var (in-list vars)]
+                      [exp (in-list exps)])
+                  (type-of exp tenv1 (apply-tenv tenv1 var)))
 
-          [(send-exp tid-exp value-exp)
-           (type-of tid-exp tenv)
-           (type-of value-exp tenv)
-           'Void]
-          [(receive-exp)     'Any]
-          [(try-receive-exp) 'Any]
+                (type-of body tenv1 t0)])]
 
-          [(primitive-proc-exp op exps)
-           (define args-type
-             (for/list ([exp (in-list exps)])
-               (type-of exp tenv)))
-           ;; TODO
-           #;(apply (hash-ref primitive-proc-type-table op)
-                    (reverse args-type))
-           'Any]
-          [(trace-proc-exp vars body) (type-of (proc-exp vars body) tenv)]
-          [(proc-exp vars body)
-           (cond [(symbol? vars)
-                  (define proc-tenv
-                    ;; TODO
-                    (extend-tenv tenv vars '(Listof Any)))
-                  `[-> Any * ,(type-of body proc-tenv)]]
-                 [else
-                  (define proc-tenv
-                    (for/fold ([res : TEnv tenv])
-                              ([var (in-list vars)])
-                      ;; TODO
-                      (extend-tenv res var 'Any)))
-                  `[-> ,@(map (const 'Any) vars) ,(type-of body proc-tenv)]])]
-          [(call-exp rator rands)
-           (match rator
-             [(proc-exp vars body)
-              ]
-             [_
-              ])])))
+        [(let/cc-exp cc-var body)
+         (define tenv0 (extend-tenv cc-var `[-> ,(assert t0) Nothing] tenv))
+         (type-of body tenv0 t0)]
 
+        [(handlers-exp catch-preds catch-handlers body)
+         (begin0 (type-of body tenv t0)
+           (for ([catch-pred    (in-list catch-preds)]
+                 [catch-handler (in-list catch-handlers)])
+             (assert (type-of catch-pred tenv #f) λ-type?)
+             (check (λ-return-type (assert (type-of catch-handler tenv #f) λ-type?)))))]
+        [(raise-exp exp)  (begin0 (check 'Nothing) (when safe? (type-of exp tenv #f)))]
+        [(spawn-exp exp)  (begin0 (check 'Natural) (when safe? (type-of exp tenv #f)))]
+        [(mutex-exp exp)  (begin0 (check 'Mutex)   (when safe? (type-of exp tenv 'Natural)))]
+        [(wait-exp exp)   (begin0 (check 'Void)    (when safe? (type-of exp tenv 'Mutex)))]
+        [(signal-exp exp) (begin0 (check 'Void)    (when safe? (type-of exp tenv 'Mutex)))]
+        [(yield-exp)      (check 'Natural)]
+        [(kill-exp exp)   (begin0 (check 'Boolean) (when safe? (type-of exp tenv 'Natural)))]
+
+        [(send-exp tid-exp value-exp)
+         (begin0 (check 'Void)
+           (type-of tid-exp tenv 'Natural)
+           (type-of value-exp tenv #f))]
+        [(receive-exp)     (assert t0)]
+        [(try-receive-exp) (assert t0)]
+
+        #;[(trace-proc-exp vars body) (type-of (proc-exp vars body) tenv)]
+        [(proc-exp vars body) (assert t0)]
+        [(call-exp rator rands)
+         (match rator
+           [(proc-exp vars body)
+            (: ts (Listof Type))
+            (define ts
+              (if (list? rands)
+                  (for/list : (Listof Type)
+                            ([rand (in-list rands)])
+                    (type-of rand tenv #f))
+                  (match (type-of rands tenv #f)
+                    [`(List ,(? type? #{ts : (Listof Type)}) ...) ts])))
+
+            (type-of body
+                     (if (list? vars)
+                         (extend-tenv* vars ts tenv)
+                         (extend-tenv  vars `(List ,@ts) tenv))
+                     t0)]
+           [_
+            (: ts (Listof Type))
+            (: t1 Type)
+            (define-values (ts t1)
+              (match (type-of rator tenv #f)
+                [`[-> ,ts ... ,t* * ,t1]
+                 #:when (and (types? ts) (type? t*) (type? t1))
+                 (values
+                  (if (list? rands)
+                      (append ts (build-list (- (length rands) (length ts)) (const t*)))
+                      (match (type-of rands tenv #f)
+                        [`(List ,ts0 ...)
+                         #:when (types? ts0)
+                         (begin0 ts0
+                           (let loop ([ts0 ts0] [ts ts])
+                             (cond
+                               [(null? ts0) (assert (null? ts))]
+                               [(null? ts)
+                                (define t0 (car ts0))
+                                (if (<=: t0 t*)
+                                    (loop (cdr ts0) ts)
+                                    (raise-argument-error 'type-of (format "'~a" t*) t0))]
+                               [else
+                                (define t0 (car ts0))
+                                (define t  (car ts))
+                                (if (<=: t0 t)
+                                    (loop (cdr ts0) (cdr ts))
+                                    (raise-argument-error 'type-of (format "'~a" t)  t0))])))]))
+                  (check t1))]
+                [`[-> ,ts ... ,t1]
+                 #:when (and (types? ts) (type? t1))
+                 (when (list? rands)
+                   (assert (= (length rands) (length ts))))
+                 (values ts (check t1))]))
+            (if (list? rands)
+                (for ([t    (in-list ts)]
+                      [rand (in-list rands)])
+                  (type-of rand tenv t))
+                (type-of rands tenv `(List ,@ts)))
+            t1])])))
 
   )

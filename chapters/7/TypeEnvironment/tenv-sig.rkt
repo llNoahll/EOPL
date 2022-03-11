@@ -6,7 +6,9 @@
 
 
 (define-signature tenv^
-  ([empty-tenv   : [-> TEnv]]
+  (
+   [base-tenv    : (Parameter TEnv)]
+   [empty-tenv   : [-> TEnv]]
    [empty-tenv?  : [-> TEnv Boolean]]
 
 
