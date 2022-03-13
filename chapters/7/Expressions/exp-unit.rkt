@@ -350,7 +350,7 @@
                                            [(cont? op)
                                             (apply-cont op (car (expval->list args)))]
                                            [(primitive-proc? op)
-                                            (apply-cont cont (apply (primitive-proc-λ op) (reverse (expval->list args))))])))
+                                            (apply-cont cont (apply (primitive-proc-λ op) (expval->list args)))])))
                                  [-> Cont [-> ExpVal FinalAnswer]]))
                            cont))
                          (let loop : FinalAnswer
