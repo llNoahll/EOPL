@@ -52,7 +52,7 @@
 (define-type DenVal (U Literal Symbol Undefined Void
                        Primitive-Proc
                        Proc Trace-Proc
-                       Cont Mutex Thread-Identifier
+                       Cont Mutex
                        Null (Pair DenVal DenVal)))
 (define-predicate denval?  DenVal)
 (define-predicate denpair? (Pair DenVal DenVal))
@@ -105,11 +105,6 @@
    [time-slice : Exact-Positive-Integer]
    [thunk : [-> FinalAnswer]])
   #:type-name Thd)
-
-(struct thread-identifier
-  ([tid  : Natural]
-   [ptid : Natural])
-  #:type-name Thread-Identifier)
 
 (: thread-share-memory? (Parameter Boolean))
 (define thread-share-memory? (make-parameter #f))
