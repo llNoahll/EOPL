@@ -34,16 +34,18 @@
 
   (: place-on-thread-queue
      (case-> [-> (Queueof Natural) (U Natural [-> FinalAnswer]) (Queueof Natural)]
-             [-> (Queueof Natural) [-> FinalAnswer] Natural Natural (Queueof Natural)]))
+             [-> (Queueof Natural)
+                 [-> FinalAnswer] Natural Natural (Boxof (Queueof DenVal))
+                 (Queueof Natural)]))
   (define place-on-thread-queue
     (case-lambda
       [(thds t)
        (if (natural? t)
            (enqueue thds t)
-           (place-on-thread-queue thds t (get-ptid) (get-tid)))]
-      [(thds thk ptid tid)
+           (place-on-thread-queue thds t (get-ptid) (get-tid) (get-mail)))]
+      [(thds thk ptid tid mail)
        (define th
-         (thd ptid tid (box (empty-queue))
+         (thd ptid tid mail
               (let ([the-time the-time-remaining])
                 (if (exact-positive-integer? the-time)
                     the-time
@@ -54,13 +56,13 @@
 
   (: place-on-ready-queue!
      (case-> [-> (U Natural [-> FinalAnswer]) Void]
-             [-> [-> FinalAnswer] Natural Natural Void]))
+             [-> [-> FinalAnswer] Natural Natural (Boxof (Queueof DenVal)) Void]))
   (define place-on-ready-queue!
     (case-lambda
       [(t)
        (set! the-ready-queue (place-on-thread-queue the-ready-queue t))]
-      [(thk ptid tid)
-       (set! the-ready-queue (place-on-thread-queue the-ready-queue thk ptid tid))]))
+      [(thk ptid tid mail)
+       (set! the-ready-queue (place-on-thread-queue the-ready-queue thk ptid tid mail))]))
 
   (: run-next-thread [-> FinalAnswer])
   (define run-next-thread

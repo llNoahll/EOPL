@@ -9,9 +9,11 @@
   (
    [initialize-scheduler!  : [-> Exact-Positive-Integer Void]]
    [place-on-thread-queue  : (case-> [-> (Queueof Natural) (U Natural [-> FinalAnswer]) (Queueof Natural)]
-                                     [-> (Queueof Natural) [-> FinalAnswer] Natural Natural (Queueof Natural)])]
+                                     [-> (Queueof Natural)
+                                         [-> FinalAnswer] Natural Natural (Boxof (Queueof DenVal))
+                                         (Queueof Natural)])]
    [place-on-ready-queue!  : (case-> [-> (U Natural [-> FinalAnswer]) Void]
-                                     [-> [-> FinalAnswer] Natural Natural Void])]
+                                     [-> [-> FinalAnswer] Natural Natural (Boxof (Queueof DenVal)) Void])]
    [run-next-thread        : [-> FinalAnswer]]
    [set-final-answer!      : [-> ExpVal Void]]
    [time-expired?          : [-> Boolean]]

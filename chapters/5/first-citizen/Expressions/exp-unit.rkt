@@ -228,7 +228,7 @@
                                             (apply-cont cont ((primitive-proc-λ op) (num-val spawn-tid)))))]
                              [else (raise-argument-error 'value-of/k "operator?" op)]))
 
-                     (place-on-ready-queue! spawn-thk (get-tid) spawn-tid)
+                     (place-on-ready-queue! spawn-thk (get-tid) spawn-tid (box (empty-queue)))
                      (apply-cont cont (num-val spawn-tid))))
                  [-> Cont [-> ExpVal FinalAnswer]]))
            cont))]

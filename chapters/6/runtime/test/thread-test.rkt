@@ -48,13 +48,13 @@
            (displayln "End"))
         (base-env) (end-main-thread-cont) 10)
 
-#;(displayln "\n----------------------------------------------")
-#;(*eval* '(begin
-             (displayln "Start")
-             (spawn (λ (tid) (thread-send 1 "Hello, World!")))
-             (displayln (thread-receive))
-             (displayln "End"))
-          (base-env) (end-main-thread-cont))
+(displayln "\n----------------------------------------------")
+(*eval* '(begin
+           (displayln "Start")
+           (spawn (λ (tid) (thread-send 1 "Hello, World!")))
+           (displayln (thread-receive))
+           (displayln "End"))
+        (base-env) (end-main-thread-cont))
 
 (displayln "\n----------------------------------------------")
 (*eval* '(begin
