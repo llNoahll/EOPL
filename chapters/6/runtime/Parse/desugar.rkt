@@ -61,6 +61,20 @@
        #:when (and (s-exp? exp1) (s-exp? exp2))
        (desugar exp2)]
 
+      [`(when ,pred-exp ,body-exps ..1)
+       #:when (and (s-exp? pred-exp)
+                   ((listof? s-exp?) body-exps))
+       (desugar
+        `(if ,pred-exp
+             (begin ,@body-exps)
+             (void)))]
+      [`(unless ,pred-exp ,body-exps ..1)
+       #:when (and (s-exp? pred-exp)
+                   ((listof? s-exp?) body-exps))
+       (desugar
+        `(if ,pred-exp
+             (void)
+             (begin ,@body-exps)))]
       [`(cond [,pred-exp ,body-exp ,body-exp* ...]
               ,next ...)
        #:when (and (s-exp? pred-exp)

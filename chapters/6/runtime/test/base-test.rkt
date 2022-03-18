@@ -132,6 +132,19 @@
 (*check-code* '(void 1)   (base-env) base-eval-ns)
 (*check-code* '(void 1 2) (base-env) base-eval-ns)
 
+(*check-code* '(when (null? (list 1 2 3))
+                 'when)
+              (base-env) base-eval-ns)
+(*check-code* '(when (not (null? (list 1 2 3)))
+                 'when)
+              (base-env) base-eval-ns)
+(*check-code* '(unless (not (null? (list 1 2 3)))
+                 'unless)
+              (base-env) base-eval-ns)
+(*check-code* '(unless (null? (list 1 2 3))
+                 'unless)
+              (base-env) base-eval-ns)
+
 (*check-code* '(cond [(null? (list 1 2 3)) 'cond-1]
                      [(null? (list 9 0 8)) 'cond-2]
                      [else 'else-cons])
