@@ -9,14 +9,31 @@
 (define desugar
   (let ()
     (define-predicate define-exp? (List* 'define S-Exp S-Exp (Listof S-Exp)))
+
     (λ (code)
       (match code
         ;; macro
         [`(,(or 'quote 'quasiquote) ,(? literal? atom)) atom]
-        [`(quote ,(? list? ls))
-         (desugar `(list ,@(map (ann (λ (arg) `(quote ,arg)) [-> S-Exp S-Exp]) ls)))]
-        ;; TODO quasiquote
-        #;[`(quasiquote ,(? list? ls)) ]
+        [`(,(or 'quote 'quasiquote) ,(? symbol?))       code]
+        [`',(? list? ls)
+         `(list ,@(map (ann (λ (datum) (desugar `',datum)) [-> S-Exp S-Exp]) ls))]
+        [`',_ code]
+
+        [``,(list 'unquote datum) (desugar datum)]
+        [``,(list 'unquote-splicing datum)
+         (raise-arguments-error 'unquote-splicing
+                                "unquote-splicing: invalid context within quasiquote"
+                                "at" (list 'unquote-splicing datum)
+                                "in" code)]
+        [``,(? list? ls)
+         `(list
+           ,@(for/foldr : (Listof S-Exp)
+                        ([res '()])
+               ([datum (in-list ls)])
+               (match datum
+                 [(list 'unquote datum) (cons (desugar datum) res)]
+                 #;[(list 'unquote-splicing datum) (append (desugar datum) res)] ; TODO
+                 [_ (cons (desugar (list 'quasiquote datum)) res)])))]
 
         [`(begin (define ,vars ,vals) ..1 ,exps ..1)
          #:when (and ((listof? symbol?) vars)
@@ -203,9 +220,7 @@
              (signal ,mut)))]
 
         ;; reduce
-        [`(quote ,_) code]
-        [(? list?)
-         (map desugar code)]
+        [(? list?) (map desugar code)]
         [_ code
            #;(match code
                [(? boolean? bool) code]

@@ -229,6 +229,9 @@
 (*check-code* '(map car '((a 0) (b 1) (c 2) (d 3)))
               (base-env) base-eval-ns)
 
+(*check-code* '(apply * `(1 ,(+ 1 2) 4))
+              (base-env) base-eval-ns)
+
 (*check-code* '(let ([funcs
                       (Y*
                        (λ (even? odd?)
