@@ -291,21 +291,17 @@
                      (define average
                        (λ (x y)
                          (/ (+ x y) 2)))
-
                      (define abs
                        (λ (x)
                          (cond [(< x 0) (- x)]
                                [(= x 0) 0]
                                [(> x 0) x])))
-
                      (define good-enough?
                        (λ (y)
                          (< (abs (- (* y y) x)) tolerance)))
-
                      (define improve
                        (λ (y)
                          (average (/ x y) y)))
-
                      (define try
                        (λ (y)
                          (if (good-enough? y)
@@ -315,7 +311,27 @@
                      (define tolerance 0.0000001)
 
                      (try 1)))
+                 (sqrt 2))
+              (base-env) base-eval-ns)
 
+(*check-code* '(begin
+                 (define (sqrt x)
+                   (define (average x y) (/ (+ x y) 2))
+                   (define (improve y) (average (/ x y) y))
+                   (define (abs x)
+                     (cond [(< x 0) (- x)]
+                           [(= x 0) 0]
+                           [(> x 0) x]))
+                   (define (good-enough? y)
+                     (< (abs (- (* y y) x)) tolerance))
+                   (define (try y)
+                     (if (good-enough? y)
+                         y
+                         (try (improve y))))
+
+                   (define tolerance 0.0000001)
+
+                   (try 1))
                  (sqrt 2))
               (base-env) base-eval-ns)
 
