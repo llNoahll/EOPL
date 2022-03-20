@@ -28,8 +28,8 @@
         [``,(? list? ls)
          `(list
            ,@(for/foldr : (Listof S-Exp)
-                        ([res '()])
-               ([datum (in-list ls)])
+                 ([res '()])
+                 ([datum (in-list ls)])
                (match datum
                  [(list 'unquote datum) (cons (desugar datum) res)]
                  #;[(list 'unquote-splicing datum) (append (desugar datum) res)] ; TODO

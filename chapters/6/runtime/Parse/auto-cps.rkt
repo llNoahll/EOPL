@@ -20,9 +20,7 @@
                                    CPS-Exp)))
 (define-predicate simple-λ? Simple-λ)
 
-(define-type Simple-Exp (U Literal Symbol (List 'quote S-Exp) Simple-λ
-                           (List 'set! Symbol Simple-Exp)
-                           (List 'raise       Simple-Exp)
+(define-type Thread-Exp (U (List 'raise       Simple-Exp)
                            (List 'spawn       (List Simple-Exp K-Exp))
                            (List 'mutex       Simple-Exp)
                            (List 'wait        Simple-Exp)
@@ -32,6 +30,10 @@
                            (List 'thread-receive)
                            (List 'thread-try-receive)
                            (List 'yield)))
+
+(define-type Simple-Exp (U Literal Symbol (List 'quote S-Exp) Simple-λ
+                           (List 'set! Symbol Simple-Exp)
+                           Thread-Exp))
 (define-predicate simple-exp? Simple-Exp)
 
 (define-type K-Exp (List Lambda (List Symbol) CPS-Exp))
