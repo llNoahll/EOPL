@@ -23,12 +23,9 @@
        #:when (and (symbol? var) (s-exp? exp))
        `(assign-exp ',var ,(parser exp))]
 
-      [`(begin ,exp ,exps ..1)
-       #:when (and (s-exp? exp)
-                   ((listof? s-exp?) exps))
-       (if (null? exps)
-           (parser exp)
-           `(begin-exp (list ,@(map parser (cons exp exps)))))]
+      [`(begin ,exps ..2)
+       #:when ((listof? s-exp?) exps)
+       `(begin-exp (list ,@(map parser exps)))]
 
       [`(if ,(? s-exp? pred-exp)
             ,(? s-exp? true-exp)
