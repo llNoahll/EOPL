@@ -193,10 +193,6 @@
                                            (copy-env (proc-saved-env op))))
                                  (list (num-val spawn-tid))
                                  (end-subthread-cont)))]
-                             [(cont? op)
-                              (λ ()
-                                (apply-cont (end-subthread-cont)
-                                            (apply-cont op (num-val spawn-tid))))]
                              [(primitive-proc? op)
                               (λ ()
                                 (apply-cont (end-subthread-cont)
@@ -328,7 +324,7 @@
             (inherit-handlers-cont cont)
             (ann (λ (cont)
                    (λ (op)
-                     (unless (or (proc? op) (cont? op) (primitive-proc? op))
+                     (unless (or (proc? op) (primitive-proc? op))
                        (raise-argument-error 'value-of/k "operator?" op))
 
                      (if (var-exp? rands)
@@ -342,8 +338,6 @@
                                    (λ (args)
                                      (cond [(proc? op)
                                             (apply-procedure/k op (expval->list args) cont)]
-                                           [(cont? op)
-                                            (apply-cont op (car (expval->list args)))]
                                            [(primitive-proc? op)
                                             (apply-cont cont (apply (primitive-proc-λ op) (expval->list args)))])))
                                  [-> Cont [-> ExpVal FinalAnswer]]))
@@ -353,8 +347,6 @@
                            (if (null? rands)
                                (cond [(proc? op)
                                       (apply-procedure/k op (reverse args) cont)]
-                                     [(cont? op)
-                                      (apply-cont op (car (last-pair args)))]
                                      [(primitive-proc? op)
                                       (apply-cont cont (apply (primitive-proc-λ op) (reverse args)))])
                                (value-of/k

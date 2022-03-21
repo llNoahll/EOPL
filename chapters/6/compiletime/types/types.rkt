@@ -52,7 +52,7 @@
 (define-type DenVal (U Literal Symbol Undefined Void
                        Primitive-Proc
                        Proc Trace-Proc
-                       Cont Mutex
+                       Mutex
                        Null (Pair DenVal DenVal)))
 (define-predicate denval?  DenVal)
 (define-predicate denpair? (Pair DenVal DenVal))
