@@ -186,6 +186,6 @@
     (λ (code)
       ;; TODO: K type
       #;(cond [(cps-exp? code) code]
-            [else
-             (fv 0) (cps code id)])
+              [else
+               (fv 0) (cps code id)])
       (fv 0) (cps code id))))
