@@ -209,18 +209,19 @@
          #:when (and ((listof? s-exp?) pred-exps)
                      ((listof? s-exp?) handler-exps)
                      ((listof? s-exp?) body-exps))
-         (define cc (gensym 'cc))
+         (define cc  (gensym 'cc))
+         (define arg (gensym 'arg))
          (desugar
           `(let/cc ,cc
              (let ([raise
-                    (λ (arg)
+                    (λ (,arg)
                       (,cc
                        (cond
                          ,@(map (ann (λ (pred-exp handler-exp)
-                                       `[(,pred-exp arg) (,handler-exp arg)])
+                                       `[(,pred-exp ,arg) (,handler-exp ,arg)])
                                      [-> S-Exp S-Exp (List S-Exp S-Exp)])
                                 pred-exps handler-exps)
-                         [else (raise arg)])))])
+                         [else (raise ,arg)])))])
                ,@body-exps)))]
 
         ['(mutex) '(mutex 1)]
