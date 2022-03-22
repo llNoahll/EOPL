@@ -180,6 +180,12 @@
                              (cdr bind-exps))
                    ,@body-exps))))]
 
+        [`(let/cc ,cc-var1 (let/cc ,cc-var2 ,body-exps ..1))
+         #:when (and (symbol? cc-var1)
+                     (symbol? cc-var2)
+                     ((listof? s-exp?) body-exps))
+         (desugar `(let/cc ,cc-var1 (let ([,cc-var2 ,cc-var1]) ,@body-exps)))]
+
         [`(,op ,binds ,body-exps ..2)
          #:when (and (case op
                        [(with-handlers letrec let/cc lambda λ trace-lambda trace-λ) #t]
