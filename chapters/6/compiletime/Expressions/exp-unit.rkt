@@ -29,7 +29,6 @@
           (cons
            (frame
             'assign-frame
-            (inherit-handlers-cont cont)
             (ann (λ (cont)
                    (λ (val)
                      (apply-cont cont (set-binding! env var (expval->denval val)))))
@@ -49,7 +48,6 @@
           (cons
            (frame
             'begin-frame
-            (inherit-handlers-cont cont)
             (ann (λ (cont)
                    (λ (val)
                      (let ([exps (cdr exps)])
@@ -65,7 +63,6 @@
           (cons
            (frame
             'if-frame
-            (inherit-handlers-cont cont)
             (ann (λ (cont)
                    (λ (pred-val)
                      (value-of/k
@@ -94,7 +91,6 @@
                              [exp (in-list (append (cdr exps) (list body)))])
                     (frame
                      'letrec-frame
-                     (inherit-handlers-cont cont)
                      (ann (λ (cont)
                             (λ (val)
                               (set-binding! new-env var (expval->denval val))
@@ -102,80 +98,12 @@
                           [-> Cont [-> ExpVal FinalAnswer]])))
                   cont))])]
 
-        [(handlers-exp catch-preds catch-handlers body)
-         (cond
-           [(or (null? catch-preds) (null? catch-handlers))
-            (value-of/k body env cont)]
-           [(= 1 (length catch-preds) (length catch-handlers))
-            (value-of/k
-             (car catch-preds) env
-             (cons
-              (frame
-               'handlers-frame
-               (inherit-handlers-cont cont)
-               (ann (λ (cont)
-                      (λ (val)
-                        (define pred-val (expval->proc val))
-                        (value-of/k
-                         (car catch-handlers) env
-                         (cons
-                          (frame
-                           'handlers-frame
-                           (inherit-handlers-cont cont)
-                           (ann (λ (cont)
-                                  (λ (val)
-                                    (define handler-val (expval->proc val))
-                                    (define frame (car cont))
-                                    (define cont* (cdr cont))
-                                    (value-of/k
-                                     body env
-                                     (cons
-                                      (if (handlers-frame? frame)
-                                          (handlers-frame
-                                           'handlers-frame
-                                           (inherit-handlers-cont cont*)
-                                           (frame-func frame)
-                                           (cons    pred-val (handlers-frame-preds    frame))
-                                           (cons handler-val (handlers-frame-handlers frame)))
-                                          (handlers-frame
-                                           'handlers-frame
-                                           (inherit-handlers-cont cont)
-                                           (frame-func frame)
-                                           (list    pred-val)
-                                           (list handler-val)))
-                                      cont*))))
-                                [-> Cont [-> ExpVal FinalAnswer]]))
-                          cont))))
-                    [-> Cont [-> ExpVal FinalAnswer]]))
-              cont))]
-           [else
-            (value-of/k
-             (handlers-exp (cdr catch-preds)
-                           (cdr catch-handlers)
-                           (handlers-exp (list (car catch-preds))
-                                         (list (car catch-handlers))
-                                         body))
-             env cont)])]
-        [(raise-exp exp)
-         (value-of/k
-          exp env
-          (cons
-           (frame
-            'raise-frame
-            (inherit-handlers-cont cont)
-            (ann (λ (cont)
-                   (λ (val)
-                     (apply-handler cont (expval->denval val))))
-                 [-> Cont [-> ExpVal FinalAnswer]]))
-           cont))]
-
         [(spawn-exp exp)
          (value-of/k
           exp env
           (cons
            (frame
             'spawn-frame
-            (inherit-handlers-cont cont)
             (ann (λ (cont)
                    (λ (op)
                      (: spawn-tid Natural)
@@ -210,7 +138,6 @@
           (cons
            (frame
             'mutex-frame
-            (inherit-handlers-cont cont)
             (ann (λ (cont)
                    (λ (keys)
                      (apply-cont cont
@@ -225,7 +152,6 @@
           (cons
            (frame
             'wait-frame
-            (inherit-handlers-cont cont)
             (ann (λ (cont)
                    (λ (mut)
                      (wait-for-mutex
@@ -239,7 +165,6 @@
           (cons
            (frame
             'signal-frame
-            (inherit-handlers-cont cont)
             (ann (λ (cont)
                    (λ (mut)
                      (signal-mutex
@@ -256,7 +181,6 @@
           (cons
            (frame
             'kill-frame
-            (inherit-handlers-cont cont)
             (ann (λ (cont)
                    (λ (tid)
                      (define res (kill-thread! (assert tid natural?)))
@@ -272,7 +196,6 @@
           (cons
            (frame
             'send-frame
-            (inherit-handlers-cont cont)
             (ann (λ (cont)
                    (λ (tid)
                      (if (has-thread? (assert tid natural?))
@@ -281,7 +204,6 @@
                           (cons
                            (frame
                             'send-frame
-                            (inherit-handlers-cont cont)
                             (ann (λ (cont)
                                    (λ (val)
                                      (define th (get-thread (assert tid natural?)))
@@ -321,7 +243,6 @@
           (cons
            (frame
             'call-rator-frame
-            (inherit-handlers-cont cont)
             (ann (λ (cont)
                    (λ (op)
                      (unless (or (proc? op) (primitive-proc? op))
@@ -333,7 +254,6 @@
                           (cons
                            (frame
                             'call-rator-frame
-                            (inherit-handlers-cont cont)
                             (ann (λ (cont)
                                    (λ (args)
                                      (cond [(proc? op)
@@ -354,7 +274,6 @@
                                 (cons
                                  (frame
                                   'call-rator-frame
-                                  (inherit-handlers-cont cont)
                                   (ann (λ (cont)
                                          (λ (arg)
                                            (loop (cdr rands)

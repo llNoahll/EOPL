@@ -186,14 +186,6 @@
                      ((listof? s-exp?) body-exps))
          (desugar `(let/cc ,cc-var1 (let ([,cc-var2 ,cc-var1]) ,@body-exps)))]
 
-        [`(,op ,binds ,body-exps ..2)
-         #:when (and (case op
-                       [(with-handlers letrec let/cc lambda λ trace-lambda trace-λ) #t]
-                       [else #f])
-                     (s-exp? binds)
-                     ((listof? s-exp?) body-exps))
-         (desugar `(,op ,binds (begin ,@body-exps)))]
-
         [`(with-handlers () ,body-exps ..1)
          #:when ((listof? s-exp?) body-exps)
          (desugar `(begin ,@body-exps))]
@@ -213,6 +205,23 @@
                    (append pred-exps0 pred-exps1)
                    (append handler-exps0 handler-exps1))
              ,@body-exps))]
+        [`(with-handlers ([,pred-exps ,handler-exps] ..1) ,body-exps ..1)
+         #:when (and ((listof? s-exp?) pred-exps)
+                     ((listof? s-exp?) handler-exps)
+                     ((listof? s-exp?) body-exps))
+         (define cc (gensym 'cc))
+         (desugar
+          `(let/cc ,cc
+             (let ([raise
+                    (λ (arg)
+                      (,cc
+                       (cond
+                         ,@(map (ann (λ (pred-exp handler-exp)
+                                       `[(,pred-exp arg) (,handler-exp arg)])
+                                     [-> S-Exp S-Exp (List S-Exp S-Exp)])
+                                pred-exps handler-exps)
+                         [else (raise arg)])))])
+               ,@body-exps)))]
 
         ['(mutex) '(mutex 1)]
         [`(with-mutex ,exp ,body-exps ..1)
@@ -224,6 +233,14 @@
              (wait ,mut)
              ,@body-exps
              (signal ,mut)))]
+
+        [`(,op ,binds ,body-exps ..2)
+         #:when (and (case op
+                       [(letrec let/cc lambda λ trace-lambda trace-λ) #t]
+                       [else #f])
+                     (s-exp? binds)
+                     ((listof? s-exp?) body-exps))
+         (desugar `(,op ,binds (begin ,@body-exps)))]
 
         ;; reduce
         [(? list?) (map desugar code)]

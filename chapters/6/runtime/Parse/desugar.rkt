@@ -180,13 +180,11 @@
                              (cdr bind-exps))
                    ,@body-exps))))]
 
-        [`(,op ,binds ,body-exps ..2)
-         #:when (and (case op
-                       [(with-handlers letrec let/cc lambda λ trace-lambda trace-λ) #t]
-                       [else #f])
-                     (s-exp? binds)
+        [`(let/cc ,cc-var1 (let/cc ,cc-var2 ,body-exps ..1))
+         #:when (and (symbol? cc-var1)
+                     (symbol? cc-var2)
                      ((listof? s-exp?) body-exps))
-         (desugar `(,op ,binds (begin ,@body-exps)))]
+         (desugar `(let/cc ,cc-var1 (let ([,cc-var2 ,cc-var1]) ,@body-exps)))]
 
         [`(with-handlers () ,body-exps ..1)
          #:when ((listof? s-exp?) body-exps)
@@ -218,6 +216,14 @@
              (wait ,mut)
              ,@body-exps
              (signal ,mut)))]
+
+        [`(,op ,binds ,body-exps ..2)
+         #:when (and (case op
+                       [(with-handlers letrec let/cc lambda λ trace-lambda trace-λ) #t]
+                       [else #f])
+                     (s-exp? binds)
+                     ((listof? s-exp?) body-exps))
+         (desugar `(,op ,binds (begin ,@body-exps)))]
 
         ;; reduce
         [(? list?) (map desugar code)]

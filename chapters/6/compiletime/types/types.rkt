@@ -113,19 +113,10 @@
 (define-type Cont (Listof Frame))
 (define-predicate cont? Cont)
 
-(define-type Handlers-Cont (Pair Handlers-Frame Cont))
-(define-predicate handlers-cont? Handlers-Cont)
-
 (struct frame
   ([type : Symbol]
-   [handlers-cont : (Option Handlers-Cont)]
    [func : [-> Cont [-> ExpVal FinalAnswer]]])
   #:type-name Frame)
-
-(struct handlers-frame frame
-  ([preds    : (Listof Proc)]
-   [handlers : (Listof Proc)])
-  #:type-name Handlers-Frame)
 
 
 (define-struct ref
@@ -238,19 +229,6 @@
    [rands : (U Var-Exp (Listof Exp))])  ; Symbol is used for `apply'.
   #:transparent
   #:type-name Call-Exp)
-
-
-(define-struct (handlers-exp exp)
-  ([catch-preds : (Listof Exp)]
-   [catch-bodys : (Listof Exp)]
-   [body : Exp])
-  #:transparent
-  #:type-name Handlers-Exp)
-
-(define-struct (raise-exp exp)
-  ([exp : Exp])
-  #:transparent
-  #:type-name Raise-Exp)
 
 
 (define-struct (spawn-exp exp)

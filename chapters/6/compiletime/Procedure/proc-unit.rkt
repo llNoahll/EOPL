@@ -61,7 +61,6 @@
                       (extend-env* vars vals
                                    (proc-saved-env proc)))
                   (cons (frame 'apply-procedure-frame
-                               (inherit-handlers-cont cont)
                                (ann (λ (cont)
                                       (λ (result)
                                         (when (trace-proc? proc)
@@ -114,13 +113,6 @@
 
          (free-binds (append vars bind-vars) (begin-exp (cons body bind-exps)) new-env)]
 
-        [(handlers-exp catch-preds catch-handlers body)
-         (if (or (null? catch-preds) (null? catch-handlers))
-             (free-binds vars body env)
-             (free-binds vars
-                         (begin-exp (cons body (append catch-preds catch-handlers)))
-                         env))]
-        [(raise-exp  exp) (free-binds vars exp env)]
         [(spawn-exp  exp) (free-binds vars exp env)]
         [(mutex-exp  exp) (free-binds vars exp env)]
         [(wait-exp   exp) (free-binds vars exp env)]

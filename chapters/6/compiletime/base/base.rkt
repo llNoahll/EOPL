@@ -177,6 +177,11 @@
   (add-primitive-proc! 'sub1  (unary-arithmetic-func sub1))
   (add-primitive-proc! 'add1  (unary-arithmetic-func add1))
 
+  (add-primitive-proc! 'raise
+                       (λ [vals : DenVal *] : ExpVal
+                         (match vals
+                           [`(,val) (error "uncaught exception:" (expval->denval val))]
+                           [_ (error 'unary-func "Bad args: ~s" vals)])))
   (add-primitive-proc! 'not
                        (λ [vals : DenVal *] : ExpVal
                          (match vals

@@ -34,15 +34,6 @@
                 ,(parser true-exp)
                 ,(parser false-exp))]
 
-      [`(with-handlers ([,pred-exps ,handler-exps] ..1)
-          ,body-exp)
-       #:when (and ((listof? s-exp?) pred-exps)
-                   ((listof? s-exp?) handler-exps)
-                   (s-exp? body-exp))
-       `(handlers-exp (list ,@(map parser pred-exps))
-                      (list ,@(map parser handler-exps))
-                      ,(parser body-exp))]
-      [`(raise       ,(? s-exp? exp)) `(raise-exp  ,(parser exp))]
       [`(spawn       ,(? s-exp? exp)) `(spawn-exp  ,(parser exp))]
       [`(mutex       ,(? s-exp? exp)) `(mutex-exp  ,(parser exp))]
       [`(wait        ,(? s-exp? exp)) `(wait-exp   ,(parser exp))]

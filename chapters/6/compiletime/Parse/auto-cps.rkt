@@ -20,8 +20,7 @@
                                    CPS-Exp)))
 (define-predicate simple-λ? Simple-λ)
 
-(define-type Thread-Exp (U (List 'raise       Simple-Exp)
-                           (List 'spawn       (List Simple-Exp K-Exp))
+(define-type Thread-Exp (U (List 'spawn       (List Simple-Exp K-Exp))
                            (List 'mutex       Simple-Exp)
                            (List 'wait        Simple-Exp)
                            (List 'signal      Simple-Exp)
@@ -48,9 +47,6 @@
                         Top-Exp
                         (List 'begin Simple-Exp CPS-Exp)
                         (List 'if Simple-Exp CPS-Exp CPS-Exp)
-                        (List 'with-handlers
-                              (Listof (List (List CPS-Exp K-Exp) (List CPS-Exp K-Exp)))
-                              CPS-Exp)
                         (List 'letrec (Listof (List Symbol CPS-Exp)) CPS-Exp)
                         (List 'let (List (List K K-Exp)) CPS-Exp)
                         (List 'let (List (List Symbol (List 'λ (List '_) K))) CPS-Exp)))
@@ -120,17 +116,6 @@
                         `(let ([,k (λ (,v0) ,(ctx v0))])
                            (if ,p ,(cps true-exp ctx0) ,(cps false-exp ctx0)))))))]
 
-          [`(with-handlers ([,pred-exps ,handler-exps] ..1)
-              ,body-exp)
-           #:when (and ((listof? s-exp?) pred-exps)
-                       ((listof? s-exp?) handler-exps)
-                       (s-exp? body-exp))
-           `(with-handlers ,(map (ann (λ (pred handler) `[(,(auto-cps pred) ,k0) (,(auto-cps handler) ,k0)])
-                                      [-> S-Exp S-Exp
-                                          (List (List CPS-Exp K-Exp) (List CPS-Exp K-Exp))])
-                                 pred-exps handler-exps)
-              ,(cps body-exp ctx))]
-          [`(raise       ,(? s-exp? exp)) (cps exp (λ (val) (ctx `(raise       ,val))))]
           [`(spawn       ,(? s-exp? exp)) (cps exp (λ (val) (ctx `(spawn       (,val ,k0)))))]
           [`(mutex       ,(? s-exp? exp)) (cps exp (λ (val) (ctx `(mutex       ,val))))]
           [`(wait        ,(? s-exp? exp)) (cps exp (λ (val) (ctx `(wait        ,val))))]
