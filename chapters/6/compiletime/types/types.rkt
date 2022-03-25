@@ -24,7 +24,20 @@
                [-> (pred A) (pred B) (pred C) (pred D) (pred (∩ A B C D))]
                [-> (pred A) (pred B) (pred C) (pred D) (pred E) (pred (∩ A B C D E))]))])
 
-(provide undefined or/c and/c (all-defined-out))
+(provide
+ undefined
+ or/c and/c
+ (rename-out
+  #;[trace-lambda   trace-λ]
+  [case-lambda    case-λ]
+  [match-lambda   match-λ]
+  [match-lambda*  match-λ*]
+  [match-lambda** match-λ**]
+
+  [add1 1+]
+  [sub1 1-]
+  [sub1 -1+])
+ (all-defined-out))
 
 
 (define-predicate undefined? Undefined)
@@ -50,10 +63,9 @@
 
 
 (define-type DenVal (U Literal Symbol Undefined Void
-                       Primitive-Proc
-                       Proc Trace-Proc
-                       Mutex
-                       Null (Pair DenVal DenVal)))
+                       Null (Pair DenVal DenVal)
+                       Primitive-Proc Proc Trace-Proc
+                       Mutex))
 (define-predicate denval?  DenVal)
 (define-predicate denpair? (Pair DenVal DenVal))
 (define-predicate denlist? (Listof DenVal))
