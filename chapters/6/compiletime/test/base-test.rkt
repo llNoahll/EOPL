@@ -51,7 +51,9 @@
 
 #;(: base-eval-ns Namespace)
 (define base-eval-ns (make-base-namespace))
-(namespace-set-variable-value! 'empty-list (λ () '()) #t base-eval-ns)
+(namespace-set-variable-value! 'empty-list   (λ () '())   #t base-eval-ns)
+(for ([op (in-list (list queue? empty-queue? empty-queue dequeue enqueue))])
+  (namespace-set-variable-value! (object-name op) op #t base-eval-ns))
 (namespace-set-variable-value! 'Y
                                (λ (f)
                                  ((λ (recur-func)
@@ -132,6 +134,8 @@
 (*check-code* '(void 1)   (base-env) base-eval-ns)
 (*check-code* '(void 1 2) (base-env) base-eval-ns)
 
+(*check-code* '(boolean? #t) (base-env) base-eval-ns)
+
 (*check-code* '(when (null? (list 1 2 3))
                  'when)
               (base-env) base-eval-ns)
@@ -154,9 +158,39 @@
                      [else 'else-cons])
               (base-env) base-eval-ns)
 
-(*check-code* '(displayln (cond [(null? (list 1 2 3)) 'cond-1]
-                                [(null? (empty-list)) 'cond-2]
-                                [else 'else-cons]))
+(*check-code* '(displayln
+                (cond [(null? (list 1 2 3)) 'cond-1]
+                      [(null? (empty-list)) 'cond-2]
+                      [else 'else-cons]))
+              (base-env) base-eval-ns)
+
+
+(*check-code* '(when (empty-queue? (enqueue (enqueue (enqueue (empty-queue) 1) 2) 3))
+                 'when)
+              (base-env) base-eval-ns)
+(*check-code* '(when (not (empty-queue? (enqueue (enqueue (enqueue (empty-queue) 1) 2) 3)))
+                 'when)
+              (base-env) base-eval-ns)
+(*check-code* '(unless (empty-queue? (enqueue (enqueue (enqueue (empty-queue) 1) 2) 3))
+                 'unless)
+              (base-env) base-eval-ns)
+(*check-code* '(unless (not (empty-queue? (enqueue (enqueue (enqueue (empty-queue) 1) 2) 3)))
+                 'unless)
+              (base-env) base-eval-ns)
+
+(*check-code* '(cond [(empty-queue? (enqueue (enqueue (enqueue (empty-queue) 1) 2) 3)) 'cond-1]
+                     [(empty-queue? (enqueue (enqueue (enqueue (empty-queue) 9) 0) 8)) 'cond-2]
+                     [else 'else-cons])
+              (base-env) base-eval-ns)
+(*check-code* '(cond [(empty-queue? (enqueue (enqueue (enqueue (empty-queue) 1) 2) 3)) 'cond-1]
+                     [(null? (empty-list)) 'cond-2]
+                     [else 'else-cons])
+              (base-env) base-eval-ns)
+
+(*check-code* '(displayln
+                (cond [(empty-queue? (enqueue (enqueue (enqueue (empty-queue) 1) 2) 3)) 'cond-1]
+                      [(null? (empty-list)) 'cond-2]
+                      [else 'else-cons]))
               (base-env) base-eval-ns)
 
 

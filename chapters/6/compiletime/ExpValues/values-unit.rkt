@@ -31,6 +31,9 @@
   (: list-val [-> (Listof DenVal) DenVal])
   (define list-val (λ (ls) ls))
 
+  (: queue-val [-> (Queueof DenVal) DenVal])
+  (define queue-val (λ (queue) queue))
+
   (: proc-val [-> Proc DenVal])
   (define proc-val (λ (proc) proc))
 
@@ -61,6 +64,9 @@
 
   (: expval->list [-> ExpVal (Listof DenVal)])
   (define expval->list (λ (val) (assert val denlist?)))
+
+  (: expval->queue [-> ExpVal (Queueof DenVal)])
+  (define expval->queue (λ (val) (assert val denqueue?)))
 
   (: expval->proc [-> ExpVal Proc])
   (define expval->proc (λ (val) (assert val proc?)))

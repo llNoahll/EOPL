@@ -76,6 +76,14 @@
           [_ (error 'nullary-func "Bad args: ~s" vals)]))))
 
 
+  (: unary-pred [-> [-> Any Boolean] [-> DenVal * ExpVal]])
+  (define unary-pred
+    (λ (pred)
+      (λ vals
+        (match vals
+          [`(,val) (bool-val (pred (expval->denval val)))]
+          [_ (error 'unary-pred "Bad args: ~s" vals)]))))
+
   (: unary-arithmetic-pred [-> [-> Real Boolean] [-> DenVal * ExpVal]])
   (define unary-arithmetic-pred
     (λ (pred)
@@ -171,7 +179,27 @@
   (add-primitive-proc! 'get-tid  (nullary-func get-tid))
   (add-primitive-proc! 'get-ptid (nullary-func get-ptid))
 
-  (add-primitive-proc! 'empty-list (λ [vals : DenVal *] : ExpVal '()))
+  (add-primitive-proc! 'empty-queue (nullary-func empty-queue))
+  (add-primitive-proc! 'empty-list  (λ [vals : DenVal *] : ExpVal '()))
+
+  (add-primitive-proc! 'boolean?   (unary-pred boolean?))
+  (add-primitive-proc! 'real?      (unary-pred real?))
+  (add-primitive-proc! 'char?      (unary-pred char?))
+  (add-primitive-proc! 'string?    (unary-pred string?))
+  (add-primitive-proc! 'symbol?    (unary-pred symbol?))
+  (add-primitive-proc! 'undefined? (unary-pred undefined?))
+  (add-primitive-proc! 'void?      (unary-pred void?))
+  (add-primitive-proc! 'mutex?     (unary-pred mutex?))
+
+  (add-primitive-proc! 'not    (unary-pred not))
+  (add-primitive-proc! 'false? (unary-pred false?))
+  (add-primitive-proc! 'true?  (unary-pred true?))
+
+  (add-primitive-proc! 'pair?        (unary-pred pair?))
+  (add-primitive-proc! 'null?        (unary-pred null?))
+  (add-primitive-proc! 'list?        (unary-pred list?))
+  (add-primitive-proc! 'empty-queue? (unary-pred empty-queue?))
+  (add-primitive-proc! 'queue?       (unary-pred queue?))
 
   (add-primitive-proc! 'zero? (unary-arithmetic-pred zero?))
   (add-primitive-proc! 'sub1  (unary-arithmetic-func sub1))
@@ -181,16 +209,6 @@
                        (λ [vals : DenVal *] : ExpVal
                          (match vals
                            [`(,val) (error "uncaught exception:" (expval->denval val))]
-                           [_ (error 'unary-func "Bad args: ~s" vals)])))
-  (add-primitive-proc! 'not
-                       (λ [vals : DenVal *] : ExpVal
-                         (match vals
-                           [`(,val) (bool-val (not (expval->bool val)))]
-                           [_ (error 'unary-func "Bad args: ~s" vals)])))
-  (add-primitive-proc! 'null?
-                       (λ [vals : DenVal *] : ExpVal
-                         (match vals
-                           [`(,val) (bool-val (null? val))]
                            [_ (error 'unary-func "Bad args: ~s" vals)])))
   (add-primitive-proc! 'car
                        (λ [vals : DenVal *] : ExpVal
@@ -230,6 +248,26 @@
                        (λ [vals : DenVal *] : ExpVal
                          (match vals
                            [`(,val-1 ,val-2) (pair-val (cons val-1 val-2))]
+                           [_ (error 'binary-func "Bad args: ~s" vals)])))
+
+  (add-primitive-proc! 'enqueue
+                       (λ [vals : DenVal *] : ExpVal
+                         (match vals
+                           [`(,val-1 ,val-2)
+                            #:when (denqueue? val-1)
+                            (queue-val (enqueue val-1 val-2))]
+                           [_ (error 'binary-func "Bad args: ~s" vals)])))
+
+  (add-primitive-proc! 'dequeue
+                       (λ [vals : DenVal *] : ExpVal
+                         (match vals
+                           [`(,val-1 ,val-2)
+                            #:when (and (denqueue? val-1)
+                                        (proc? val-2))
+                            (dequeue val-1
+                                     (ann (λ (1st others)
+                                            (apply-procedure/k val-2 (list 1st others) (id-cont)))
+                                          [-> DenVal (Queueof DenVal) DenVal]))]
                            [_ (error 'binary-func "Bad args: ~s" vals)])))
 
   (add-primitive-proc! '+ (n-ary-arithmetic-func +))

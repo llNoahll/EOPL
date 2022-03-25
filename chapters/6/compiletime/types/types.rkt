@@ -64,11 +64,13 @@
 
 (define-type DenVal (U Literal Symbol Undefined Void
                        Null (Pair DenVal DenVal)
+                       (Queueof DenVal)
                        Primitive-Proc Proc Trace-Proc
                        Mutex))
-(define-predicate denval?  DenVal)
-(define-predicate denpair? (Pair DenVal DenVal))
-(define-predicate denlist? (Listof DenVal))
+(define-predicate denval?   DenVal)
+(define-predicate denpair?  (Pair DenVal DenVal))
+(define-predicate denlist?  (Listof DenVal))
+(define-predicate denqueue? (Queueof DenVal))
 
 (define-type ExpVal DenVal)
 (define-predicate expval? ExpVal)
@@ -85,6 +87,7 @@
            (andmap pred arg)))))
 
 (define-type (Queueof A) (List (Listof A) (Listof A)))
+(define-predicate queue? (Queueof Any))
 (define-predicate empty-queue? (Queueof Nothing))
 
 (: empty-queue [-> (Queueof Nothing)])
