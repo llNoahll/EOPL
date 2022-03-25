@@ -67,10 +67,8 @@
                        (Queueof DenVal)
                        Primitive-Proc Proc Trace-Proc
                        Mutex))
-(define-predicate denval?   DenVal)
-(define-predicate denpair?  (Pair DenVal DenVal))
-(define-predicate denlist?  (Listof DenVal))
-(define-predicate denqueue? (Queueof DenVal))
+(define-predicate denval?  DenVal)
+(define-predicate denpair? (Pair DenVal DenVal))
 
 (define-type ExpVal DenVal)
 (define-predicate expval? ExpVal)
@@ -89,6 +87,14 @@
 (define-type (Queueof A) (List (Listof A) (Listof A)))
 (define-predicate queue? (Queueof Any))
 (define-predicate empty-queue? (Queueof Nothing))
+
+(: queueof? (All (A) [-> (pred A) (pred (Queueof A))]))
+(define queueof?
+  (λ (pred)
+    (λ (arg)
+      (and (queue? arg)
+           ((listof? pred) (car  arg))
+           ((listof? pred) (cadr arg))))))
 
 (: empty-queue [-> (Queueof Nothing)])
 (define empty-queue (let ([empty-q '(() ())]) (λ () empty-q)))

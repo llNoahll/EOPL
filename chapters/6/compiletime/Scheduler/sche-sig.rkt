@@ -7,6 +7,8 @@
 
 (define-signature sche^
   (
+   [thread-env  : [-> Env]]
+
    [initialize-scheduler!  : [-> Exact-Positive-Integer Void]]
    [place-on-thread-queue  : (case-> [-> (Queueof Natural) (U Natural [-> FinalAnswer]) (Queueof Natural)]
                                      [-> (Queueof Natural)

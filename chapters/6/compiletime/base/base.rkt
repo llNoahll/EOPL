@@ -254,7 +254,7 @@
                        (λ [vals : DenVal *] : ExpVal
                          (match vals
                            [`(,val-1 ,val-2)
-                            #:when (denqueue? val-1)
+                            #:when ((queueof? denval?) val-1)
                             (queue-val (enqueue val-1 val-2))]
                            [_ (error 'binary-func "Bad args: ~s" vals)])))
 
@@ -262,7 +262,7 @@
                        (λ [vals : DenVal *] : ExpVal
                          (match vals
                            [`(,val-1 ,val-2)
-                            #:when (and (denqueue? val-1)
+                            #:when (and ((queueof? denval?) val-1)
                                         (proc? val-2))
                             (dequeue val-1
                                      (ann (λ (1st others)

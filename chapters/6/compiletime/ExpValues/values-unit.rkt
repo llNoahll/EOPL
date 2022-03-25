@@ -63,10 +63,10 @@
   (define expval->pair (λ (val) (assert val denpair?)))
 
   (: expval->list [-> ExpVal (Listof DenVal)])
-  (define expval->list (λ (val) (assert val denlist?)))
+  (define expval->list (λ (val) (assert val (listof? denval?))))
 
   (: expval->queue [-> ExpVal (Queueof DenVal)])
-  (define expval->queue (λ (val) (assert val denqueue?)))
+  (define expval->queue (λ (val) (assert val (queueof? denval?))))
 
   (: expval->proc [-> ExpVal Proc])
   (define expval->proc (λ (val) (assert val proc?)))
