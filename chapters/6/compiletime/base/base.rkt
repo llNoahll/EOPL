@@ -217,22 +217,27 @@
                          (match vals
                            [`(,val) (cdr (expval->pair val))]
                            [_ (error 'unary-func "Bad args: ~s" vals)])))
-  (void
-   (for/fold ([prevs : (Listof String) '("a" "d")])
-             ([i (in-range 1 4)])
-     (for*/list : (Listof String)
-                ([curr (in-list '("a" "d"))]
-                 [prev (in-list prevs)])
-       (define now (string-append curr prev))
-       (add-denval! (string->symbol (string-append "c" now "r"))
-                    (expval->denval
-                     (*eval* `(λ (arg)
-                                (,(string->symbol (string-append "c" curr "r"))
-                                 (,(string->symbol (string-append "c" prev "r"))
-                                  arg)))
-                             (base-env)
-                             (id-cont))))
-       now)))
+
+  (let ()
+    (: get-op [-> String Symbol])
+    (define get-op (λ (ad*) (string->symbol (string-append "c" ad* "r"))))
+
+    (void
+     (for/fold ([prevs : (Listof String) '("a" "d")])
+               ([i (in-range 1 4)])
+       (for*/list : (Listof String)
+                  ([curr (in-list '("a" "d"))]
+                   [prev (in-list prevs)])
+         (define now (string-append curr prev))
+         (add-denval! (get-op now)
+                      (expval->denval
+                       (*eval* `(λ (arg)
+                                  (,(get-op curr)
+                                   (,(get-op prev)
+                                    arg)))
+                               (base-env)
+                               (id-cont))))
+         now))))
   (add-primitive-proc! 'length
                        (λ [vals : DenVal *] : ExpVal
                          (match vals
