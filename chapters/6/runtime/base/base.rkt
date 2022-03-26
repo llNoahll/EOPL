@@ -163,7 +163,9 @@
   (: add-denval! [-> Symbol DenVal Void])
   (define add-denval!
     (λ (name val)
-      (base-env (extend-env name val (base-env)))))
+      (if (has-binding? (base-env) name)
+          (set-binding! (base-env) name val)
+          (base-env (extend-env name val (base-env))))))
 
 
   (add-primitive-proc! 'identity (unary-func identity))

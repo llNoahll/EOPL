@@ -160,7 +160,9 @@
   (: add-denval! [-> Symbol DenVal Void])
   (define add-denval!
     (λ (name val)
-      (base-env (extend-env name val (base-env)))))
+      (if (has-binding? (base-env) name)
+          (set-binding! (base-env) name val)
+          (base-env (extend-env name val (base-env))))))
 
 
   (add-denval! 'undefined undefined)
@@ -347,14 +349,14 @@
                         (id-cont))))
 
 
+  (add-denval! 'map undefined)
   (add-denval! 'map
                (expval->denval
-                (*eval* '(Y (λ (map)
-                              (λ (func ls)
-                                (if (null? ls)
-                                    '()
-                                    (cons (func (car ls))
-                                          (map func (cdr ls)))))))
+                (*eval* '(λ (func ls)
+                           (if (null? ls)
+                               '()
+                               (cons (func (car ls))
+                                     (map func (cdr ls)))))
                         (base-env)
                         (id-cont))))
 
