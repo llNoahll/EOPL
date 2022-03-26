@@ -6,8 +6,16 @@
          "auto-cps.rkt"
          "parser.rkt")
 
-(provide (all-from-out "../types/types.rkt")
-         (all-from-out "desugar.rkt")
-         (all-from-out "auto-apply.rkt")
-         (all-from-out "auto-cps.rkt")
-         (all-from-out "parser.rkt"))
+(provide parse)
+
+
+(: parse [-> S-Exp S-Exp])
+(define parse
+  (λ (code)
+    (parser
+     (desugar
+      (auto-cps
+       (desugar
+        (auto-apply
+         (desugar
+          code))))))))
