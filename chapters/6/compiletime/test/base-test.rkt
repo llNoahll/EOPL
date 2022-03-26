@@ -134,6 +134,11 @@
 (*check-code* '(void 1)   (base-env) base-eval-ns)
 (*check-code* '(void 1 2) (base-env) base-eval-ns)
 
+(*check-code* '(cadr   (list 0 1 2 3 4 5 6)) (base-env) base-eval-ns)
+(*check-code* '(cdddr  (list 0 1 2 3 4 5 6)) (base-env) base-eval-ns)
+(*check-code* '(cadddr (list 0 1 2 3 4 5 6)) (base-env) base-eval-ns)
+(*check-code* '(length (list 0 1 2 3)) (base-env) base-eval-ns)
+
 (*check-code* '(boolean? #t) (base-env) base-eval-ns)
 
 (*check-code* '(when (null? (list 1 2 3))

@@ -217,6 +217,34 @@
                          (match vals
                            [`(,val) (cdr (expval->pair val))]
                            [_ (error 'unary-func "Bad args: ~s" vals)])))
+  (void
+   (for/fold ([prevs : (Listof String) '("a" "d")])
+             ([i (in-range 1 4)])
+     (for*/list : (Listof String)
+                ([curr (in-list '("a" "d"))]
+                 [prev (in-list prevs)])
+       (define now (string-append curr prev))
+       (add-denval! (string->symbol (string-append "c" now "r"))
+                    (expval->denval
+                     (*eval* `(λ (arg)
+                                (,(string->symbol (string-append "c" curr "r"))
+                                 (,(string->symbol (string-append "c" prev "r"))
+                                  arg)))
+                             (base-env)
+                             (id-cont))))
+       now)))
+  (add-primitive-proc! 'length
+                       (λ [vals : DenVal *] : ExpVal
+                         (match vals
+                           [`(,val) (length (expval->list val))]
+                           [_ (error 'unary-func "Bad args: ~s" vals)])))
+  (add-primitive-proc! 'list-ref
+                       (λ [vals : DenVal *] : ExpVal
+                         (match vals
+                           [`(,val-1 ,val-2)
+                            #:when (exact-integer? val-2)
+                            (list-ref (expval->list val-1) val-2)]
+                           [_ (error 'binary-func "Bad args: ~s" vals)])))
 
 
   (add-primitive-proc! 'read (nullary-func read))
