@@ -1,9 +1,7 @@
 #lang typed/racket
 
 (require "../types/types.rkt"
-         "../Parse/parser.rkt"
-         "../Parse/desugar.rkt"
-         "../Parse/auto-cps.rkt"
+         "../Parse/parse.rkt"
          "../Reference/ref-sig.rkt"
          "../Reference/ref-unit.rkt"
          "../Continuation/cont-sig.rkt"
@@ -24,9 +22,7 @@
          "../Expressions/exp-unit.rkt")
 
 (provide (all-from-out "../types/types.rkt")
-         (all-from-out "../Parse/parser.rkt")
-         (all-from-out "../Parse/desugar.rkt")
-         (all-from-out "../Parse/auto-cps.rkt")
+         (all-from-out "../Parse/parse.rkt")
          (all-defined-out))
 
 
@@ -55,7 +51,9 @@
                    (desugar
                     (auto-cps
                      (desugar
-                      code))))
+                      (auto-apply
+                       (desugar
+                        code))))))
                   eval-ns))
                (λ args (car args)))
               exp?))
@@ -174,8 +172,13 @@
       (base-env (extend-env name val (base-env)))))
 
 
+  (add-denval! 'null  null)
+  (add-denval! 'empty empty)
+
+
   (add-primitive-proc! 'identity (unary-func identity))
 
+  (add-primitive-proc! 'get-nid  (nullary-func get-nid))
   (add-primitive-proc! 'get-tid  (nullary-func get-tid))
   (add-primitive-proc! 'get-ptid (nullary-func get-ptid))
 
