@@ -26,14 +26,29 @@
         (let ()
           (define *o* (open-output-bytes))
           (values (parameterize ([current-output-port *o*])
-                    (*eval* code env (end-cont)))
+                    (*eval* code env (id-cont)))
                   (get-output-bytes *o*))))
-
 
       (if (and (equal?  res    *res*)
                (bytes=? output *output*))
-          #t
-          (raise (list (list res   output)
+          (cond
+            [(eq? env (base-env))
+             (define-values (+res+ +output+)
+               (let ()
+                 (define +o+ (open-output-bytes))
+                 (values (parameterize ([current-output-port +o+])
+                           (*eval* `(eval ',code) env (id-cont)))
+                         (get-output-bytes +o+))))
+
+             (if (and (equal?  +res+    *res*)
+                      (bytes=? +output+ *output*))
+                 #t
+                 (raise (list '(+eval+ *eval*)
+                              (list +res+ +output+)
+                              (list *res* *output*))))]
+            [else #t])
+          (raise (list '(eval *eval*)
+                       (list res   output)
                        (list *res* *output*)))))))
 
 
@@ -121,7 +136,8 @@
           ))])
   (displayln (*check-code* code (init-env) init-eval-ns)))
 
-(for ([code
+(for ([i (in-naturals)]
+      [code
        (in-list
         '(2
           -9
@@ -334,9 +350,9 @@
             (define fact
               (λ (n)
                 (let ([ls (let/cc cc (list cc n 1))])
-                  (define cc  (car ls))
-                  (define n   (car (cdr ls)))
-                  (define res (car (cdr (cdr ls))))
+                  (define cc  (car   ls))
+                  (define n   (cadr  ls))
+                  (define res (caddr ls))
                   (if (zero? n)
                       res
                       (cc (list cc (sub1 n) (* n res)))))))
@@ -360,9 +376,9 @@
             (define fact
               (λ (n)
                 (let ([ls (call/cc (λ (cc) (list cc n 1)))])
-                  (define cc  (car ls))
-                  (define n   (car (cdr ls)))
-                  (define res (car (cdr (cdr ls))))
+                  (define cc  (car   ls))
+                  (define n   (cadr  ls))
+                  (define res (caddr ls))
                   (if (zero? n)
                       res
                       (cc (list cc (sub1 n) (* n res)))))))
@@ -374,4 +390,4 @@
                   (fact 4)
                   (fact 5)))
           ))])
-  (displayln (*check-code* code (base-env) base-eval-ns)))
+  (displayln (format "test ~a: ~a" i (*check-code* code (base-env) base-eval-ns))))

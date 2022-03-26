@@ -6,7 +6,11 @@
          "auto-cps.rkt"
          "parser.rkt")
 
-(provide parse)
+(provide parse
+         parser
+         auto-cps
+         auto-apply
+         desugar)
 
 
 (: parse [-> S-Exp S-Exp])

@@ -56,72 +56,72 @@
     (value-of/k exp env cont)))
 
 (let ()
-  (: nullary-func [-> [-> Any] [-> DenVal * ExpVal]])
+  (: nullary-func [-> Symbol [-> Any] [-> DenVal * ExpVal]])
   (define nullary-func
-    (λ (func)
+    (λ (name func)
       (λ vals
         (match vals
           ['() (s-expval->expval (func))]
-          [_ (error 'nullary-func "Bad args: ~s" vals)]))))
+          [_ (error name "Bad args: ~s" vals)]))))
 
 
-  (: unary-pred [-> [-> Any Boolean] [-> DenVal * ExpVal]])
+  (: unary-pred [-> Symbol [-> Any Boolean] [-> DenVal * ExpVal]])
   (define unary-pred
-    (λ (pred)
+    (λ (name pred)
       (λ vals
         (match vals
           [`(,val) (bool-val (pred (expval->denval val)))]
-          [_ (error 'unary-pred "Bad args: ~s" vals)]))))
+          [_ (error name "Bad args: ~s" vals)]))))
 
-  (: unary-arithmetic-pred [-> [-> Real Boolean] [-> DenVal * ExpVal]])
+  (: unary-arithmetic-pred [-> Symbol [-> Real Boolean] [-> DenVal * ExpVal]])
   (define unary-arithmetic-pred
-    (λ (pred)
+    (λ (name pred)
       (λ vals
         (match vals
           [`(,val) (bool-val (pred (expval->num val)))]
-          [_ (error 'unary-pred "Bad args: ~s" vals)]))))
+          [_ (error name "Bad args: ~s" vals)]))))
 
-  (: unary-arithmetic-func [-> [-> Real Real] [-> DenVal * ExpVal]])
+  (: unary-arithmetic-func [-> Symbol [-> Real Real] [-> DenVal * ExpVal]])
   (define unary-arithmetic-func
-    (λ (func)
+    (λ (name func)
       (λ vals
         (match vals
           [`(,val) (num-val (func (expval->num val)))]
-          [_ (error 'unary-func "Bad args: ~s" vals)]))))
+          [_ (error name "Bad args: ~s" vals)]))))
 
-  (: unary-func [-> [-> Any Any] [-> DenVal * ExpVal]])
+  (: unary-func [-> Symbol [-> Any Any] [-> DenVal * ExpVal]])
   (define unary-func
-    (λ (func)
+    (λ (name func)
       (λ vals
         (match vals
           [`(,val) (s-expval->expval (func val))]
-          [_ (error 'unary-func "Bad args: ~s" vals)]))))
+          [_ (error name "Bad args: ~s" vals)]))))
 
 
-  (: binary-equal-relation [-> [-> Any Any Boolean] [-> DenVal * ExpVal]])
+  (: binary-equal-relation [-> Symbol [-> Any Any Boolean] [-> DenVal * ExpVal]])
   (define binary-equal-relation
-    (λ (relation)
+    (λ (name relation)
       (λ vals
         (match vals
           [`(,val-1 ,val-2)
            (bool-val (relation val-1 val-2))]
-          [_ (error 'binary-relation "Bad args: ~s" vals)]))))
+          [_ (error name "Bad args: ~s" vals)]))))
 
 
-  (: binary-arithmetic-relation [-> [-> Real Real Boolean] [-> DenVal * ExpVal]])
+  (: binary-arithmetic-relation [-> Symbol [-> Real Real Boolean] [-> DenVal * ExpVal]])
   (define binary-arithmetic-relation
-    (λ (relation)
+    (λ (name relation)
       (λ vals
         (match vals
           [`(,val-1 ,val-2)
            (bool-val (relation (expval->num val-1)
                                (expval->num val-2)))]
-          [_ (error 'binary-relation "Bad args: ~s" vals)]))))
+          [_ (error name "Bad args: ~s" vals)]))))
 
 
-  (: n-ary-arithmetic-func [-> [-> Real Real * Real] [-> DenVal * ExpVal]])
+  (: n-ary-arithmetic-func [-> Symbol [-> Real Real * Real] [-> DenVal * ExpVal]])
   (define n-ary-arithmetic-func
-    (λ (func)
+    (λ (name func)
       (λ vals
         (match vals
           [`(,val-1 . ,(? list? vals))
@@ -130,7 +130,7 @@
                            (map (λ ([val : DenVal]) : Real
                                   (expval->num val))
                                 vals)))]
-          [_ (error 'n-ary-arithmetic-func "Bad args: ~s" vals)]))))
+          [_ (error name "Bad args: ~s" vals)]))))
 
   (: n-ary-logic-func [-> [-> Boolean * Boolean] [-> DenVal * ExpVal]])
   (define n-ary-logic-func
@@ -170,53 +170,61 @@
   (add-denval! 'false     false)
 
 
-  (add-primitive-proc! 'identity (unary-func identity))
+  (add-primitive-proc! 'eval
+                       (λ [vals : DenVal *] : ExpVal
+                         (match vals
+                           [`(,code)
+                            #:when (s-exp? code)
+                            (*eval* code (base-env) (id-cont))]
+                           [_ (error 'eval "Bad args: ~s" vals)])))
 
-  (add-primitive-proc! 'get-nid  (nullary-func get-nid))
-  (add-primitive-proc! 'get-tid  (nullary-func get-tid))
-  (add-primitive-proc! 'get-ptid (nullary-func get-ptid))
+  (add-primitive-proc! 'identity (unary-func 'identity identity))
 
-  (add-primitive-proc! 'empty-queue (nullary-func empty-queue))
+  (add-primitive-proc! 'get-nid  (nullary-func 'get-nid  get-nid))
+  (add-primitive-proc! 'get-tid  (nullary-func 'get-tid  get-tid))
+  (add-primitive-proc! 'get-ptid (nullary-func 'get-ptid get-ptid))
+
+  (add-primitive-proc! 'empty-queue (nullary-func 'empty-queue empty-queue))
   (add-primitive-proc! 'empty-list  (λ [vals : DenVal *] : ExpVal '()))
 
-  (add-primitive-proc! 'boolean?   (unary-pred boolean?))
-  (add-primitive-proc! 'real?      (unary-pred real?))
-  (add-primitive-proc! 'char?      (unary-pred char?))
-  (add-primitive-proc! 'string?    (unary-pred string?))
-  (add-primitive-proc! 'symbol?    (unary-pred symbol?))
-  (add-primitive-proc! 'undefined? (unary-pred undefined?))
-  (add-primitive-proc! 'void?      (unary-pred void?))
-  (add-primitive-proc! 'mutex?     (unary-pred mutex?))
+  (add-primitive-proc! 'boolean?   (unary-pred 'boolean? boolean?))
+  (add-primitive-proc! 'real?      (unary-pred 'real? real?))
+  (add-primitive-proc! 'char?      (unary-pred 'char? char?))
+  (add-primitive-proc! 'string?    (unary-pred 'string? string?))
+  (add-primitive-proc! 'symbol?    (unary-pred 'symbol? symbol?))
+  (add-primitive-proc! 'undefined? (unary-pred 'undefined? undefined?))
+  (add-primitive-proc! 'void?      (unary-pred 'void? void?))
+  (add-primitive-proc! 'mutex?     (unary-pred 'mutex? mutex?))
 
-  (add-primitive-proc! 'not    (unary-pred not))
-  (add-primitive-proc! 'false? (unary-pred false?))
-  (add-primitive-proc! 'true?  (unary-pred true?))
+  (add-primitive-proc! 'not    (unary-pred 'not not))
+  (add-primitive-proc! 'false? (unary-pred 'false? false?))
+  (add-primitive-proc! 'true?  (unary-pred 'true? true?))
 
-  (add-primitive-proc! 'pair?        (unary-pred pair?))
-  (add-primitive-proc! 'null?        (unary-pred null?))
-  (add-primitive-proc! 'list?        (unary-pred list?))
-  (add-primitive-proc! 'empty-queue? (unary-pred empty-queue?))
-  (add-primitive-proc! 'queue?       (unary-pred queue?))
+  (add-primitive-proc! 'pair?        (unary-pred 'pair? pair?))
+  (add-primitive-proc! 'null?        (unary-pred 'null? null?))
+  (add-primitive-proc! 'list?        (unary-pred 'list? list?))
+  (add-primitive-proc! 'empty-queue? (unary-pred 'empty-queue? empty-queue?))
+  (add-primitive-proc! 'queue?       (unary-pred 'queue? queue?))
 
-  (add-primitive-proc! 'zero? (unary-arithmetic-pred zero?))
-  (add-primitive-proc! 'sub1  (unary-arithmetic-func sub1))
-  (add-primitive-proc! 'add1  (unary-arithmetic-func add1))
+  (add-primitive-proc! 'zero? (unary-arithmetic-pred 'zero? zero?))
+  (add-primitive-proc! 'sub1  (unary-arithmetic-func 'sub1 sub1))
+  (add-primitive-proc! 'add1  (unary-arithmetic-func 'add1 add1))
 
   (add-primitive-proc! 'raise
                        (λ [vals : DenVal *] : ExpVal
                          (match vals
                            [`(,val) (error "uncaught exception:" (expval->denval val))]
-                           [_ (error 'unary-func "Bad args: ~s" vals)])))
+                           [_ (error 'raise "Bad args: ~s" vals)])))
   (add-primitive-proc! 'car
                        (λ [vals : DenVal *] : ExpVal
                          (match vals
                            [`(,val) (car (expval->pair val))]
-                           [_ (error 'unary-func "Bad args: ~s" vals)])))
+                           [_ (error 'car "Bad args: ~s" vals)])))
   (add-primitive-proc! 'cdr
                        (λ [vals : DenVal *] : ExpVal
                          (match vals
                            [`(,val) (cdr (expval->pair val))]
-                           [_ (error 'unary-func "Bad args: ~s" vals)])))
+                           [_ (error 'cdr "Bad args: ~s" vals)])))
 
   (let ()
     (: get-op [-> String Symbol])
@@ -242,43 +250,43 @@
                        (λ [vals : DenVal *] : ExpVal
                          (match vals
                            [`(,val) (length (expval->list val))]
-                           [_ (error 'unary-func "Bad args: ~s" vals)])))
+                           [_ (error 'length "Bad args: ~s" vals)])))
   (add-primitive-proc! 'list-ref
                        (λ [vals : DenVal *] : ExpVal
                          (match vals
                            [`(,val-1 ,val-2)
                             #:when (exact-integer? val-2)
                             (list-ref (expval->list val-1) val-2)]
-                           [_ (error 'binary-func "Bad args: ~s" vals)])))
+                           [_ (error 'list-ref "Bad args: ~s" vals)])))
 
 
-  (add-primitive-proc! 'read (nullary-func read))
+  (add-primitive-proc! 'read (nullary-func 'read read))
 
-  (add-primitive-proc! 'display (unary-func display))
-  (add-primitive-proc! 'print   (unary-func print))
-  (add-primitive-proc! 'write   (unary-func write))
+  (add-primitive-proc! 'display (unary-func 'display display))
+  (add-primitive-proc! 'print   (unary-func 'print   print))
+  (add-primitive-proc! 'write   (unary-func 'write   write))
 
-  (add-primitive-proc! 'displayln (unary-func displayln))
-  (add-primitive-proc! 'println   (unary-func println))
-  (add-primitive-proc! 'writeln   (unary-func writeln))
+  (add-primitive-proc! 'displayln (unary-func 'displayln displayln))
+  (add-primitive-proc! 'println   (unary-func 'println   println))
+  (add-primitive-proc! 'writeln   (unary-func 'writeln   writeln))
 
 
-  (add-primitive-proc! '=  (binary-arithmetic-relation =))
-  (add-primitive-proc! '>  (binary-arithmetic-relation >))
-  (add-primitive-proc! '>= (binary-arithmetic-relation >=))
-  (add-primitive-proc! '<  (binary-arithmetic-relation <))
-  (add-primitive-proc! '<= (binary-arithmetic-relation <=))
+  (add-primitive-proc! '=  (binary-arithmetic-relation '=  =))
+  (add-primitive-proc! '>  (binary-arithmetic-relation '>  >))
+  (add-primitive-proc! '>= (binary-arithmetic-relation '>= >=))
+  (add-primitive-proc! '<  (binary-arithmetic-relation '<  <))
+  (add-primitive-proc! '<= (binary-arithmetic-relation '<= <=))
 
-  (add-primitive-proc! 'eq?    (binary-equal-relation eq?))
-  (add-primitive-proc! 'eqv?   (binary-equal-relation eqv?))
-  (add-primitive-proc! 'equal? (binary-equal-relation equal?))
+  (add-primitive-proc! 'eq?    (binary-equal-relation 'eq?    eq?))
+  (add-primitive-proc! 'eqv?   (binary-equal-relation 'eqv?   eqv?))
+  (add-primitive-proc! 'equal? (binary-equal-relation 'equal? equal?))
 
 
   (add-primitive-proc! 'cons
                        (λ [vals : DenVal *] : ExpVal
                          (match vals
                            [`(,val-1 ,val-2) (pair-val (cons val-1 val-2))]
-                           [_ (error 'binary-func "Bad args: ~s" vals)])))
+                           [_ (error 'cons "Bad args: ~s" vals)])))
 
   (add-primitive-proc! 'enqueue
                        (λ [vals : DenVal *] : ExpVal
@@ -286,7 +294,7 @@
                            [`(,val-1 ,val-2)
                             #:when ((queueof? denval?) val-1)
                             (queue-val (enqueue val-1 val-2))]
-                           [_ (error 'binary-func "Bad args: ~s" vals)])))
+                           [_ (error 'enqueue "Bad args: ~s" vals)])))
 
   (add-primitive-proc! 'dequeue
                        (λ [vals : DenVal *] : ExpVal
@@ -298,12 +306,12 @@
                                      (ann (λ (1st others)
                                             (apply-procedure/k val-2 (list 1st others) (id-cont)))
                                           [-> DenVal (Queueof DenVal) DenVal]))]
-                           [_ (error 'binary-func "Bad args: ~s" vals)])))
+                           [_ (error 'dequeue "Bad args: ~s" vals)])))
 
-  (add-primitive-proc! '+ (n-ary-arithmetic-func +))
-  (add-primitive-proc! '* (n-ary-arithmetic-func *))
-  (add-primitive-proc! '- (n-ary-arithmetic-func -))
-  (add-primitive-proc! '/ (n-ary-arithmetic-func /))
+  (add-primitive-proc! '+ (n-ary-arithmetic-func '+ +))
+  (add-primitive-proc! '* (n-ary-arithmetic-func '* *))
+  (add-primitive-proc! '- (n-ary-arithmetic-func '- -))
+  (add-primitive-proc! '/ (n-ary-arithmetic-func '/ /))
 
   (add-primitive-proc! 'void
                        (λ [vals : DenVal *] : ExpVal (void)))
@@ -313,10 +321,9 @@
                        (λ [vals : DenVal *] : ExpVal
                          (match vals
                            [`(,str ,args ...)
-                            (if (string? str)
-                                (string-val (apply format str args))
-                                (error 'format "Bad arg: ~s" str))]
-                           [_ (error 'n-ary-func "Bad args: ~s" vals)])))
+                            #:when (string? str)
+                            (string-val (apply format str args))]
+                           [_ (error 'format "Bad args: ~s" vals)])))
 
 
   (add-denval! 'apply

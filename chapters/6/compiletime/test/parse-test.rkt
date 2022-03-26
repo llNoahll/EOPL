@@ -1,176 +1,275 @@
 #lang typed/racket
 
-(require "../Parse/parser.rkt")
+(require "../Parse/parse.rkt")
 
 
-(pretty-print (parser '2))
-(pretty-print (parser '-9))
-(pretty-print (parser 'x))
-(pretty-print (parser 'i))
+(for ([i (in-naturals)]
+      [code
+       (in-list
+        '(2
+          -9
+          (not #t)
+          (not #f)
+          #\a
+          "b"
+          (void)
+          (void 1)
+          (void 1 2)
+          (cadr   (list 0 1 2 3 4 5 6))
+          (cdddr  (list 0 1 2 3 4 5 6))
+          (cadddr (list 0 1 2 3 4 5 6))
+          (length (list 0 1 2 3))
+          (boolean? #t)
+          (when (null? (list 1 2 3)) 'when)
+          (when (not (null? (list 1 2 3))) 'when)
+          (unless (not (null? (list 1 2 3))) 'unless)
+          (unless (null? (list 1 2 3)) 'unless)
+          (cond [(null? (list 1 2 3)) 'cond-1]
+                [(null? (list 9 0 8)) 'cond-2]
+                [else 'else-cons])
+          (cond [(null? (list 1 2 3)) 'cond-1]
+                [(null? (empty-list)) 'cond-2]
+                [else 'else-cons])
+          (displayln
+           (cond [(null? (list 1 2 3)) 'cond-1]
+                 [(null? (empty-list)) 'cond-2]
+                 [else 'else-cons]))
 
-(pretty-print (parser '#\a))
-(pretty-print (parser '"b"))
+          (when (empty-queue? (enqueue (enqueue (enqueue (empty-queue) 1) 2) 3)) 'when)
+          (when (not (empty-queue? (enqueue (enqueue (enqueue (empty-queue) 1) 2) 3))) 'when)
+          (unless (empty-queue? (enqueue (enqueue (enqueue (empty-queue) 1) 2) 3)) 'unless)
+          (unless (not (empty-queue? (enqueue (enqueue (enqueue (empty-queue) 1) 2) 3))) 'unless)
+          (cond [(empty-queue? (enqueue (enqueue (enqueue (empty-queue) 1) 2) 3)) 'cond-1]
+                [(empty-queue? (enqueue (enqueue (enqueue (empty-queue) 9) 0) 8)) 'cond-2]
+                [else 'else-cons])
+          (cond [(empty-queue? (enqueue (enqueue (enqueue (empty-queue) 1) 2) 3)) 'cond-1]
+                [(null? (empty-list)) 'cond-2]
+                [else 'else-cons])
+          (displayln
+           (cond [(empty-queue? (enqueue (enqueue (enqueue (empty-queue) 1) 2) 3)) 'cond-1]
+                 [(null? (empty-list)) 'cond-2]
+                 [else 'else-cons]))
 
-(pretty-print (parser '(not #t)))
-(pretty-print (parser '(not #f)))
+          (let ([x 1]) (cons x x))
+          (let ([a 1] [b 2] [c 3])
+            (list a b c))
+          (let ([x 30])
+            (let ([x (- x 1)]
+                  [y (- x 2)])
+              (- x y)))
+          (let ([x 30])
+            (let* ([x (- x 1)]
+                   [y (- x 2)])
+              (+ x y)
+              (* x y)
+              (- x y)))
+          (let ([f (λ (x) (- x 11))])
+            (f (f 77)))
+          ((λ (f) (f (f 77)))
+           (λ (x) (- x 11)))
+          (let* ([x 200]
+                 [f (λ (z) (- z x))]
+                 [x 100]
+                 [g (λ (z) (- z x))])
+            (- (f 1) (g 1)))
+          ((λ args (displayln args))
+           1 2 3 4)
 
-(pretty-print (parser '(minus -9)))
-(pretty-print (parser '(minus i)))
-(pretty-print (parser '(minus x)))
+          (apply + (list 1 2))
+          (apply + '(1 2))
+          (let ([fact
+                 (Y (λ (fact)
+                      (λ (n)
+                        (cond [(= n 0) 1]
+                              [(= n 1) 1]
+                              [else (* n (fact (- n 1)))]))))])
+            (fact 5))
 
-(pretty-print (parser '(greater? i x)))
-(pretty-print (parser '(less? i x)))
+          (if #t 1 2)
+          (if #f 1 2)
+          (null? '((a 0) (b 1) (c 2) (d 3)))
+          (map car '((a 0) (b 1) (c 2) (d 3)))
+          (apply * `(1 ,(+ 1 2) 4))
 
-(pretty-print (parser '(cons i i)))
-(pretty-print (parser '(car (cons i x))))
-(pretty-print (parser '(list x i i)))
-(pretty-print (parser '(null? (empty-list))))
+          (let ([funcs
+                 (Y*
+                  (λ (even? odd?)
+                    (λ (num)
+                      (cond [(zero? num) #t]
+                            [(= 1 num) #f]
+                            [else (odd? (- num 1))])))
+                  (λ (even? odd?)
+                    (λ (num)
+                      (cond [(zero? num) #f]
+                            [(= 1 num) #t]
+                            [else (even? (- num 1))]))))])
+            (let ([even? (car funcs)]
+                  [odd?  (car (cdr funcs))])
+              (displayln (eq? #t (even? 0)))))
+          (letrec ([even? (λ (num)
+                            (cond [(zero? num) #t]
+                                  [(= 1 num) #f]
+                                  [else (odd? (sub1 num))]))]
+                   [odd?  (λ (num)
+                            (cond [(zero? num) #f]
+                                  [(= 1 num) #t]
+                                  [else (even? (sub1 num))]))])
+            (displayln "-----------------------")
+            (displayln (even? 0))
+            (displayln (even? 2))
+            (displayln (even? 4))
 
-(pretty-print (parser '(let ([x 1])
-                         (cons x x))))
+            (displayln (odd? 1))
+            (displayln (odd? 3))
+            (displayln (odd? 5)))
+          (begin
+            (define odd?
+              (λ (num)
+                (cond [(zero? num) #f]
+                      [(= 1 num) #t]
+                      [else (even? (sub1 num))])))
+            (define even?
+              (λ (num)
+                (cond [(zero? num) #t]
+                      [(= 1 num) #f]
+                      [else (odd? (sub1 num))])))
+            (displayln "-----------------------")
+            (displayln (even? 0))
+            (displayln (even? 2))
+            (displayln (even? 4))
 
-(pretty-print (parser '(let ([a 'a]
-                             [b 'b]
-                             [c 'c])
-                         (list a b c))))
+            (displayln (odd? 1))
+            (displayln (odd? 3))
+            (displayln (odd? 5)))
 
+          (begin
+            (define sqrt
+              (λ (x)
+                (define average
+                  (λ (x y)
+                    (/ (+ x y) 2)))
+                (define abs
+                  (λ (x)
+                    (cond [(< x 0) (- x)]
+                          [(= x 0) 0]
+                          [(> x 0) x])))
+                (define good-enough?
+                  (λ (y)
+                    (< (abs (- (* y y) x)) tolerance)))
+                (define improve
+                  (λ (y)
+                    (average (/ x y) y)))
+                (define try
+                  (λ (y)
+                    (if (good-enough? y)
+                        y
+                        (try (improve y)))))
 
-(pretty-print (parser '(if (greater? 2 1) 'true 'false)))
+                (define tolerance 0.0000001)
 
-(pretty-print (parser '(cond [(null? (list 1 2 3)) 'cond-1]
-                             [(null? (list 9 0 8)) 'cond-2]
-                             [else 'else-cons])))
+                (try 1)))
+            (sqrt 2))
+          (begin
+            (define (sqrt x)
+              (define (average x y) (/ (+ x y) 2))
+              (define (improve y) (average (/ x y) y))
+              (define (abs x)
+                (cond [(< x 0) (- x)]
+                      [(= x 0) 0]
+                      [(> x 0) x]))
+              (define (good-enough? y)
+                (< (abs (- (* y y) x)) tolerance))
+              (define (try y)
+                (if (good-enough? y)
+                    y
+                    (try (improve y))))
 
+              (define tolerance 0.0000001)
 
-(pretty-print (parser '(let ([x 30])
-                         (let* ([x (- x 1)]
-                                [y (- x 2)])
-                           (+ x y)
-                           (* x y)
-                           (- x y)))))
+              (try 1))
+            (sqrt 2))
 
-(pretty-print (parser '(let* ([a 1]
-                              [b 2]
-                              [c 3])
-                         (list a b c))))
+          (begin
+            (define fib
+              (λ (num)
+                (cond [(= 0 num) 0]
+                      [(= 1 num) 1]
+                      [else (+ (fib (- num 1))
+                               (fib (- num 2)))])))
+            (fib 2))
 
-(pretty-print (parser '(let ([x 30])
-                         (let* ([x (- x 1)]
-                                [y (- x 2)])
-                           (- x y)))))
+          (and)
+          (or)
+          (or #f #f #f)
+          (or #f #t #f)
+          (and #t #t #t)
+          (and #f #t #f)
 
+          (+ 10 (let/cc cc (+ 1 (cc 2))))
+          (let ()
+            (displayln
+             (let/cc cc
+               (displayln 'hello)
+               (cc 'cc)
+               (displayln 'world)))
+            (displayln 456))
+          (begin
+            (define fact
+              (λ (n)
+                (let ([ls (let/cc cc (list cc n 1))])
+                  (define cc  (car   ls))
+                  (define n   (cadr  ls))
+                  (define res (caddr ls))
+                  (if (zero? n)
+                      res
+                      (cc (list cc (sub1 n) (* n res)))))))
 
-(pretty-print (parser '(let ([f (λ (x) (- x 11))])
-                         (f (f 77)))))
+            (list (fact 0)
+                  (fact 1)
+                  (fact 2)
+                  (fact 3)
+                  (fact 4)
+                  (fact 5)))
+          (+ 10 (call/cc (λ (cc) (+ 1 (cc 2)))) )
+          (let ()
+            (displayln
+             (call/cc
+              (λ (cc)
+                (displayln 'hello)
+                (cc 'cc)
+                (displayln 'world))))
+            (displayln 456))
+          (begin
+            (define fact
+              (λ (n)
+                (let ([ls (call/cc (λ (cc) (list cc n 1)))])
+                  (define cc  (car   ls))
+                  (define n   (cadr  ls))
+                  (define res (caddr ls))
+                  (if (zero? n)
+                      res
+                      (cc (list cc (sub1 n) (* n res)))))))
 
-(pretty-print (parser ''a))
-(pretty-print (parser ''#t))
-(pretty-print (parser ''233))
-(pretty-print (parser ''"hello"))
-(pretty-print (parser ''#\b))
-(pretty-print (parser ''(1 2 3 'a "cd")))
-
-
-(pretty-print (parser '(λ (f)
-                         ((λ (recur-func)
-                            (recur-func recur-func))
-                          (λ (recur-func)
-                            (f (λ args
-                                 (apply (recur-func recur-func) args))))))))
-
-
-(pretty-print (parser '(cond [(= n 0) 1]
-                             [(= n 1) 1]
-                             [else (* n (fact (sub1 n)))])))
-(pretty-print (parser '(λ (fact)
-                         (λ (n)
-                           (cond [(= n 0) 1]
-                                 [(= n 1) 1]
-                                 [else (* n (fact (sub1 n)))])))))
-
-
-(pretty-print (parser '(let ([funcs
-                              (Y*
-                               (λ (even? odd?)
-                                 (λ (num)
-                                   (cond [(zero? num) #t]
-                                         [(= 1 num) #f]
-                                         [else (odd? (- num 1))])))
-                               (λ (even? odd?)
-                                 (λ (num)
-                                   (cond [(zero? num) #f]
-                                         [(= 1 num) #t]
-                                         [else (even? (- num 1))]))))])
-                         (let ([even? (car funcs)]
-                               [odd?  (car (cdr funcs))])
-                           (displayln (eq? #t (even? 0)))))))
-
-
-(pretty-print (parser '(λ funcs
-                         ((λ (recur-funcs)
-                            (displayln recur-funcs)
-                            (displayln (recur-funcs recur-funcs))
-
-                            (recur-funcs recur-funcs))
-                          (λ (recur-funcs)
-                            (map (λ (func)
-                                   (λ args
-                                     (apply (apply func (recur-funcs recur-funcs)) args)))
-                                 funcs))))))
-
-
-(pretty-print (parser '(if #t 1 2)))
-
-
-(pretty-print (parser '(letrec ([even? (λ (num)
-                                         (cond [(zero? num) #t]
-                                               [(= 1 num) #f]
-                                               [else (odd? (sub1 num))]))]
-                                [odd?  (λ (num)
-                                         (cond [(zero? num) #f]
-                                               [(= 1 num) #t]
-                                               [else (even? (sub1 num))]))])
-                         (odd? 5))))
-
-(pretty-print (parser '(letrec ([fib (λ (num)
-                                       (cond [(= 0 num) 0]
-                                             [(= 1 num) 1]
-                                             [else (+ (fib (- num 1))
-                                                      (fib (- num 2)))]))])
-                         (fib 0))))
-
-
-(pretty-print (parser '(let ([x 0])
-                         (letrec ([even (λ ()
-                                          (if (zero? x)
-                                              1
-                                              (begin
-                                                (set! x (- x 1))
-                                                (odd))))]
-                                  [odd  (λ ()
-                                          (if (zero? x)
-                                              0
-                                              (begin
-                                                (set! x (- x 1))
-                                                (even))))])
-                           (set! x 13)
-                           (odd)))))
-
-(pretty-print (parser '(let* ([g (let ([counter 0])
-                                   (λ ()
-                                     (set! counter (- counter -1))
-                                     counter))]
-                              [a (g)]
-                              [b (g)])
-                         (displayln (format "a = ~a, b = ~a" a b)))))
-
-(pretty-print (parser '(let ([n 0])
-                         (set! n (+ n 1))
-                         n)))
-
-(pretty-print (parser '(let ([n 1])
-                         (with-handlers ([(λ (arg) (eq? arg 0))
-                                          (λ (arg) (displayln "raise a value: ZERO."))]
-                                         [(λ (arg) (eq? arg 1))
-                                          (λ (arg) (displayln "raise a value: ONE."))])
-                           (raise n)))))
+            (list (fact 0)
+                  (fact 1)
+                  (fact 2)
+                  (fact 3)
+                  (fact 4)
+                  (fact 5)))
+          ))])
+  (displayln (format "initial ~a:" i))
+  (pretty-print code)
+  (displayln (format "desugar ~a:" i))
+  (pretty-print (desugar
+                 code))
+  (displayln (format "auto-applied ~a:" i))
+  (pretty-print (auto-apply
+                 (desugar
+                  code)))
+  (displayln (format "auto-cpsed ~a:" i))
+  (pretty-print (auto-cps
+                 (desugar
+                  (auto-apply
+                   (desugar
+                    code)))))
+  (newline))
