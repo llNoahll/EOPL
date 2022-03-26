@@ -38,5 +38,6 @@
    [expval->hash           : [-> ExpVal (HashTable DenVal DenVal)]]
 
    [expval->denval   : [-> ExpVal DenVal]]
+   [s-expval->denval : [-> Any DenVal]]
    [s-expval->expval : [-> Any ExpVal]]
    ))

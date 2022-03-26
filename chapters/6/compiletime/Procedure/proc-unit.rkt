@@ -77,7 +77,8 @@
         [(assign-exp var exp)
          (free-binds vars (begin-exp (list (var-exp var) exp)) env)]
 
-        [(or (symbol-exp _)
+        [(or (quote-exp _)
+             (symbol-exp _)
              (real-exp _)
              (bool-exp _)
              (char-exp _)

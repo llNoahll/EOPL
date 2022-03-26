@@ -11,6 +11,7 @@
     (match code
       [`(,(or 'quote 'quasiquote) ,(? symbol? sym))
        `(symbol-exp ',sym)]
+      [`',(? s-exp? datum) `(quote-exp ',datum)]
 
       [(? boolean? bool) `(bool-exp ,bool)]
       [(? real? num)     `(real-exp ,num)]

@@ -17,7 +17,8 @@
         [`(,(or 'quote 'quasiquote) ,(? symbol?))       code]
         [`(,(or 'quote 'quasiquote) ())                 'null]
         [`',(? list? ls)
-         `(list ,@(map (ann (λ (datum) (desugar `',datum)) [-> S-Exp S-Exp]) ls))]
+         code
+         #;`(list ,@(map (ann (λ (datum) (desugar `',datum)) [-> S-Exp S-Exp]) ls))]
         #;[`',_ code]
 
         [``,(list 'unquote datum) (desugar datum)]

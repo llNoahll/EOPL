@@ -9,7 +9,7 @@
 (define auto-apply
   (λ (code)
     (match code
-      [(or `(,(or 'quote 'quasiquote) ,(? symbol?))
+      [(or `(,(or 'quote 'quasiquote) ,_)
            (? boolean?)
            (? real?)
            (? string?)

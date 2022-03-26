@@ -34,13 +34,14 @@
                      (apply-cont cont (set-binding! env var (expval->denval val)))))
                  [-> Cont [-> ExpVal FinalAnswer]]))
            cont))]
-        [(symbol-exp sym)  (apply-cont cont (symbol-val sym))]
-        [(real-exp   num)  (apply-cont cont (num-val    num))]
-        [(bool-exp   bool) (apply-cont cont (bool-val   bool))]
-        [(char-exp   char) (apply-cont cont (char-val   char))]
-        [(string-exp str)  (apply-cont cont (string-val str))]
+        [(quote-exp  datum) (apply-cont cont (s-expval->denval datum))]
+        [(symbol-exp sym)   (apply-cont cont (symbol-val sym))]
+        [(real-exp   num)   (apply-cont cont (num-val    num))]
+        [(bool-exp   bool)  (apply-cont cont (bool-val   bool))]
+        [(char-exp   char)  (apply-cont cont (char-val   char))]
+        [(string-exp str)   (apply-cont cont (string-val str))]
 
-        [(var-exp    var)  (apply-cont cont (apply-env env var))]
+        [(var-exp    var)   (apply-cont cont (apply-env env var))]
 
         [(begin-exp exps)
          (value-of/k

@@ -100,6 +100,9 @@
   (define expval->denval (λ (val) (assert val denval?)))
 
 
+  (: s-expval->denval [-> Any DenVal])
+  (define s-expval->denval (λ (val) (assert val denval?)))
+
   (: s-expval->expval [-> Any ExpVal])
   (define s-expval->expval (λ (val) (assert val expval?)))
 

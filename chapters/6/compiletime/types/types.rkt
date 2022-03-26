@@ -238,6 +238,11 @@
     #:type-name Assign-Exp)
 
 
+  (define-struct (quote-exp exp)
+    ([datum : S-Exp])
+    #:transparent
+    #:type-name Quote-Exp)
+
   (define-struct (symbol-exp exp)
     ([symbol : Symbol])
     #:transparent
