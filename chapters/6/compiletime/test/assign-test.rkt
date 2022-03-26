@@ -55,10 +55,10 @@
 (*eval*
  '(let ([times4 0])
     (set! times4
-      (λ (x)
-        (if (zero? x)
-            0
-            (- (times4 (- x 1)) -4))))
+          (λ (x)
+            (if (zero? x)
+                0
+                (- (times4 (- x 1)) -4))))
     (displayln (times4 3)))
  (base-env)
  (end-cont))
@@ -74,8 +74,8 @@
  (end-cont))
 
 
-;; (*eval*
-;;  '(let ([n (read)])
-;;     (displayln n))
-;;  (base-env)
-;;  (end-cont))
+#;(*eval*
+   '(let ([n (read)])
+      (displayln n))
+   (base-env)
+   (end-cont))

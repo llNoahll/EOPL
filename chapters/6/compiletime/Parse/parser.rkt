@@ -47,15 +47,6 @@
       ['(yield)              '(yield-exp)]
 
 
-      [`(letrec ([,bind-vars ,bind-exps] ...) ,body-exp)
-       #:when (and ((listof? symbol?) bind-vars)
-                   ((listof? s-exp?)  bind-exps)
-                   (s-exp? body-exp))
-       `(letrec-exp ',bind-vars
-                    (list ,@(map parser bind-exps))
-                    ,(parser body-exp))]
-
-
       [`(,(? λ?) ,args ,body-exp)
        #:when (and ((or/c symbol? (listof? symbol?)) args)
                    (s-exp? body-exp))

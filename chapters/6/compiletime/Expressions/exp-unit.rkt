@@ -73,31 +73,6 @@
                  [-> Cont [-> ExpVal FinalAnswer]]))
            cont))]
 
-        [(letrec-exp vars exps body)
-         (cond [(or (null? exps) (null? vars))
-                (value-of/k body env cont)]
-               [else
-                (define new-env
-                  (extend-env+
-                   (map (ann (λ (var) (cons var undefined))
-                             [-> Symbol (Pair Symbol Undefined)])
-                        vars)
-                   env))
-                (value-of/k
-                 (car exps) new-env
-                 (append
-                  (for/list : Cont
-                            ([var (in-list vars)]
-                             [exp (in-list (append (cdr exps) (list body)))])
-                    (frame
-                     'letrec-frame
-                     (ann (λ (cont)
-                            (λ (val)
-                              (set-binding! new-env var (expval->denval val))
-                              (value-of/k exp new-env cont)))
-                          [-> Cont [-> ExpVal FinalAnswer]])))
-                  cont))])]
-
         [(spawn-exp exp)
          (value-of/k
           exp env

@@ -47,7 +47,6 @@
                         Top-Exp
                         (List 'begin Simple-Exp CPS-Exp)
                         (List 'if Simple-Exp CPS-Exp CPS-Exp)
-                        (List 'letrec (Listof (List Symbol CPS-Exp)) CPS-Exp)
                         (List 'let (List (List K K-Exp)) CPS-Exp)
                         (List 'let (List (List Symbol (List 'λ (List '_) K))) CPS-Exp)))
 (define-predicate cps-exp? CPS-Exp)
@@ -132,15 +131,6 @@
           ['(thread-try-receive) (ctx code)]
           ['(yield)              (ctx code)]
 
-
-          [`(letrec ([,bind-vars ,bind-exps] ...) ,body-exp)
-           #:when (and ((listof? symbol?) bind-vars)
-                       ((listof? s-exp?)  bind-exps)
-                       (s-exp? body-exp))
-           `(letrec ,(map (ann (λ (var exp) `[,var ,(auto-cps exp)])
-                               [-> Symbol S-Exp (List Symbol CPS-Exp)])
-                          bind-vars bind-exps)
-              ,(cps body-exp ctx))]
 
           [`(let/cc ,cc-var ,body-exp)
            #:when (and (symbol? cc-var) (s-exp? body-exp))

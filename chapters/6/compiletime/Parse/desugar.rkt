@@ -178,6 +178,19 @@
                              (cdr bind-vars)
                              (cdr bind-exps))
                    ,@body-exps))))]
+        [`(letrec ([,bind-vars ,bind-exps] ...)
+            ,body-exps ..1)
+         #:when (and ((listof? symbol?) bind-vars)
+                     ((listof? s-exp?)  bind-exps)
+                     ((listof? s-exp?)  body-exps))
+         (desugar
+          `(let ,(map (ann (λ (var) `[,var undefined])
+                           [-> Symbol (List Symbol 'undefined)])
+                      bind-vars)
+               ,@(map (ann (λ (var exp) `(set! ,var ,exp))
+                           [-> Symbol S-Exp (List 'set! Symbol S-Exp)])
+                      bind-vars bind-exps)
+               ,@body-exps))]
 
         [`(let/cc ,cc-var1 (let/cc ,cc-var2 ,body-exps ..1))
          #:when (and (symbol? cc-var1)
@@ -236,7 +249,7 @@
 
         [`(,op ,binds ,body-exps ..2)
          #:when (and (case op
-                       [(letrec let/cc lambda λ trace-lambda trace-λ) #t]
+                       [(let/cc lambda λ trace-lambda trace-λ) #t]
                        [else #f])
                      (s-exp? binds)
                      ((listof? s-exp?) body-exps))

@@ -104,15 +104,6 @@
                      (begin-exp (list pred-exp true-exp false-exp))
                      env)]
 
-        [(letrec-exp bind-vars bind-exps body)
-         (define new-env
-           (extend-env+ (map (ann (λ (var) (cons var undefined))
-                                  [-> Symbol (Pair Symbol Undefined)])
-                             vars)
-                        env))
-
-         (free-binds (append vars bind-vars) (begin-exp (cons body bind-exps)) new-env)]
-
         [(spawn-exp  exp) (free-binds vars exp env)]
         [(mutex-exp  exp) (free-binds vars exp env)]
         [(wait-exp   exp) (free-binds vars exp env)]

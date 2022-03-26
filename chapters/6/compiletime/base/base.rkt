@@ -163,8 +163,11 @@
       (base-env (extend-env name val (base-env)))))
 
 
-  (add-denval! 'null  null)
-  (add-denval! 'empty empty)
+  (add-denval! 'undefined undefined)
+  (add-denval! 'null      null)
+  (add-denval! 'empty     empty)
+  (add-denval! 'true      true)
+  (add-denval! 'false     false)
 
 
   (add-primitive-proc! 'identity (unary-func identity))

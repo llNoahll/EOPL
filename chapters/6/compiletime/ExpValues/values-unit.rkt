@@ -25,14 +25,8 @@
   (: string-val [-> String DenVal])
   (define string-val (λ (str) str))
 
-  (: pair-val [-> (Pair DenVal DenVal) DenVal])
-  (define pair-val (λ (pair) pair))
-
-  (: list-val [-> (Listof DenVal) DenVal])
-  (define list-val (λ (ls) ls))
-
-  (: queue-val [-> (Queueof DenVal) DenVal])
-  (define queue-val (λ (queue) queue))
+  (: mutex-val [-> Mutex DenVal])
+  (define mutex-val (λ (mut) mut))
 
   (: proc-val [-> Proc DenVal])
   (define proc-val (λ (proc) proc))
@@ -40,8 +34,23 @@
   (: primitive-proc-val [-> Primitive-Proc DenVal])
   (define primitive-proc-val (λ (primitive-proc) primitive-proc))
 
-  (: mutex-val [-> Mutex DenVal])
-  (define mutex-val (λ (mut) mut))
+  (: queue-val [-> (Queueof DenVal) DenVal])
+  (define queue-val (λ (queue) queue))
+
+  (: box-val [-> (Boxof DenVal) DenVal])
+  (define box-val (λ (bx) bx))
+
+  (: pair-val [-> (Pairof DenVal DenVal) DenVal])
+  (define pair-val (λ (pair) pair))
+
+  (: list-val [-> (Listof DenVal) DenVal])
+  (define list-val (λ (ls) ls))
+
+  (: vector-val [-> (Vectorof DenVal) DenVal])
+  (define vector-val (λ (vec) vec))
+
+  (: hash-val [-> (HashTable DenVal DenVal) DenVal])
+  (define hash-val (λ (ht) ht))
 
 
   (: expval->num [-> ExpVal Real])
@@ -59,14 +68,8 @@
   (: expval->string [-> ExpVal String])
   (define expval->string (λ (val) (assert val string?)))
 
-  (: expval->pair [-> ExpVal (Pair DenVal DenVal)])
-  (define expval->pair (λ (val) (assert val denpair?)))
-
-  (: expval->list [-> ExpVal (Listof DenVal)])
-  (define expval->list (λ (val) (assert val (listof? denval?))))
-
-  (: expval->queue [-> ExpVal (Queueof DenVal)])
-  (define expval->queue (λ (val) (assert val (queueof? denval?))))
+  (: expval->mutex [-> ExpVal Mutex])
+  (define expval->mutex (λ (val) (assert val mutex?)))
 
   (: expval->proc [-> ExpVal Proc])
   (define expval->proc (λ (val) (assert val proc?)))
@@ -74,8 +77,23 @@
   (: expval->primitive-proc [-> ExpVal Primitive-Proc])
   (define expval->primitive-proc (λ (val) (assert val primitive-proc?)))
 
-  (: expval->mutex [-> ExpVal Mutex])
-  (define expval->mutex (λ (val) (assert val mutex?)))
+  (: expval->queue [-> ExpVal (Queueof DenVal)])
+  (define expval->queue (λ (val) (assert val (queueof? denval?))))
+
+  (: expval->box [-> ExpVal (Boxof DenVal)])
+  (define expval->box (λ (val) (assert val denbox?)))
+
+  (: expval->pair [-> ExpVal (Pairof DenVal DenVal)])
+  (define expval->pair (λ (val) (assert val denpair?)))
+
+  (: expval->list [-> ExpVal (Listof DenVal)])
+  (define expval->list (λ (val) (assert val (listof? denval?))))
+
+  (: expval->vector [-> ExpVal (Vectorof DenVal)])
+  (define expval->vector (λ (val) (assert val denvector?)))
+
+  (: expval->hash [-> ExpVal (HashTable DenVal DenVal)])
+  (define expval->hash (λ (val) (assert val denhash?)))
 
 
   (: expval->denval [-> ExpVal DenVal])

@@ -38,17 +38,6 @@
                '())]
 
 
-      [`(letrec ([,bind-vars ,bind-exps] ...) ,body-exp)
-       #:when (and ((listof? symbol?) bind-vars)
-                   ((listof? s-exp?)  bind-exps)
-                   (s-exp? body-exp))
-       `(letrec ,(map (ann (λ (var exp)
-                             `[,var (apply (λ () ,(auto-apply exp)) '())])
-                           [-> Symbol S-Exp (List Symbol S-Exp)])
-                      bind-vars bind-exps)
-          ,(auto-apply body-exp))]
-
-
       [`(apply ,op ,exps)
        #:when (and (s-exp? op) (s-exp? exps))
        `(apply ,(auto-apply op) ,(auto-apply exps))]
