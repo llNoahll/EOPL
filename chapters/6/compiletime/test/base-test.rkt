@@ -104,354 +104,274 @@
 (displayln "Start thread test.\n")
 
 
-(*check-code* 'x (init-env) init-eval-ns)
-(*check-code* 'i (init-env) init-eval-ns)
+(for ([code
+       (in-list
+        '(x
+          i
+          (sub1 -9)
+          (sub1 i)
+          (add1 x)
+          (> i x)
+          (< i x)
+          (= i x)
+          (cons i i)
+          (car (cons i x))
+          (list x i i)
+          (null? (empty-list))
+          ))])
+  (displayln (*check-code* code (init-env) init-eval-ns)))
 
-(*check-code* '(sub1 -9) (init-env) init-eval-ns)
-(*check-code* '(sub1 i)  (init-env) init-eval-ns)
-(*check-code* '(add1 x)  (init-env) init-eval-ns)
+(for ([code
+       (in-list
+        '(2
+          -9
+          (not #t)
+          (not #f)
+          #\a
+          "b"
+          (void)
+          (void 1)
+          (void 1 2)
+          (cadr   (list 0 1 2 3 4 5 6))
+          (cdddr  (list 0 1 2 3 4 5 6))
+          (cadddr (list 0 1 2 3 4 5 6))
+          (length (list 0 1 2 3))
+          (boolean? #t)
+          (when (null? (list 1 2 3)) 'when)
+          (when (not (null? (list 1 2 3))) 'when)
+          (unless (not (null? (list 1 2 3))) 'unless)
+          (unless (null? (list 1 2 3)) 'unless)
+          (cond [(null? (list 1 2 3)) 'cond-1]
+                [(null? (list 9 0 8)) 'cond-2]
+                [else 'else-cons])
+          (cond [(null? (list 1 2 3)) 'cond-1]
+                [(null? (empty-list)) 'cond-2]
+                [else 'else-cons])
+          (displayln
+           (cond [(null? (list 1 2 3)) 'cond-1]
+                 [(null? (empty-list)) 'cond-2]
+                 [else 'else-cons]))
 
-(*check-code* '(> i x) (init-env) init-eval-ns)
-(*check-code* '(< i x) (init-env) init-eval-ns)
-(*check-code* '(= i x) (init-env) init-eval-ns)
+          (when (empty-queue? (enqueue (enqueue (enqueue (empty-queue) 1) 2) 3)) 'when)
+          (when (not (empty-queue? (enqueue (enqueue (enqueue (empty-queue) 1) 2) 3))) 'when)
+          (unless (empty-queue? (enqueue (enqueue (enqueue (empty-queue) 1) 2) 3)) 'unless)
+          (unless (not (empty-queue? (enqueue (enqueue (enqueue (empty-queue) 1) 2) 3))) 'unless)
+          (cond [(empty-queue? (enqueue (enqueue (enqueue (empty-queue) 1) 2) 3)) 'cond-1]
+                [(empty-queue? (enqueue (enqueue (enqueue (empty-queue) 9) 0) 8)) 'cond-2]
+                [else 'else-cons])
+          (cond [(empty-queue? (enqueue (enqueue (enqueue (empty-queue) 1) 2) 3)) 'cond-1]
+                [(null? (empty-list)) 'cond-2]
+                [else 'else-cons])
+          (displayln
+           (cond [(empty-queue? (enqueue (enqueue (enqueue (empty-queue) 1) 2) 3)) 'cond-1]
+                 [(null? (empty-list)) 'cond-2]
+                 [else 'else-cons]))
 
-(*check-code* '(cons i i) (init-env) init-eval-ns)
-(*check-code* '(car (cons i x)) (init-env) init-eval-ns)
-(*check-code* '(list x i i) (init-env) init-eval-ns)
-(*check-code* '(null? (empty-list)) (init-env) init-eval-ns)
+          (let ([x 1]) (cons x x))
+          (let ([a 1] [b 2] [c 3])
+            (list a b c))
+          (let ([x 30])
+            (let ([x (- x 1)]
+                  [y (- x 2)])
+              (- x y)))
+          (let ([x 30])
+            (let* ([x (- x 1)]
+                   [y (- x 2)])
+              (+ x y)
+              (* x y)
+              (- x y)))
+          (let ([f (λ (x) (- x 11))])
+            (f (f 77)))
+          ((λ (f) (f (f 77)))
+           (λ (x) (- x 11)))
+          (let* ([x 200]
+                 [f (λ (z) (- z x))]
+                 [x 100]
+                 [g (λ (z) (- z x))])
+            (- (f 1) (g 1)))
+          ((λ args (displayln args))
+           1 2 3 4)
 
+          (apply + (list 1 2))
+          (apply + '(1 2))
+          (let ([fact
+                 (Y (λ (fact)
+                      (λ (n)
+                        (cond [(= n 0) 1]
+                              [(= n 1) 1]
+                              [else (* n (fact (- n 1)))]))))])
+            (fact 5))
 
-(*check-code* '2 (base-env) base-eval-ns)
-(*check-code* '-9 (base-env) base-eval-ns)
+          (if #t 1 2)
+          (if #f 1 2)
+          (null? '((a 0) (b 1) (c 2) (d 3)))
+          (map car '((a 0) (b 1) (c 2) (d 3)))
+          (apply * `(1 ,(+ 1 2) 4))
 
-(*check-code* '(not #t) (base-env) base-eval-ns)
-(*check-code* '(not #f) (base-env) base-eval-ns)
+          (let ([funcs
+                 (Y*
+                  (λ (even? odd?)
+                    (λ (num)
+                      (cond [(zero? num) #t]
+                            [(= 1 num) #f]
+                            [else (odd? (- num 1))])))
+                  (λ (even? odd?)
+                    (λ (num)
+                      (cond [(zero? num) #f]
+                            [(= 1 num) #t]
+                            [else (even? (- num 1))]))))])
+            (let ([even? (car funcs)]
+                  [odd?  (car (cdr funcs))])
+              (displayln (eq? #t (even? 0)))))
+          (letrec ([even? (λ (num)
+                            (cond [(zero? num) #t]
+                                  [(= 1 num) #f]
+                                  [else (odd? (sub1 num))]))]
+                   [odd?  (λ (num)
+                            (cond [(zero? num) #f]
+                                  [(= 1 num) #t]
+                                  [else (even? (sub1 num))]))])
+            (displayln "-----------------------")
+            (displayln (even? 0))
+            (displayln (even? 2))
+            (displayln (even? 4))
 
-(*check-code* '#\a (base-env) base-eval-ns)
-(*check-code* '"b" (base-env) base-eval-ns)
+            (displayln (odd? 1))
+            (displayln (odd? 3))
+            (displayln (odd? 5)))
+          (begin
+            (define odd?
+              (λ (num)
+                (cond [(zero? num) #f]
+                      [(= 1 num) #t]
+                      [else (even? (sub1 num))])))
+            (define even?
+              (λ (num)
+                (cond [(zero? num) #t]
+                      [(= 1 num) #f]
+                      [else (odd? (sub1 num))])))
+            (displayln "-----------------------")
+            (displayln (even? 0))
+            (displayln (even? 2))
+            (displayln (even? 4))
 
-(*check-code* '(void)     (base-env) base-eval-ns)
-(*check-code* '(void 1)   (base-env) base-eval-ns)
-(*check-code* '(void 1 2) (base-env) base-eval-ns)
+            (displayln (odd? 1))
+            (displayln (odd? 3))
+            (displayln (odd? 5)))
 
-(*check-code* '(cadr   (list 0 1 2 3 4 5 6)) (base-env) base-eval-ns)
-(*check-code* '(cdddr  (list 0 1 2 3 4 5 6)) (base-env) base-eval-ns)
-(*check-code* '(cadddr (list 0 1 2 3 4 5 6)) (base-env) base-eval-ns)
-(*check-code* '(length (list 0 1 2 3)) (base-env) base-eval-ns)
+          (begin
+            (define sqrt
+              (λ (x)
+                (define average
+                  (λ (x y)
+                    (/ (+ x y) 2)))
+                (define abs
+                  (λ (x)
+                    (cond [(< x 0) (- x)]
+                          [(= x 0) 0]
+                          [(> x 0) x])))
+                (define good-enough?
+                  (λ (y)
+                    (< (abs (- (* y y) x)) tolerance)))
+                (define improve
+                  (λ (y)
+                    (average (/ x y) y)))
+                (define try
+                  (λ (y)
+                    (if (good-enough? y)
+                        y
+                        (try (improve y)))))
 
-(*check-code* '(boolean? #t) (base-env) base-eval-ns)
+                (define tolerance 0.0000001)
 
-(*check-code* '(when (null? (list 1 2 3))
-                 'when)
-              (base-env) base-eval-ns)
-(*check-code* '(when (not (null? (list 1 2 3)))
-                 'when)
-              (base-env) base-eval-ns)
-(*check-code* '(unless (not (null? (list 1 2 3)))
-                 'unless)
-              (base-env) base-eval-ns)
-(*check-code* '(unless (null? (list 1 2 3))
-                 'unless)
-              (base-env) base-eval-ns)
+                (try 1)))
+            (sqrt 2))
+          (begin
+            (define (sqrt x)
+              (define (average x y) (/ (+ x y) 2))
+              (define (improve y) (average (/ x y) y))
+              (define (abs x)
+                (cond [(< x 0) (- x)]
+                      [(= x 0) 0]
+                      [(> x 0) x]))
+              (define (good-enough? y)
+                (< (abs (- (* y y) x)) tolerance))
+              (define (try y)
+                (if (good-enough? y)
+                    y
+                    (try (improve y))))
 
-(*check-code* '(cond [(null? (list 1 2 3)) 'cond-1]
-                     [(null? (list 9 0 8)) 'cond-2]
-                     [else 'else-cons])
-              (base-env) base-eval-ns)
-(*check-code* '(cond [(null? (list 1 2 3)) 'cond-1]
-                     [(null? (empty-list)) 'cond-2]
-                     [else 'else-cons])
-              (base-env) base-eval-ns)
+              (define tolerance 0.0000001)
 
-(*check-code* '(displayln
-                (cond [(null? (list 1 2 3)) 'cond-1]
-                      [(null? (empty-list)) 'cond-2]
-                      [else 'else-cons]))
-              (base-env) base-eval-ns)
+              (try 1))
+            (sqrt 2))
 
+          (begin
+            (define fib
+              (λ (num)
+                (cond [(= 0 num) 0]
+                      [(= 1 num) 1]
+                      [else (+ (fib (- num 1))
+                               (fib (- num 2)))])))
+            (fib 2))
 
-(*check-code* '(when (empty-queue? (enqueue (enqueue (enqueue (empty-queue) 1) 2) 3))
-                 'when)
-              (base-env) base-eval-ns)
-(*check-code* '(when (not (empty-queue? (enqueue (enqueue (enqueue (empty-queue) 1) 2) 3)))
-                 'when)
-              (base-env) base-eval-ns)
-(*check-code* '(unless (empty-queue? (enqueue (enqueue (enqueue (empty-queue) 1) 2) 3))
-                 'unless)
-              (base-env) base-eval-ns)
-(*check-code* '(unless (not (empty-queue? (enqueue (enqueue (enqueue (empty-queue) 1) 2) 3)))
-                 'unless)
-              (base-env) base-eval-ns)
+          (and)
+          (or)
+          (or #f #f #f)
+          (or #f #t #f)
+          (and #t #t #t)
+          (and #f #t #f)
 
-(*check-code* '(cond [(empty-queue? (enqueue (enqueue (enqueue (empty-queue) 1) 2) 3)) 'cond-1]
-                     [(empty-queue? (enqueue (enqueue (enqueue (empty-queue) 9) 0) 8)) 'cond-2]
-                     [else 'else-cons])
-              (base-env) base-eval-ns)
-(*check-code* '(cond [(empty-queue? (enqueue (enqueue (enqueue (empty-queue) 1) 2) 3)) 'cond-1]
-                     [(null? (empty-list)) 'cond-2]
-                     [else 'else-cons])
-              (base-env) base-eval-ns)
+          (+ 10 (let/cc cc (+ 1 (cc 2))))
+          (let ()
+            (displayln
+             (let/cc cc
+               (displayln 'hello)
+               (cc 'cc)
+               (displayln 'world)))
+            (displayln 456))
+          (begin
+            (define fact
+              (λ (n)
+                (let ([ls (let/cc cc (list cc n 1))])
+                  (define cc  (car ls))
+                  (define n   (car (cdr ls)))
+                  (define res (car (cdr (cdr ls))))
+                  (if (zero? n)
+                      res
+                      (cc (list cc (sub1 n) (* n res)))))))
 
-(*check-code* '(displayln
-                (cond [(empty-queue? (enqueue (enqueue (enqueue (empty-queue) 1) 2) 3)) 'cond-1]
-                      [(null? (empty-list)) 'cond-2]
-                      [else 'else-cons]))
-              (base-env) base-eval-ns)
+            (list (fact 0)
+                  (fact 1)
+                  (fact 2)
+                  (fact 3)
+                  (fact 4)
+                  (fact 5)))
+          (+ 10 (call/cc (λ (cc) (+ 1 (cc 2)))) )
+          (let ()
+            (displayln
+             (call/cc
+              (λ (cc)
+                (displayln 'hello)
+                (cc 'cc)
+                (displayln 'world))))
+            (displayln 456))
+          (begin
+            (define fact
+              (λ (n)
+                (let ([ls (call/cc (λ (cc) (list cc n 1)))])
+                  (define cc  (car ls))
+                  (define n   (car (cdr ls)))
+                  (define res (car (cdr (cdr ls))))
+                  (if (zero? n)
+                      res
+                      (cc (list cc (sub1 n) (* n res)))))))
 
-
-(*check-code* '(let ([x 1])
-                 (cons x x))
-              (init-env) init-eval-ns)
-(*check-code* '(let ([a 1] [b 2] [c 3])
-                 (list a b c))
-              (init-env) init-eval-ns)
-
-(*check-code* '(let ([x 30])
-                 (let ([x (- x 1)]
-                       [y (- x 2)])
-                   (- x y)))
-              (init-env) init-eval-ns)
-
-(*check-code* '(let ([x 30])
-                 (let* ([x (- x 1)]
-                        [y (- x 2)])
-                   (+ x y)
-                   (* x y)
-                   (- x y)))
-              (init-env) init-eval-ns)
-
-(*check-code* '(let ([f (λ (x) (- x 11))])
-                 (f (f 77)))
-              (base-env) base-eval-ns)
-(*check-code* '((λ (f) (f (f 77)))
-                (λ (x) (- x 11)))
-              (base-env) base-eval-ns)
-
-(*check-code* '(let* ([x 200]
-                      [f (λ (z) (- z x))]
-                      [x 100]
-                      [g (λ (z) (- z x))])
-                 (- (f 1) (g 1)))
-              (base-env) base-eval-ns)
-
-(*check-code* '((λ args (displayln args))
-                1 2 3 4)
-              (base-env) base-eval-ns)
-
-
-(*check-code* '(apply + (list 1 2))
-              (base-env) base-eval-ns)
-
-(*check-code* '(apply + '(1 2))
-              (base-env) base-eval-ns)
-
-(*check-code* '(let ([fact
-                      (Y (λ (fact)
-                           (λ (n)
-                             (cond [(= n 0) 1]
-                                   [(= n 1) 1]
-                                   [else (* n (fact (- n 1)))]))))])
-                 (fact 5))
-              (base-env) base-eval-ns)
-
-
-(*check-code* '(if #t 1 2)
-              (base-env) base-eval-ns)
-
-(*check-code* '(if #f 1 2)
-              (base-env) base-eval-ns)
-
-
-(*check-code* '(null? '((a 0) (b 1) (c 2) (d 3)))
-              (base-env) base-eval-ns)
-
-(*check-code* '(map car '((a 0) (b 1) (c 2) (d 3)))
-              (base-env) base-eval-ns)
-
-(*check-code* '(apply * `(1 ,(+ 1 2) 4))
-              (base-env) base-eval-ns)
-
-(*check-code* '(let ([funcs
-                      (Y*
-                       (λ (even? odd?)
-                         (λ (num)
-                           (cond [(zero? num) #t]
-                                 [(= 1 num) #f]
-                                 [else (odd? (- num 1))])))
-                       (λ (even? odd?)
-                         (λ (num)
-                           (cond [(zero? num) #f]
-                                 [(= 1 num) #t]
-                                 [else (even? (- num 1))]))))])
-                 (let ([even? (car funcs)]
-                       [odd?  (car (cdr funcs))])
-                   (displayln (eq? #t (even? 0)))))
-              (base-env) base-eval-ns)
-
-(*check-code* '(letrec ([even? (λ (num)
-                                 (cond [(zero? num) #t]
-                                       [(= 1 num) #f]
-                                       [else (odd? (sub1 num))]))]
-                        [odd?  (λ (num)
-                                 (cond [(zero? num) #f]
-                                       [(= 1 num) #t]
-                                       [else (even? (sub1 num))]))])
-                 (displayln "-----------------------")
-                 (displayln (even? 0))
-                 (displayln (even? 2))
-                 (displayln (even? 4))
-
-                 (displayln (odd? 1))
-                 (displayln (odd? 3))
-                 (displayln (odd? 5)))
-              (base-env) base-eval-ns)
-
-(*check-code* '(begin
-                 (define odd?
-                   (λ (num)
-                     (cond [(zero? num) #f]
-                           [(= 1 num) #t]
-                           [else (even? (sub1 num))])))
-                 (define even?
-                   (λ (num)
-                     (cond [(zero? num) #t]
-                           [(= 1 num) #f]
-                           [else (odd? (sub1 num))])))
-                 (displayln "-----------------------")
-                 (displayln (even? 0))
-                 (displayln (even? 2))
-                 (displayln (even? 4))
-
-                 (displayln (odd? 1))
-                 (displayln (odd? 3))
-                 (displayln (odd? 5)))
-              (base-env) base-eval-ns)
-
-(*check-code* '(begin
-                 (define sqrt
-                   (λ (x)
-                     (define average
-                       (λ (x y)
-                         (/ (+ x y) 2)))
-                     (define abs
-                       (λ (x)
-                         (cond [(< x 0) (- x)]
-                               [(= x 0) 0]
-                               [(> x 0) x])))
-                     (define good-enough?
-                       (λ (y)
-                         (< (abs (- (* y y) x)) tolerance)))
-                     (define improve
-                       (λ (y)
-                         (average (/ x y) y)))
-                     (define try
-                       (λ (y)
-                         (if (good-enough? y)
-                             y
-                             (try (improve y)))))
-
-                     (define tolerance 0.0000001)
-
-                     (try 1)))
-                 (sqrt 2))
-              (base-env) base-eval-ns)
-
-(*check-code* '(begin
-                 (define (sqrt x)
-                   (define (average x y) (/ (+ x y) 2))
-                   (define (improve y) (average (/ x y) y))
-                   (define (abs x)
-                     (cond [(< x 0) (- x)]
-                           [(= x 0) 0]
-                           [(> x 0) x]))
-                   (define (good-enough? y)
-                     (< (abs (- (* y y) x)) tolerance))
-                   (define (try y)
-                     (if (good-enough? y)
-                         y
-                         (try (improve y))))
-
-                   (define tolerance 0.0000001)
-
-                   (try 1))
-                 (sqrt 2))
-              (base-env) base-eval-ns)
-
-(*check-code* '(begin
-                 (define fib
-                   (λ (num)
-                     (cond [(= 0 num) 0]
-                           [(= 1 num) 1]
-                           [else (+ (fib (- num 1))
-                                    (fib (- num 2)))])))
-                 (fib 2))
-              (base-env) base-eval-ns)
-
-(*check-code* '(and) (base-env) base-eval-ns)
-(*check-code* '(or) (base-env) base-eval-ns)
-
-(*check-code* '(or #f #f #f) (base-env) base-eval-ns)
-(*check-code* '(or #f #t #f) (base-env) base-eval-ns)
-
-(*check-code* '(and #t #t #t) (base-env) base-eval-ns)
-(*check-code* '(and #f #t #f) (base-env) base-eval-ns)
-
-
-(*check-code* '(+ 10 (let/cc cc (+ 1 (cc 2))))
-              (base-env) base-eval-ns)
-(*check-code* '(let ()
-                 (displayln
-                  (let/cc cc
-                    (displayln 'hello)
-                    (cc 'cc)
-                    (displayln 'world)))
-                 (displayln 456))
-              (base-env) base-eval-ns)
-(*check-code* '(begin
-                 (define fact
-                   (λ (n)
-                     (let ([ls (let/cc cc (list cc n 1))])
-                       (define cc  (car ls))
-                       (define n   (car (cdr ls)))
-                       (define res (car (cdr (cdr ls))))
-                       (if (zero? n)
-                           res
-                           (cc (list cc (sub1 n) (* n res)))))))
-
-                 (list (fact 0)
-                       (fact 1)
-                       (fact 2)
-                       (fact 3)
-                       (fact 4)
-                       (fact 5)))
-              (base-env) base-eval-ns)
-
-(*check-code* '(+ 10 (call/cc (λ (cc) (+ 1 (cc 2)))) )
-              (base-env) base-eval-ns)
-(*check-code* '(let ()
-                 (displayln
-                  (call/cc
-                   (λ (cc)
-                     (displayln 'hello)
-                     (cc 'cc)
-                     (displayln 'world))))
-                 (displayln 456))
-              (base-env) base-eval-ns)
-(*check-code* '(begin
-                 (define fact
-                   (λ (n)
-                     (let ([ls (call/cc (λ (cc) (list cc n 1)))])
-                       (define cc  (car ls))
-                       (define n   (car (cdr ls)))
-                       (define res (car (cdr (cdr ls))))
-                       (if (zero? n)
-                           res
-                           (cc (list cc (sub1 n) (* n res)))))))
-
-                 (list (fact 0)
-                       (fact 1)
-                       (fact 2)
-                       (fact 3)
-                       (fact 4)
-                       (fact 5)))
-              (base-env) base-eval-ns)
+            (list (fact 0)
+                  (fact 1)
+                  (fact 2)
+                  (fact 3)
+                  (fact 4)
+                  (fact 5)))
+          ))])
+  (displayln (*check-code* code (base-env) base-eval-ns)))
