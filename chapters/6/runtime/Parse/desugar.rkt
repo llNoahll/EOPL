@@ -80,17 +80,10 @@
                      ((listof? s-exp?) exps2))
          (desugar `(begin ,@exps1 ,@exps2))]
 
-        [`(define (,head ,args ...)
-            ,bodys ..1)
+        [`(define (,head ,args ... . ,rests) ,bodys ..1)
          #:when (and (symbol? head)
                      ((listof? symbol?) args)
-                     ((listof? s-exp?) bodys))
-         `(define ,head ,(desugar `(λ (,@args) ,@bodys)))]
-        [`(define (,head ,args ... . ,rests)
-            ,bodys ..1)
-         #:when (and (symbol? head)
-                     ((listof? symbol?) args)
-                     (symbol? rests)
+                     ((or/c symbol? null?) rests)
                      ((listof? s-exp?) bodys))
          `(define ,head ,(desugar `(λ (,@args . ,rests) ,@bodys)))]
 
