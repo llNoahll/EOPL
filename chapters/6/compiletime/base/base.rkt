@@ -73,6 +73,32 @@
           [`(,val) (bool-val (pred (expval->denval val)))]
           [_ (error name "Bad args: ~s" vals)]))))
 
+  (: unary-length (All (A) [-> Symbol (pred A) [-> A Index] [-> DenVal * ExpVal]]))
+  (define unary-length
+    (λ (name pred len)
+      (λ vals
+        (match vals
+          [`(,val) #:when (pred val) (num-val (len val))]
+          [_ (error name "Bad args: ~s" vals)]))))
+
+  (: unary-destruct (All (A) [-> Symbol (pred A) [-> A DenVal] [-> DenVal * ExpVal]]))
+  (define unary-destruct
+    (λ (name pred destruct)
+      (λ vals
+        (match vals
+          [`(,val) #:when (pred val) (destruct val)]
+          [_ (error name "Bad args: ~s" vals)]))))
+
+  (: binary-ref (All (A) [-> Symbol (pred A) [-> A Index DenVal] [-> DenVal * ExpVal]]))
+  (define binary-ref
+    (λ (name pred ref)
+      (λ vals
+        (match vals
+          [`(,val-1 ,val-2)
+           #:when (and (pred val-1) (index? val-2))
+           (ref val-1 val-2)]
+          [_ (error name "Bad args: ~s" vals)]))))
+
   (: unary-arithmetic-pred [-> Symbol [-> Real Boolean] [-> DenVal * ExpVal]])
   (define unary-arithmetic-pred
     (λ (name pred)
@@ -97,6 +123,28 @@
           [`(,val) (s-expval->expval (func val))]
           [_ (error name "Bad args: ~s" vals)]))))
 
+
+  (: binary-imhash [-> Symbol
+                       [->* () #:rest-star (DenVal DenVal) (Immutable-HashTable DenVal DenVal)]
+                       [-> DenVal * ExpVal]])
+  (define binary-imhash
+    (λ (name make)
+      (λ vals
+        (match vals
+          ['()              (make)]
+          [`(,val-1 ,val-2) (make val-1 val-2)]
+          [_ (error name "Bad args: ~s" vals)]))))
+
+  (: unary-mhash [-> Symbol
+                      [->* () ((Listof (Pairof DenVal DenVal))) (Mutable-HashTable DenVal DenVal)]
+                      [-> DenVal * ExpVal]])
+  (define unary-mhash
+    (λ (name make)
+      (λ vals
+        (match vals
+          ['()     (make)]
+          [`(,val) #:when ((listof? denpair?) val) (make val)]
+          [_ (error name "Bad args: ~s" vals)]))))
 
   (: binary-equal-relation [-> Symbol [-> Any Any Boolean] [-> DenVal * ExpVal]])
   (define binary-equal-relation
@@ -168,6 +216,7 @@
   (add-denval! 'undefined undefined)
   (add-denval! 'null      null)
   (add-denval! 'empty     empty)
+  (add-denval! 'empty     empty)
   (add-denval! 'true      true)
   (add-denval! 'false     false)
 
@@ -180,7 +229,7 @@
                             (*eval* code (base-env) (id-cont))]
                            [_ (error 'eval "Bad args: ~s" vals)])))
 
-  (add-primitive-proc! 'identity (unary-func 'identity identity))
+  (add-primitive-proc! 'identity (unary-func  'identity identity))
 
   (add-primitive-proc! 'get-nid  (nullary-func 'get-nid  get-nid))
   (add-primitive-proc! 'get-tid  (nullary-func 'get-tid  get-tid))
@@ -189,45 +238,51 @@
   (add-primitive-proc! 'empty-queue (nullary-func 'empty-queue empty-queue))
   (add-primitive-proc! 'empty-list  (λ [vals : DenVal *] : ExpVal '()))
 
-  (add-primitive-proc! 'boolean?   (unary-pred 'boolean? boolean?))
-  (add-primitive-proc! 'real?      (unary-pred 'real? real?))
-  (add-primitive-proc! 'char?      (unary-pred 'char? char?))
-  (add-primitive-proc! 'string?    (unary-pred 'string? string?))
-  (add-primitive-proc! 'symbol?    (unary-pred 'symbol? symbol?))
+  (add-primitive-proc! 'boolean?   (unary-pred 'boolean?   boolean?))
+  (add-primitive-proc! 'real?      (unary-pred 'real?      real?))
+  (add-primitive-proc! 'char?      (unary-pred 'char?      char?))
+  (add-primitive-proc! 'string?    (unary-pred 'string?    string?))
+  (add-primitive-proc! 'symbol?    (unary-pred 'symbol?    symbol?))
   (add-primitive-proc! 'undefined? (unary-pred 'undefined? undefined?))
-  (add-primitive-proc! 'void?      (unary-pred 'void? void?))
-  (add-primitive-proc! 'mutex?     (unary-pred 'mutex? mutex?))
+  (add-primitive-proc! 'void?      (unary-pred 'void?      void?))
+  (add-primitive-proc! 'mutex?     (unary-pred 'mutex?     mutex?))
 
-  (add-primitive-proc! 'not    (unary-pred 'not not))
+  (add-primitive-proc! 'not    (unary-pred 'not    not))
   (add-primitive-proc! 'false? (unary-pred 'false? false?))
-  (add-primitive-proc! 'true?  (unary-pred 'true? true?))
+  (add-primitive-proc! 'true?  (unary-pred 'true?  true?))
 
-  (add-primitive-proc! 'pair?        (unary-pred 'pair? pair?))
-  (add-primitive-proc! 'null?        (unary-pred 'null? null?))
-  (add-primitive-proc! 'list?        (unary-pred 'list? list?))
+  (add-primitive-proc! 'null?        (unary-pred 'null?        null?))
+  (add-primitive-proc! 'list?        (unary-pred 'list?        list?))
   (add-primitive-proc! 'empty-queue? (unary-pred 'empty-queue? empty-queue?))
-  (add-primitive-proc! 'queue?       (unary-pred 'queue? queue?))
+  (add-primitive-proc! 'queue?       (unary-pred 'queue?       queue?))
+  (add-primitive-proc! 'immutable?   (unary-pred 'immutable?   immutable?))
+  (add-primitive-proc! 'box?         (unary-pred 'box?         box?))
+  (add-primitive-proc! 'pair?        (unary-pred 'pair?        pair?))
+  (add-primitive-proc! 'vector?      (unary-pred 'vector?      vector?))
+  (add-primitive-proc! 'hash?        (unary-pred 'hash?        hash?))
 
   (add-primitive-proc! 'zero? (unary-arithmetic-pred 'zero? zero?))
-  (add-primitive-proc! 'sub1  (unary-arithmetic-func 'sub1 sub1))
-  (add-primitive-proc! 'add1  (unary-arithmetic-func 'add1 add1))
+  (add-primitive-proc! 'sub1  (unary-arithmetic-func 'sub1  sub1))
+  (add-primitive-proc! 'add1  (unary-arithmetic-func 'add1  add1))
 
   (add-primitive-proc! 'raise
                        (λ [vals : DenVal *] : ExpVal
                          (match vals
                            [`(,val) (error "uncaught exception:" (expval->denval val))]
                            [_ (error 'raise "Bad args: ~s" vals)])))
-  (add-primitive-proc! 'car
-                       (λ [vals : DenVal *] : ExpVal
-                         (match vals
-                           [`(,val) (car (expval->pair val))]
-                           [_ (error 'car "Bad args: ~s" vals)])))
-  (add-primitive-proc! 'cdr
-                       (λ [vals : DenVal *] : ExpVal
-                         (match vals
-                           [`(,val) (cdr (expval->pair val))]
-                           [_ (error 'cdr "Bad args: ~s" vals)])))
 
+  (add-primitive-proc! 'string-length (unary-length 'string-length string?           string-length))
+  (add-primitive-proc! 'length        (unary-length 'length        (listof? denval?) (inst length DenVal)))
+  (add-primitive-proc! 'vector-length (unary-length 'vector-length denvector?        vector-length))
+
+  (add-primitive-proc! 'string-ref (binary-ref 'string-ref string?           string-ref))
+  (add-primitive-proc! 'list-ref   (binary-ref 'list-ref   (listof? denval?) (inst list-ref   DenVal)))
+  (add-primitive-proc! 'vector-ref (binary-ref 'vector-ref denvector?        (inst vector-ref DenVal)))
+  (add-primitive-proc! 'hash-ref   (binary-ref 'hash-ref   denhash?          (inst hash-ref   DenVal DenVal)))
+
+  (add-primitive-proc! 'unbox (unary-destruct 'unbox denbox?  (inst unbox DenVal)))
+  (add-primitive-proc! 'car   (unary-destruct 'car   denpair? (inst car DenVal DenVal)))
+  (add-primitive-proc! 'cdr   (unary-destruct 'cdr   denpair? (inst cdr DenVal DenVal)))
   (let ()
     (: get-op [-> String Symbol])
     (define get-op (λ (ad*) (string->symbol (string-append "c" ad* "r"))))
@@ -248,18 +303,6 @@
                                (base-env)
                                (id-cont))))
          now))))
-  (add-primitive-proc! 'length
-                       (λ [vals : DenVal *] : ExpVal
-                         (match vals
-                           [`(,val) (length (expval->list val))]
-                           [_ (error 'length "Bad args: ~s" vals)])))
-  (add-primitive-proc! 'list-ref
-                       (λ [vals : DenVal *] : ExpVal
-                         (match vals
-                           [`(,val-1 ,val-2)
-                            #:when (exact-integer? val-2)
-                            (list-ref (expval->list val-1) val-2)]
-                           [_ (error 'list-ref "Bad args: ~s" vals)])))
 
 
   (add-primitive-proc! 'read (nullary-func 'read read))
@@ -278,10 +321,6 @@
   (add-primitive-proc! '>= (binary-arithmetic-relation '>= >=))
   (add-primitive-proc! '<  (binary-arithmetic-relation '<  <))
   (add-primitive-proc! '<= (binary-arithmetic-relation '<= <=))
-
-  (add-primitive-proc! 'eq?    (binary-equal-relation 'eq?    eq?))
-  (add-primitive-proc! 'eqv?   (binary-equal-relation 'eqv?   eqv?))
-  (add-primitive-proc! 'equal? (binary-equal-relation 'equal? equal?))
 
 
   (add-primitive-proc! 'cons
@@ -310,15 +349,76 @@
                                           [-> DenVal (Queueof DenVal) DenVal]))]
                            [_ (error 'dequeue "Bad args: ~s" vals)])))
 
+
+  (add-primitive-proc! 'box
+                       (λ [vals : DenVal *] : ExpVal
+                         (match vals
+                           [`(,val-1) (box-val (box val-1))]
+                           [_ (error 'box "Bad args: ~s" vals)])))
+
+  (add-primitive-proc! 'set-box!
+                       (λ [vals : DenVal *] : ExpVal
+                         (match vals
+                           [`(,val-1 ,val-2) #:when (denbox? val-1) (set-box! val-1 val-2)]
+                           [_ (error 'set-box! "Bad args: ~s" vals)])))
+
+
   (add-primitive-proc! '+ (n-ary-arithmetic-func '+ +))
   (add-primitive-proc! '* (n-ary-arithmetic-func '* *))
   (add-primitive-proc! '- (n-ary-arithmetic-func '- -))
   (add-primitive-proc! '/ (n-ary-arithmetic-func '/ /))
 
-  (add-primitive-proc! 'void
-                       (λ [vals : DenVal *] : ExpVal (void)))
-  (add-primitive-proc! 'list
-                       (λ [vals : DenVal *] : ExpVal (list-val vals)))
+  (add-primitive-proc! 'void             (λ [vals : DenVal *] : ExpVal (void)))
+  (add-primitive-proc! 'list             (λ [vals : DenVal *] : ExpVal (list-val vals)))
+  (add-primitive-proc! 'vector           (λ [vals : DenVal *] : ExpVal (apply vector vals)))
+  (add-primitive-proc! 'vector-immutable (λ [vals : DenVal *] : ExpVal (apply vector-immutable vals)))
+
+
+  (add-primitive-proc! 'eq?    (binary-equal-relation 'eq?    eq?))
+  (add-primitive-proc! 'eqv?   (binary-equal-relation 'eqv?   eqv?))
+  (add-primitive-proc! 'equal? (binary-equal-relation 'equal? equal?))
+
+  (add-primitive-proc! 'hash             (binary-imhash 'hash         (inst hash         DenVal DenVal)))
+  (add-primitive-proc! 'hasheq           (binary-imhash 'hasheq       (inst hasheq       DenVal DenVal)))
+  (add-primitive-proc! 'hasheqv          (binary-imhash 'hasheqv      (inst hasheqv      DenVal DenVal)))
+  (add-primitive-proc! 'make-hash        (unary-mhash   'make-hash    (inst make-hash    DenVal DenVal)))
+  (add-primitive-proc! 'make-hasheq      (unary-mhash   'make-hasheq  (inst make-hasheq  DenVal DenVal)))
+  (add-primitive-proc! 'make-hasheqv     (unary-mhash   'make-hasheqv (inst make-hasheqv DenVal DenVal)))
+  (add-primitive-proc! 'hash-has-key?
+                       (λ [vals : DenVal *] : ExpVal
+                         (match vals
+                           [`(,ht ,key) #:when (denhash? ht) (hash-has-key? ht key)]
+                           [_ (error 'hash-has-key?  "Bad args: ~s" vals)])))
+  (add-primitive-proc! 'hash-set
+                       (λ [vals : DenVal *] : ExpVal
+                         (match vals
+                           [`(,ht ,key ,val) #:when (denimhash? ht) (hash-set  ht key val)]
+                           [_ (error 'hash-set  "Bad args: ~s" vals)])))
+  (add-primitive-proc! 'hash-set!
+                       (λ [vals : DenVal *] : ExpVal
+                         (match vals
+                           [`(,ht ,key ,val) #:when (denmhash? ht)  (hash-set! ht key val)]
+                           [_ (error 'hash-set! "Bad args: ~s" vals)])))
+  (add-primitive-proc! 'hash-remove
+                       (λ [vals : DenVal *] : ExpVal
+                         (match vals
+                           [`(,ht ,key) #:when (denimhash? ht) (hash-remove  ht key)]
+                           [_ (error 'hash-remove  "Bad args: ~s" vals)])))
+  (add-primitive-proc! 'hash-remove!
+                       (λ [vals : DenVal *] : ExpVal
+                         (match vals
+                           [`(,ht ,key) #:when (denmhash? ht)  (hash-remove! ht key)]
+                           [_ (error 'hash-remove! "Bad args: ~s" vals)])))
+  (add-primitive-proc! 'hash-clear
+                       (λ [vals : DenVal *] : ExpVal
+                         (match vals
+                           [`(,ht) #:when (denimhash? ht) (hash-clear  ht)]
+                           [_ (error 'hash-clear  "Bad args: ~s" vals)])))
+  (add-primitive-proc! 'hash-clear!
+                       (λ [vals : DenVal *] : ExpVal
+                         (match vals
+                           [`(,ht) #:when (denmhash? ht)  (hash-clear! ht)]
+                           [_ (error 'hash-clear! "Bad args: ~s" vals)])))
   (add-primitive-proc! 'format
                        (λ [vals : DenVal *] : ExpVal
                          (match vals
