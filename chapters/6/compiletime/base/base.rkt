@@ -329,13 +329,13 @@
 
 
   (add-denval! 'apply
-                 (proc-val
-                  (procedure '(k)
-                             (proc-exp '(func args)
-                                       (call-exp (call-exp (var-exp 'func)
-                                                           (list (var-exp 'k)))
-                                                 (var-exp 'args)))
-                             (empty-env))))
+               (proc-val
+                (procedure '(k)
+                           (proc-exp '(func args)
+                                     (call-exp (call-exp (var-exp 'func)
+                                                         (list (var-exp 'k)))
+                                               (var-exp 'args)))
+                           (empty-env))))
   #;(add-primitive-proc! 'apply
                          ;; k should be passed to func, so this code won't work.
                          (λ [vals : DenVal *] : ExpVal
