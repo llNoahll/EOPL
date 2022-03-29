@@ -37,6 +37,14 @@
                  #;[(list 'unquote-splicing datum) (append (desugar datum) res)] ; TODO
                  [_ (cons (desugar (list 'quasiquote datum)) res)])))]
 
+        [`(begin ,define-exps ...
+                 (begin ,exps ..1))
+         #:when (and ((listof? define-exp?) define-exps)
+                     ((listof? s-exp?) exps))
+         (desugar
+          `(begin
+             ,@(map desugar define-exps)
+             ,@exps))]
         [`(begin (define ,vars ,vals) ..1 ,exps ..1)
          #:when (and ((listof? symbol?) vars)
                      ((listof? s-exp?)  vals)
