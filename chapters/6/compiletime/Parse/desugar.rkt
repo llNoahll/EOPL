@@ -194,7 +194,7 @@
                ,@(map (ann (λ (var exp) `(set! ,var ,exp))
                            [-> Symbol S-Exp (List 'set! Symbol S-Exp)])
                       bind-vars bind-exps)
-               ,@body-exps))]
+               ,@(map desugar body-exps)))]
 
         [`(let/cc ,cc-var1 (let/cc ,cc-var2 ,body-exps ..1))
          #:when (and (symbol? cc-var1)
@@ -292,18 +292,6 @@
                               [-> S-Exp S-Exp (List S-Exp S-Exp)])
                          pred-exps handler-exps)
                    ,(desugar body-exp))]
-               [`(raise       ,(? s-exp? exp)) `(raise       ,(desugar exp))]
-               [`(spawn       ,(? s-exp? exp)) `(spawn       ,(desugar exp))]
-               [`(mutex       ,(? s-exp? exp)) `(mutex       ,(desugar exp))]
-               [`(wait        ,(? s-exp? exp)) `(wait        ,(desugar exp))]
-               [`(signal      ,(? s-exp? exp)) `(signal      ,(desugar exp))]
-               [`(kill-thread ,(? s-exp? exp)) `(kill-thread ,(desugar exp))]
-
-               [`(thread-send ,(? s-exp? tid-exp) ,(? s-exp? value-exp))
-                `(thread-send ,(desugar tid-exp)  ,(desugar value-exp))]
-               ['(thread-receive)     code]
-               ['(thread-try-receive) code]
-               ['(yield)              code]
 
                [`(letrec ([,bind-vars ,bind-exps] ...) ,body-exp)
                 #:when (and ((listof? symbol?) bind-vars)
