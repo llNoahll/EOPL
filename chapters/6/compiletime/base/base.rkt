@@ -6,12 +6,6 @@
          "../Reference/ref-unit.rkt"
          "../Continuation/cont-sig.rkt"
          "../Continuation/cont-unit.rkt"
-         "../Thread/thd-sig.rkt"
-         "../Thread/thd-unit.rkt"
-         "../Scheduler/sche-sig.rkt"
-         "../Scheduler/sche-unit.rkt"
-         "../Mutex/mut-sig.rkt"
-         "../Mutex/mut-unit.rkt"
          "../ExpValues/values-sig.rkt"
          "../ExpValues/values-unit.rkt"
          "../Procedure/proc-sig.rkt"
@@ -21,19 +15,22 @@
          "../Expressions/exp-sig.rkt"
          "../Expressions/exp-unit.rkt")
 
+(require "../Modules/thread.rkt")
+
 (provide (all-from-out "../types/types.rkt")
          (all-from-out "../Parse/parse.rkt")
+         (all-from-out "../Modules/thread.rkt")
          (all-defined-out))
 
 
 (define-compound-unit/infer base@
   (import)
-  (export ref^ cont^ thd^ sche^ mut^ values^ env^ proc^ exp^)
-  (link   ref@ cont@ thd@ sche@ mut@ values@ env@ proc@ exp@))
+  (export ref^ cont^ values^ env^ proc^ exp^)
+  (link   ref@ cont@ values@ env@ proc@ exp@))
 
 (define-values/invoke-unit base@
   (import)
-  (export ref^ cont^ thd^ sche^ mut^ values^ env^ proc^ exp^))
+  (export ref^ cont^ values^ env^ proc^ exp^))
 
 
 (define-namespace-anchor ns-anchor)
@@ -45,17 +42,39 @@
     (: exp Exp)
     (define exp
       (assert (call-with-values
-               (λ () (eval (parse code) eval-ns))
+               (λ ()
+                 (eval
+                  (parser
+                   (desugar
+                    (auto-cps
+                     (desugar
+                      (module/thread
+                       (auto-apply
+                        (desugar
+                         code))
+                       timeslice)))))
+                  eval-ns))
                (λ args (car args)))
               exp?))
 
 
     ;; (pretty-print code)
-    (initialize-scheduler! timeslice)
-    (initialize-thread-identifier!)
     (value-of/k exp env cont)))
 
 (let ()
+  (: +eval+ [-> S-Exp Env ExpVal])
+  (define +eval+
+    (λ (code env)
+      (: exp Exp)
+      (define exp
+        (assert (call-with-values
+                 (λ () (eval (parse code) eval-ns))
+                 (λ args (car args)))
+                exp?))
+
+      ;; (pretty-print code)
+      (value-of/k exp env (id-cont))))
+
   (: nullary-func [-> Symbol [-> Any] [-> DenVal * ExpVal]])
   (define nullary-func
     (λ (name func)
@@ -89,13 +108,13 @@
           [`(,val) #:when (pred val) (destruct val)]
           [_ (error name "Bad args: ~s" vals)]))))
 
-  (: binary-ref (All (A) [-> Symbol (pred A) [-> A Index DenVal] [-> DenVal * ExpVal]]))
+  (: binary-ref (All (A B) [-> Symbol (pred A) (pred B) [-> A B DenVal] [-> DenVal * ExpVal]]))
   (define binary-ref
-    (λ (name pred ref)
+    (λ (name pred key? ref)
       (λ vals
         (match vals
           [`(,val-1 ,val-2)
-           #:when (and (pred val-1) (index? val-2))
+           #:when (and (pred val-1) (key? val-2))
            (ref val-1 val-2)]
           [_ (error name "Bad args: ~s" vals)]))))
 
@@ -136,8 +155,8 @@
           [_ (error name "Bad args: ~s" vals)]))))
 
   (: unary-mhash [-> Symbol
-                      [->* () ((Listof (Pairof DenVal DenVal))) (Mutable-HashTable DenVal DenVal)]
-                      [-> DenVal * ExpVal]])
+                     [->* () ((Listof (Pairof DenVal DenVal))) (Mutable-HashTable DenVal DenVal)]
+                     [-> DenVal * ExpVal]])
   (define unary-mhash
     (λ (name make)
       (λ vals
@@ -208,6 +227,7 @@
   (: add-denval! [-> Symbol DenVal Void])
   (define add-denval!
     (λ (name val)
+      #;(displayln name)
       (if (has-binding? (base-env) name)
           (set-binding! (base-env) name val)
           (base-env (extend-env name val (base-env))))))
@@ -215,7 +235,6 @@
 
   (add-denval! 'undefined undefined)
   (add-denval! 'null      null)
-  (add-denval! 'empty     empty)
   (add-denval! 'empty     empty)
   (add-denval! 'true      true)
   (add-denval! 'false     false)
@@ -231,10 +250,6 @@
 
   (add-primitive-proc! 'identity (unary-func  'identity identity))
 
-  (add-primitive-proc! 'get-nid  (nullary-func 'get-nid  get-nid))
-  (add-primitive-proc! 'get-tid  (nullary-func 'get-tid  get-tid))
-  (add-primitive-proc! 'get-ptid (nullary-func 'get-ptid get-ptid))
-
   (add-primitive-proc! 'empty-queue (nullary-func 'empty-queue empty-queue))
   (add-primitive-proc! 'empty-list  (λ [vals : DenVal *] : ExpVal '()))
 
@@ -245,7 +260,6 @@
   (add-primitive-proc! 'symbol?    (unary-pred 'symbol?    symbol?))
   (add-primitive-proc! 'undefined? (unary-pred 'undefined? undefined?))
   (add-primitive-proc! 'void?      (unary-pred 'void?      void?))
-  (add-primitive-proc! 'mutex?     (unary-pred 'mutex?     mutex?))
 
   (add-primitive-proc! 'not    (unary-pred 'not    not))
   (add-primitive-proc! 'false? (unary-pred 'false? false?))
@@ -261,6 +275,7 @@
   (add-primitive-proc! 'vector?      (unary-pred 'vector?      vector?))
   (add-primitive-proc! 'hash?        (unary-pred 'hash?        hash?))
 
+  (add-primitive-proc! 'exact-positive-integer? (unary-pred 'exact-positive-integer? exact-positive-integer?))
   (add-primitive-proc! 'zero? (unary-arithmetic-pred 'zero? zero?))
   (add-primitive-proc! 'sub1  (unary-arithmetic-func 'sub1  sub1))
   (add-primitive-proc! 'add1  (unary-arithmetic-func 'add1  add1))
@@ -271,14 +286,31 @@
                            [`(,val) (error "uncaught exception:" (expval->denval val))]
                            [_ (error 'raise "Bad args: ~s" vals)])))
 
+  (add-primitive-proc! 'reverse
+                       (λ [vals : DenVal *] : ExpVal
+                         (match vals
+                           [`(,val) #:when ((listof? denval?) val) (reverse val)]
+                           [_ (error 'reverse "Bad args: ~s" vals)])))
+
+
   (add-primitive-proc! 'string-length (unary-length 'string-length string?           string-length))
   (add-primitive-proc! 'length        (unary-length 'length        (listof? denval?) (inst length DenVal)))
   (add-primitive-proc! 'vector-length (unary-length 'vector-length denvector?        vector-length))
 
-  (add-primitive-proc! 'string-ref (binary-ref 'string-ref string?           string-ref))
-  (add-primitive-proc! 'list-ref   (binary-ref 'list-ref   (listof? denval?) (inst list-ref   DenVal)))
-  (add-primitive-proc! 'vector-ref (binary-ref 'vector-ref denvector?        (inst vector-ref DenVal)))
-  (add-primitive-proc! 'hash-ref   (binary-ref 'hash-ref   denhash?          (inst hash-ref   DenVal DenVal)))
+  (add-primitive-proc! 'string-ref (binary-ref 'string-ref string?           index? string-ref))
+  (add-primitive-proc! 'list-ref   (binary-ref 'list-ref   (listof? denval?) index? (inst list-ref   DenVal)))
+  (add-primitive-proc! 'vector-ref (binary-ref 'vector-ref denvector?        index? (inst vector-ref DenVal)))
+  (add-primitive-proc! 'hash-ref
+                       (λ vals
+                         (match vals
+                           [`(,val-1 ,val-2)
+                            #:when (denhash? val-1)
+                            (hash-ref val-1 val-2)]
+                           [`(,val-1 ,val-2 ,val-3) ; `val-3' is failure-result
+                            #:when (and (denhash? val-1)
+                                        (false? val-3))
+                            (hash-ref val-1 val-2 val-3)]
+                           [_ (error 'hash-ref "Bad args: ~s" vals)])))
 
   (add-primitive-proc! 'unbox (unary-destruct 'unbox denbox?  (inst unbox DenVal)))
   (add-primitive-proc! 'car   (unary-destruct 'car   denpair? (inst car DenVal DenVal)))
@@ -296,12 +328,11 @@
          (define now (string-append curr prev))
          (add-denval! (get-op now)
                       (expval->denval
-                       (*eval* `(λ (arg)
+                       (+eval+ `(λ (arg)
                                   (,(get-op curr)
                                    (,(get-op prev)
                                     arg)))
-                               (base-env)
-                               (id-cont))))
+                               (base-env))))
          now))))
 
 
@@ -328,26 +359,6 @@
                          (match vals
                            [`(,val-1 ,val-2) (pair-val (cons val-1 val-2))]
                            [_ (error 'cons "Bad args: ~s" vals)])))
-
-  (add-primitive-proc! 'enqueue
-                       (λ [vals : DenVal *] : ExpVal
-                         (match vals
-                           [`(,val-1 ,val-2)
-                            #:when ((queueof? denval?) val-1)
-                            (queue-val (enqueue val-1 val-2))]
-                           [_ (error 'enqueue "Bad args: ~s" vals)])))
-
-  (add-primitive-proc! 'dequeue
-                       (λ [vals : DenVal *] : ExpVal
-                         (match vals
-                           [`(,val-1 ,val-2)
-                            #:when (and ((queueof? denval?) val-1)
-                                        (proc? val-2))
-                            (dequeue val-1
-                                     (ann (λ (1st others)
-                                            (apply-procedure/k val-2 (list 1st others) (id-cont)))
-                                          [-> DenVal (Queueof DenVal) DenVal]))]
-                           [_ (error 'dequeue "Bad args: ~s" vals)])))
 
 
   (add-primitive-proc! 'box
@@ -428,6 +439,29 @@
                            [_ (error 'format "Bad args: ~s" vals)])))
 
 
+  (add-primitive-proc! 'enqueue
+                       (λ [vals : DenVal *] : ExpVal
+                         (match vals
+                           [`(,val-1 ,val-2)
+                            #:when ((queueof? denval?) val-1)
+                            (queue-val (enqueue val-1 val-2))]
+                           [_ (error 'enqueue "Bad args: ~s" vals)])))
+
+  (add-denval! 'dequeue
+               (expval->denval
+                (+eval+ '(λ (q f)
+                           (cond
+                             [(empty-queue? q)
+                              (raise "ERROR! Passing empty queue to dequeue!")]
+                             [(null? (cadr q))
+                              (let ([l (reverse (car q))])
+                                (f (car l) (list null (cdr l))))]
+                             [else
+                              (let ([l (cadr q)])
+                                (f (car l) (list (car q) (cdr l))))]))
+                        (base-env))))
+
+
   (add-denval! 'apply
                (proc-val
                 (procedure '(k)
@@ -447,32 +481,28 @@
                              [_ (error 'apply "Bad args: ~s" vals)])))
 
 
+  (add-denval! 'map undefined)
+  (add-denval! 'map
+               (expval->denval
+                (+eval+ '(λ (func ls)
+                           (if (null? ls)
+                               '()
+                               (cons (func (car ls)) (map func (cdr ls)))))
+                        (base-env))))
+
   (add-denval! 'Y
                (expval->denval
-                (*eval* '(λ (f)
+                (+eval+ '(λ (f)
                            ((λ (recur-func)
                               (recur-func recur-func))
                             (λ (recur-func)
                               (f (λ args
                                    (apply (recur-func recur-func) args))))))
-                        (base-env)
-                        (id-cont))))
-
-
-  (add-denval! 'map undefined)
-  (add-denval! 'map
-               (expval->denval
-                (*eval* '(λ (func ls)
-                           (if (null? ls)
-                               '()
-                               (cons (func (car ls))
-                                     (map func (cdr ls)))))
-                        (base-env)
-                        (id-cont))))
+                        (base-env))))
 
   (add-denval! 'Y*
                (expval->denval
-                (*eval* '(λ funcs
+                (+eval+ '(λ funcs
                            ((λ (recur-funcs)
                               (recur-funcs recur-funcs))
                             (λ (recur-funcs)
@@ -480,13 +510,178 @@
                                      (λ args
                                        (apply (apply func (recur-funcs recur-funcs)) args)))
                                    funcs))))
-                        (base-env)
-                        (id-cont))))
+                        (base-env))))
 
   (add-denval! 'call/cc
                (expval->denval
-                (*eval* '(λ (cont) (let/cc cc (cont cc)))
-                        (base-env)
-                        (id-cont))))
+                (+eval+ '(λ (cont) (let/cc cc (cont cc)))
+                        (base-env))))
+
+
+  ;; ------------------------------
+  ;; Thread
+  (add-denval! 'thd
+               (expval->denval
+                (+eval+ '(λ (ptid tid mail time-slice thunk)
+                           (vector-immutable 'thd ptid tid mail time-slice thunk))
+                        (base-env))))
+  (add-denval! 'thd?
+               (expval->denval
+                (+eval+ '(λ (arg)
+                           (and (vector? arg)
+                                (immutable? arg)
+                                (eqv? 'thd (vector-ref arg 0))))
+                        (base-env))))
+
+  (add-denval! 'thd-ptid       (expval->denval (+eval+ '(λ (arg) (if (thd? arg) (vector-ref arg 1) #f)) (base-env))))
+  (add-denval! 'thd-tid        (expval->denval (+eval+ '(λ (arg) (if (thd? arg) (vector-ref arg 2) #f)) (base-env))))
+  (add-denval! 'thd-mail       (expval->denval (+eval+ '(λ (arg) (if (thd? arg) (vector-ref arg 3) #f)) (base-env))))
+  (add-denval! 'thd-time-slice (expval->denval (+eval+ '(λ (arg) (if (thd? arg) (vector-ref arg 4) #f)) (base-env))))
+  (add-denval! 'thd-thunk      (expval->denval (+eval+ '(λ (arg) (if (thd? arg) (vector-ref arg 5) #f)) (base-env))))
+
+
+  (add-denval! 'thread-table (make-hasheq (list (cons 0 #t))))
+  (add-denval! 'mail (box (empty-queue)))
+  (add-denval! 'ptid 0)
+  (add-denval! 'tid  0)
+  (add-denval! 'ntid 0)
+
+  (add-denval!
+   'initialize-thread-identifier!
+   (expval->denval
+    (+eval+
+     '(λ ()
+        (hash-clear! thread-table)
+        (hash-set! thread-table 0 #t)
+        (set-box! mail (empty-queue))
+        (set! ptid 0)
+        (set! tid  0)
+        (set! ntid 0))
+     (base-env))))
+
+  (add-denval!
+   'update-thread-identifier!
+   (expval->denval
+    (+eval+
+     '(λ (th)
+        (set! ptid (thd-ptid th))
+        (set! tid  (thd-tid  th))
+        (set! mail (thd-mail th))
+        (hash-set! thread-table tid #t))
+     (base-env))))
+
+
+  (add-denval! 'get-mail (expval->denval (+eval+ '(λ () mail) (base-env))))
+  (add-denval! 'get-ptid (expval->denval (+eval+ '(λ () ptid) (base-env))))
+  (add-denval! 'get-tid  (expval->denval (+eval+ '(λ () tid)  (base-env))))
+  (add-denval! 'get-ntid (expval->denval (+eval+ '(λ () (set! ntid (add1 ntid)) ntid) (base-env))))
+
+  (add-denval! 'has-thread? (+eval+ '(λ (tid) (hash-has-key? thread-table tid))   (base-env)))
+  (add-denval! 'get-thread  (+eval+ '(λ (tid) (hash-ref thread-table tid #f))     (base-env)))
+  (add-denval! 'add-thread! (+eval+ '(λ (tid th) (hash-set! thread-table tid th)) (base-env)))
+
+  (add-denval!
+   'kill-thread
+   (expval->denval
+    (+eval+
+     '(λ (tid)
+        (let ([th (get-thread tid)])
+          (cond [(false? th) #f]
+                [else
+                 (hash-remove! thread-table tid)
+                 (if (thd? th) #t (void))])))
+     (base-env))))
+
+  (add-denval! 'apply-thd (+eval+ '(λ (th) (update-thread-identifier! th) ((thd-thunk th))) (base-env)))
+
+
+  (add-denval! 'the-ready-queue    (empty-queue))
+  (add-denval! 'the-final-answer   undefined)
+  (add-denval! 'the-max-time-slice 1)
+  (add-denval! 'the-time-remaining 0)
+
+  (add-denval!
+   'initialize-scheduler!
+   (expval->denval
+    (+eval+
+     '(λ (ticks)
+        (set! the-ready-queue    (empty-queue))
+        (set! the-final-answer   undefined)
+        (set! the-max-time-slice ticks)
+        (set! the-time-remaining the-max-time-slice))
+     (base-env))))
+
+
+  (add-denval!
+   'place-on-thread-queue
+   (expval->denval
+    (+eval+
+     '(λ (thds thk ptid tid mail)
+        (add-thread! tid
+                     (thd ptid tid mail
+                          (let ([the-time the-time-remaining])
+                            (if (exact-positive-integer? the-time)
+                                the-time
+                                the-max-time-slice))
+                          thk))
+        (enqueue thds tid))
+     (base-env))))
+
+  (add-denval!
+   'place-on-ready-queue!
+   (expval->denval
+    (+eval+
+     '(λ (thk ptid tid mail)
+        (set! the-ready-queue
+              (place-on-thread-queue
+               the-ready-queue
+               thk ptid tid mail)))
+     (base-env))))
+
+
+  (add-denval! 'set-final-answer! (+eval+ '(λ (val) (set! the-final-answer val)) (base-env)))
+  (add-denval! 'time-expired?     (+eval+ '(λ () (= 0 the-time-remaining)) (base-env)))
+  (add-denval! 'decrement-timer!  (+eval+ '(λ () (set! the-time-remaining (sub1 the-time-remaining))) (base-env)))
+
+  (add-denval! 'run-next-thread undefined)
+  (add-denval!
+   'run-next-thread
+   (expval->denval
+    (+eval+
+     '(λ ()
+        (if (empty-queue? the-ready-queue)
+            the-final-answer
+            (dequeue the-ready-queue
+                     (λ (1st-ready-tid other-ready-tids)
+                       (let ([th (get-thread 1st-ready-tid)])
+                         (set! the-ready-queue other-ready-tids)
+                         (when (thd? th)
+                           (set! the-time-remaining (thd-time-slice th))
+                           (let ([res (apply-thd th)])
+                             (when (= 1 (get-tid))
+                               (set-final-answer! res))))
+                         (run-next-thread))))))
+     (base-env))))
+
+
+  (add-denval!
+   'spawn
+   (expval->denval
+    (+eval+
+     '(λ (ctx)
+        (let* ([spawn-tid (get-ntid)]
+               [spawn-thk (λ () (ctx spawn-tid))])
+          (place-on-ready-queue! spawn-thk (get-tid) spawn-tid (box (empty-queue)))))
+     (base-env))))
+
+  (add-denval!
+   'yield
+   (expval->denval
+    (+eval+
+     '(λ ()
+        (let/cc cc
+          (spawn (λ (_) (cc (get-tid))))
+          (run-next-thread)))
+     (base-env))))
 
   )

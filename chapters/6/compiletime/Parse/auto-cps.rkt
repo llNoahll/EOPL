@@ -20,15 +20,13 @@
                                    CPS-Exp)))
 (define-predicate simple-λ? Simple-λ)
 
-(define-type Thread-Exp (U (List 'spawn       (List Simple-Exp K-Exp))
-                           (List 'mutex       Simple-Exp)
+(define-type Thread-Exp (U (List 'mutex       Simple-Exp)
                            (List 'wait        Simple-Exp)
                            (List 'signal      Simple-Exp)
                            (List 'kill-thread Simple-Exp)
                            (List 'thread-send Simple-Exp Simple-Exp)
                            (List 'thread-receive)
-                           (List 'thread-try-receive)
-                           (List 'yield)))
+                           (List 'thread-try-receive)))
 
 (define-type Simple-Exp (U Literal Symbol (List 'quote S-Exp) Simple-λ
                            (List 'set! Symbol Simple-Exp)
@@ -93,7 +91,8 @@
 
           [`(set! ,var ,exp)
            #:when (and (symbol? var) (s-exp? exp))
-           (cps exp (λ (val) (ctx `(set! ,var ,val))))]
+           (cps exp (λ (val) (ctx `(set! ,var ,val))))
+           #;(cps exp (λ (val) `(begin (set! ,var ,val) ,(cps '(void) ctx))))]
 
           [`(begin ,exp ,exps ...)
            #:when (and (s-exp? exp)
@@ -115,7 +114,6 @@
                         `(let ([,k (λ (,v0) ,(ctx v0))])
                            (if ,p ,(cps true-exp ctx0) ,(cps false-exp ctx0)))))))]
 
-          [`(spawn       ,(? s-exp? exp)) (cps exp (λ (val) (ctx `(spawn       (,val ,k0)))))]
           [`(mutex       ,(? s-exp? exp)) (cps exp (λ (val) (ctx `(mutex       ,val))))]
           [`(wait        ,(? s-exp? exp)) (cps exp (λ (val) (ctx `(wait        ,val))))]
           [`(signal      ,(? s-exp? exp)) (cps exp (λ (val) (ctx `(signal      ,val))))]
@@ -129,12 +127,11 @@
                          (ctx `(thread-send ,tid ,val))))))]
           ['(thread-receive)     (ctx code)]
           ['(thread-try-receive) (ctx code)]
-          ['(yield)              (ctx code)]
 
 
           [`(let/cc ,cc-var ,body-exp)
            #:when (and (symbol? cc-var) (s-exp? body-exp))
-           (if (or (eq? ctx ctx0) (eq? ctx id))
+           (if (or (eq? ctx ctx0))
                `(let ([,cc-var (λ (_) ,k)])
                   ,(cps body-exp ctx))
                (let ([v0 (fv)])

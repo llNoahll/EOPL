@@ -6,25 +6,35 @@
 #;(: *check-code* [-> S-Exp Env Namespace Boolean])
 (define *check-code*
   (λ (code env eval-ns)
+    (define eval-type undefined)
     (with-handlers ([list? (λ (msg)
                              (displayln "Not Equal:")
                              (pretty-print code)
                              (pretty-print msg)
                              (raise #f))]
                     [exn:fail? (λ (ex)
-                                 (displayln "Raise Error:")
+                                 (displayln (format "Raise Error in ~a:" eval-type))
                                  (pretty-print code)
                                  (raise ex))])
       (define-values (res output)
         (let ()
           (define o (open-output-bytes))
+          (set! eval-type 'eval)
           (values (parameterize ([current-output-port o])
-                    (eval code eval-ns))
+                    (eval
+                     code
+                     #;(desugar
+                        (module/thread
+                         (auto-apply
+                          (desugar
+                           code))))
+                     eval-ns))
                   (get-output-bytes o))))
 
       (define-values (*res* *output*)
         (let ()
           (define *o* (open-output-bytes))
+          (set! eval-type '*eval*)
           (values (parameterize ([current-output-port *o*])
                     (*eval* code env (id-cont)))
                   (get-output-bytes *o*))))
@@ -36,6 +46,7 @@
              (define-values (+res+ +output+)
                (let ()
                  (define +o+ (open-output-bytes))
+                 (set! eval-type '+eval+)
                  (values (parameterize ([current-output-port +o+])
                            (*eval* `(eval ',code) env (id-cont)))
                          (get-output-bytes +o+))))
@@ -66,52 +77,33 @@
 
 #;(: base-eval-ns Namespace)
 (define base-eval-ns (make-base-namespace))
-(namespace-set-variable-value! 'empty-list   (λ () '())   #t base-eval-ns)
-(for ([op (in-list (list undefined? true? queue? empty-queue? empty-queue dequeue enqueue))])
-  (namespace-set-variable-value! (object-name op) op #t base-eval-ns))
-(namespace-set-variable-value! 'undefined  undefined  #t base-eval-ns)
-(namespace-set-variable-value! 'Y
-                               (λ (f)
-                                 ((λ (recur-func)
-                                    (recur-func recur-func))
-                                  (λ (recur-func)
-                                    (f (λ args
-                                         (apply (recur-func recur-func) args))))))
-                               #t base-eval-ns)
-(namespace-set-variable-value! 'Y*
-                               (λ funcs
-                                 ((λ (recur-funcs)
-                                    (recur-funcs recur-funcs))
-                                  (λ (recur-funcs)
-                                    (map (λ (func)
-                                           (λ args
-                                             (apply (apply func (recur-funcs recur-funcs)) args)))
-                                         funcs))))
-                               #t base-eval-ns)
-
 
 #;(: init-eval-ns Namespace)
 (define init-eval-ns (make-base-namespace))
-(namespace-set-variable-value! 'empty-list (λ () '()) #t init-eval-ns)
-(namespace-set-variable-value! 'Y
-                               (λ (f)
-                                 ((λ (recur-func)
-                                    (recur-func recur-func))
-                                  (λ (recur-func)
-                                    (f (λ args
-                                         (apply (recur-func recur-func) args))))))
-                               #t init-eval-ns)
-(namespace-set-variable-value! 'Y*
-                               (λ funcs
-                                 ((λ (recur-funcs)
-                                    (recur-funcs recur-funcs))
-                                  (λ (recur-funcs)
-                                    (map (λ (func)
-                                           (λ args
-                                             (apply (apply func (recur-funcs recur-funcs)) args)))
-                                         funcs))))
-                               #t init-eval-ns)
 
+(for ([eval-ns (in-list (list base-eval-ns init-eval-ns))])
+  (for ([op (in-list (list undefined? true? queue? empty-queue? empty-queue dequeue enqueue))])
+    (namespace-set-variable-value! (object-name op) op  #t eval-ns))
+  (namespace-set-variable-value! 'empty-list (λ () '()) #t eval-ns)
+  (namespace-set-variable-value! 'undefined  undefined  #t eval-ns)
+  (namespace-set-variable-value! 'Y
+                                 (λ (f)
+                                   ((λ (recur-func)
+                                      (recur-func recur-func))
+                                    (λ (recur-func)
+                                      (f (λ args
+                                           (apply (recur-func recur-func) args))))))
+                                 #t eval-ns)
+  (namespace-set-variable-value! 'Y*
+                                 (λ funcs
+                                   ((λ (recur-funcs)
+                                      (recur-funcs recur-funcs))
+                                    (λ (recur-funcs)
+                                      (map (λ (func)
+                                             (λ args
+                                               (apply (apply func (recur-funcs recur-funcs)) args)))
+                                           funcs))))
+                                 #t eval-ns))
 (namespace-set-variable-value! 'i  1 #t init-eval-ns)
 (namespace-set-variable-value! 'v  5 #t init-eval-ns)
 (namespace-set-variable-value! 'x 10 #t init-eval-ns)

@@ -7,10 +7,8 @@
 
 (define-signature cont^
   (
-   [id-cont              : [-> Null]]
-   [end-cont             : [-> Null]]
-   [end-subthread-cont   : [-> (List Frame)]]
-   [end-main-thread-cont : [-> (List Frame)]]
+   [id-cont    : [-> Null]]
+   [end-cont   : [-> Null]]
 
-   [apply-cont    : [-> Cont ExpVal FinalAnswer]]
+   [apply-cont : [-> Cont ExpVal FinalAnswer]]
    ))

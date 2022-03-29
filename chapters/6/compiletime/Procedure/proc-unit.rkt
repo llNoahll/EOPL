@@ -105,21 +105,6 @@
                      (begin-exp (list pred-exp true-exp false-exp))
                      env)]
 
-        [(spawn-exp  exp) (free-binds vars exp env)]
-        [(mutex-exp  exp) (free-binds vars exp env)]
-        [(wait-exp   exp) (free-binds vars exp env)]
-        [(signal-exp exp) (free-binds vars exp env)]
-        [(kill-exp   exp) (free-binds vars exp env)]
-
-        [(send-exp tid-exp value-exp)
-         (free-binds vars
-                     (begin-exp (list tid-exp value-exp))
-                     env)]
-
-        [(receive-exp)     '()]
-        [(try-receive-exp) '()]
-        [(yield-exp)       '()]
-
         [(proc-exp proc-vars body)
          (free-binds (if (symbol? proc-vars)
                          (cons proc-vars vars)

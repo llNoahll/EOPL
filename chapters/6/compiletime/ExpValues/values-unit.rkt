@@ -25,9 +25,6 @@
   (: string-val [-> String DenVal])
   (define string-val (λ (str) str))
 
-  (: mutex-val [-> Mutex DenVal])
-  (define mutex-val (λ (mut) mut))
-
   (: proc-val [-> Proc DenVal])
   (define proc-val (λ (proc) proc))
 
@@ -67,9 +64,6 @@
 
   (: expval->string [-> ExpVal String])
   (define expval->string (λ (val) (assert val string?)))
-
-  (: expval->mutex [-> ExpVal Mutex])
-  (define expval->mutex (λ (val) (assert val mutex?)))
 
   (: expval->proc [-> ExpVal Proc])
   (define expval->proc (λ (val) (assert val proc?)))

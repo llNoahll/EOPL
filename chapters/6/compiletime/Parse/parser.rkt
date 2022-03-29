@@ -35,18 +35,6 @@
                 ,(parser true-exp)
                 ,(parser false-exp))]
 
-      [`(spawn       ,(? s-exp? exp)) `(spawn-exp  ,(parser exp))]
-      [`(mutex       ,(? s-exp? exp)) `(mutex-exp  ,(parser exp))]
-      [`(wait        ,(? s-exp? exp)) `(wait-exp   ,(parser exp))]
-      [`(signal      ,(? s-exp? exp)) `(signal-exp ,(parser exp))]
-      [`(kill-thread ,(? s-exp? exp)) `(kill-exp   ,(parser exp))]
-
-      [`(thread-send ,(? s-exp? tid-exp) ,(? s-exp? value-exp))
-       `(send-exp ,(parser tid-exp) ,(parser value-exp))]
-      ['(thread-receive)     '(receive-exp)]
-      ['(thread-try-receive) '(try-receive-exp)]
-      ['(yield)              '(yield-exp)]
-
 
       [`(,(? λ?) ,args ,body-exp)
        #:when (and ((or/c symbol? (listof? symbol?)) args)

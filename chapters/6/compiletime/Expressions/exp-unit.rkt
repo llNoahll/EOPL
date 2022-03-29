@@ -3,9 +3,6 @@
 (require "../types/types.rkt"
          "../Reference/ref-sig.rkt"
          "../Continuation/cont-sig.rkt"
-         "../Thread/thd-sig.rkt"
-         "../Scheduler/sche-sig.rkt"
-         "../Mutex/mut-sig.rkt"
          "../ExpValues/values-sig.rkt"
          "../Environment/env-sig.rkt"
          "../Procedure/proc-sig.rkt"
@@ -15,7 +12,7 @@
 
 
 (define-unit exp@
-  (import ref^ cont^ thd^ sche^ mut^ values^ env^ proc^)
+  (import ref^ cont^ values^ env^ proc^)
   (export exp^)
 
 
@@ -73,141 +70,6 @@
                       env cont)))
                  [-> Cont [-> ExpVal FinalAnswer]]))
            cont))]
-
-        [(spawn-exp exp)
-         (value-of/k
-          exp env
-          (cons
-           (frame
-            'spawn-frame
-            (ann (λ (cont)
-                   (λ (op)
-                     (: spawn-tid Natural)
-                     (define spawn-tid (get-nid))
-
-                     (: spawn-thk [-> FinalAnswer])
-                     (define spawn-thk
-                       (cond [(proc? op)
-                              (λ ()
-                                (apply-procedure/k
-                                 (if (thread-share-memory?)
-                                     op
-                                     (proc (proc-vars op)
-                                           (proc-body op)
-                                           (copy-env (proc-saved-env op))))
-                                 (list (num-val spawn-tid))
-                                 (end-subthread-cont)))]
-                             [(primitive-proc? op)
-                              (λ ()
-                                (apply-cont (end-subthread-cont)
-                                            (apply-cont cont ((primitive-proc-λ op) (num-val spawn-tid)))))]
-                             [else (raise-argument-error 'value-of/k "operator?" op)]))
-
-                     (place-on-ready-queue! spawn-thk (get-tid) spawn-tid (box (empty-queue)))
-                     (apply-cont cont (num-val spawn-tid))))
-                 [-> Cont [-> ExpVal FinalAnswer]]))
-           cont))]
-
-        [(mutex-exp exp)
-         (value-of/k
-          exp env
-          (cons
-           (frame
-            'mutex-frame
-            (ann (λ (cont)
-                   (λ (keys)
-                     (apply-cont cont
-                                 (mutex-val
-                                  (mutex (assert keys natural?)
-                                         (empty-queue))))))
-                 [-> Cont [-> ExpVal FinalAnswer]]))
-           cont))]
-        [(wait-exp exp)
-         (value-of/k
-          exp env
-          (cons
-           (frame
-            'wait-frame
-            (ann (λ (cont)
-                   (λ (mut)
-                     (wait-for-mutex
-                      (expval->mutex mut)
-                      (λ () (apply-cont cont (void))))))
-                 [-> Cont [-> ExpVal FinalAnswer]]))
-           cont))]
-        [(signal-exp exp)
-         (value-of/k
-          exp env
-          (cons
-           (frame
-            'signal-frame
-            (ann (λ (cont)
-                   (λ (mut)
-                     (signal-mutex
-                      (expval->mutex mut)
-                      (λ () (apply-cont cont (void))))))
-                 [-> Cont [-> ExpVal FinalAnswer]]))
-           cont))]
-        [(yield-exp)
-         (place-on-ready-queue! (λ () (apply-cont cont (num-val (get-tid)))))
-         (run-next-thread)]
-        [(kill-exp exp)
-         (value-of/k
-          exp env
-          (cons
-           (frame
-            'kill-frame
-            (ann (λ (cont)
-                   (λ (tid)
-                     (define res (kill-thread! (assert tid natural?)))
-                     (if (boolean? res)
-                         (apply-cont cont (bool-val res))
-                         (run-next-thread))))
-                 [-> Cont [-> ExpVal FinalAnswer]]))
-           cont))]
-
-        [(send-exp tid-exp value-exp)
-         (value-of/k
-          tid-exp env
-          (cons
-           (frame
-            'send-frame
-            (ann (λ (cont)
-                   (λ (tid)
-                     (if (has-thread? (assert tid natural?))
-                         (value-of/k
-                          value-exp env
-                          (cons
-                           (frame
-                            'send-frame
-                            (ann (λ (cont)
-                                   (λ (val)
-                                     (define th (get-thread (assert tid natural?)))
-                                     (let ([mail (if (thd? th) (thd-mail th) (get-mail))])
-                                       (set-box! mail (enqueue (unbox mail) (expval->denval val)))
-                                       (apply-cont cont (void)))))
-                                 [-> Cont [-> ExpVal FinalAnswer]]))
-                           cont))
-                         (apply-cont cont (num-val (get-tid))))))
-                 [-> Cont [-> ExpVal FinalAnswer]]))
-           cont))]
-        [(receive-exp)
-         (cond [(empty-queue? (unbox (get-mail)))
-                (place-on-ready-queue! (λ () (value-of/k (receive-exp) env cont)))
-                (run-next-thread)]
-               [else (value-of/k (try-receive-exp) env cont)])]
-        [(try-receive-exp)
-         (define mail (get-mail))
-         (define value-queue (unbox mail))
-         (apply-cont
-          cont
-          (if (empty-queue? value-queue)
-              (bool-val #f)
-              (dequeue value-queue
-                       (ann (λ (1st-value other-values)
-                              (set-box! mail other-values)
-                              1st-value)
-                            [-> DenVal (Queueof DenVal) DenVal]))))]
 
         [(trace-proc-exp vars body)
          (apply-cont cont (proc-val (trace-procedure vars body env)))]

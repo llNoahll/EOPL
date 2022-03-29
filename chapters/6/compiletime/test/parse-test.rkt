@@ -263,19 +263,19 @@
           ))])
   (displayln (format "initial ~a:" i))
   (pretty-print code)
-  (displayln (format "desugar ~a:" i))
-  (pretty-print (desugar
-                 code))
-  (displayln (format "auto-applied ~a:" i))
-  (pretty-print (auto-apply
-                 (desugar
-                  code)))
+  ;; (displayln (format "desugar ~a:" i))
+  ;; (pretty-print (desugar
+  ;;                code))
+  ;; (displayln (format "auto-applied ~a:" i))
+  ;; (pretty-print (auto-apply
+  ;;                (desugar
+  ;;                 code)))
   (displayln (format "auto-cpsed ~a:" i))
   (pretty-print (auto-cps
                  (desugar
                   (auto-apply
                    (desugar
                     code)))))
-  (displayln (format "parse ~a:" i))
-  (pretty-print (parse code))
+  ;; (displayln (format "parse ~a:" i))
+  ;; (pretty-print (parse code))
   (newline))

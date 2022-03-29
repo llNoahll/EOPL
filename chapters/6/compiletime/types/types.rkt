@@ -71,6 +71,9 @@
         (and (list? arg)
              (andmap pred arg)))))
 
+  (: empty-list [-> Null])
+  (define empty-list (λ () '()))
+
   (define-type (Queueof A) (List (Listof A) (Listof A)))
   (define-predicate queue? (Queueof Any))
   (define-predicate empty-queue? (Queueof Nothing))
@@ -107,21 +110,8 @@
          (f 1st `(,in ,out))])))
 
 
-  (struct thd
-    ([ptid : Natural]
-     [tid  : Natural]
-     [mail : (Boxof (Queueof DenVal))]
-     [time-slice : Exact-Positive-Integer]
-     [thunk : [-> FinalAnswer]])
-    #:type-name Thd)
-
-  (: thread-share-memory? (Parameter Boolean))
-  (define thread-share-memory? (make-parameter #f))
-
-
   (define-type Cont (Listof Frame))
   (define-predicate cont? Cont)
-
   (struct frame
     ([type : Symbol]
      [func : [-> Cont [-> ExpVal FinalAnswer]]])
@@ -129,7 +119,6 @@
 
 
   (define-type DenVal (U Literal Symbol Undefined Void Null
-                         Mutex
                          Primitive-Proc Proc Trace-Proc
                          (Queueof DenVal)
 
@@ -167,12 +156,6 @@
   (define-struct (trace-proc proc) () #:type-name Trace-Proc)
 
 
-  (define-struct mutex
-    ([keys : Natural]
-     [wait-queue : (Queueof Natural)])
-    #:mutable
-    #:type-name Mutex)
-
   (: denval? [-> Any Boolean])
   (define denval?
     (λ (arg)
@@ -181,7 +164,6 @@
           (undefined? arg)
           (void? arg)
           (null? arg)
-          (mutex? arg)
           (primitive-proc? arg)
           (proc? arg)
           (trace-proc? arg)
@@ -306,52 +288,7 @@
     #:transparent
     #:type-name Call-Exp)
 
-
-  (define-struct (spawn-exp exp)
-    ([exp : Exp])
-    #:transparent
-    #:type-name Spawn-Exp)
-
-  (define-struct (mutex-exp exp)
-    ([exp : Exp])
-    #:transparent
-    #:type-name Mutex-Exp)
-
-  (define-struct (wait-exp exp)
-    ([exp : Exp])
-    #:transparent
-    #:type-name Wait-Exp)
-
-  (define-struct (signal-exp exp)
-    ([exp : Exp])
-    #:transparent
-    #:type-name Signal-Exp)
-
-  (define-struct (kill-exp exp)
-    ([exp : Exp])
-    #:transparent
-    #:type-name Kill-Exp)
-
-  (define-struct (send-exp exp)
-    ([tid-exp   : Exp]
-     [value-exp : Exp])
-    #:transparent
-    #:type-name Send-Exp)
-
-  (define-struct (receive-exp exp)
-    ()
-    #:transparent
-    #:type-name Receive-Exp)
-
-  (define-struct (try-receive-exp exp)
-    ()
-    #:transparent
-    #:type-name Try-Receive-Exp)
-
-  (define-struct (yield-exp exp)
-    ()
-    #:transparent
-    #:type-name Yield-Exp))
+  )
 
 (require (except-in 'types
                     denval?
