@@ -694,7 +694,6 @@
           (run-next-thread)))
      (base-env))))
 
-  (add-denval! '*apply* (apply-env (base-env) 'apply))
   (add-denval!
    'apply
    (expval->denval
@@ -709,6 +708,6 @@
                 [else
                  (decrement-timer!)
                  (return (*apply* func args))])))
-     (base-env))))
+     (extend-env '*apply* (apply-env (base-env) 'apply) (base-env)))))
 
   )
