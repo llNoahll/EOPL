@@ -44,6 +44,7 @@
 
 
 (define-type (Queueof A) (List (Listof A) (Listof A)))
+(define-predicate queue? (Queueof Any))
 (define-predicate empty-queue? (Queueof Nothing))
 
 (: empty-queue [-> (Queueof Nothing)])

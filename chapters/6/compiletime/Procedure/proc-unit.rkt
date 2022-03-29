@@ -120,9 +120,7 @@
         [(try-receive-exp) '()]
         [(yield-exp)       '()]
 
-        [(or (trace-proc-exp proc-vars body)
-             (proc-exp proc-vars body))
-         #:when (not (false? body))
+        [(proc-exp proc-vars body)
          (free-binds (if (symbol? proc-vars)
                          (cons proc-vars vars)
                          (append proc-vars vars))

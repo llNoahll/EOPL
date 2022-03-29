@@ -67,8 +67,9 @@
 #;(: base-eval-ns Namespace)
 (define base-eval-ns (make-base-namespace))
 (namespace-set-variable-value! 'empty-list   (λ () '())   #t base-eval-ns)
-(for ([op (in-list (list queue? empty-queue? empty-queue dequeue enqueue))])
+(for ([op (in-list (list undefined? true? queue? empty-queue? empty-queue dequeue enqueue))])
   (namespace-set-variable-value! (object-name op) op #t base-eval-ns))
+(namespace-set-variable-value! 'undefined  undefined  #t base-eval-ns)
 (namespace-set-variable-value! 'Y
                                (λ (f)
                                  ((λ (recur-func)
@@ -116,7 +117,7 @@
 (namespace-set-variable-value! 'x 10 #t init-eval-ns)
 
 
-(displayln "Start thread test.\n")
+(displayln "Start base test.\n")
 
 
 (for ([code
@@ -171,6 +172,9 @@
            (cond [(null? (list 1 2 3)) 'cond-1]
                  [(null? (empty-list)) 'cond-2]
                  [else 'else-cons]))
+
+          (dequeue (enqueue (empty-queue) 1) (λ (1st others) 1st))
+          (dequeue (enqueue (empty-queue) 1) (λ (1st others) others))
 
           (when (empty-queue? (enqueue (enqueue (enqueue (empty-queue) 1) 2) 3)) 'when)
           (when (not (empty-queue? (enqueue (enqueue (enqueue (empty-queue) 1) 2) 3))) 'when)
