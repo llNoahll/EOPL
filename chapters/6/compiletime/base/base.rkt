@@ -15,11 +15,13 @@
          "../Expressions/exp-sig.rkt"
          "../Expressions/exp-unit.rkt")
 
-(require "../Modules/thread.rkt")
+(require "../Modules/thread.rkt"
+         "../Modules/exit.rkt")
 
 (provide (all-from-out "../types/types.rkt")
          (all-from-out "../Parse/parse.rkt")
          (all-from-out "../Modules/thread.rkt")
+         (all-from-out "../Modules/exit.rkt")
          (all-defined-out))
 
 
@@ -48,17 +50,19 @@
                    (desugar
                     (auto-cps
                      (desugar
-                      (module/thread
-                       (auto-apply
-                        (desugar
-                         code))
-                       timeslice)))))
+                      (module/exit
+                       (module/thread
+                        (auto-apply
+                         (desugar
+                          code))
+                        timeslice))))))
                   eval-ns))
                (λ args (car args)))
               exp?))
 
 
-    ;; (pretty-print code)
+    #;(pretty-print code)
+    #;(pretty-print exp)
     (value-of/k exp env cont)))
 
 (let ()
@@ -72,7 +76,8 @@
                  (λ args (car args)))
                 exp?))
 
-      ;; (pretty-print code)
+      #;(pretty-print code)
+      #;(pretty-print exp)
       (value-of/k exp env (id-cont))))
 
   (: nullary-func [-> Symbol [-> Any] [-> DenVal * ExpVal]])
@@ -240,6 +245,16 @@
   (add-denval! 'false     false)
 
 
+  (add-primitive-proc! 'exit
+                       (λ [vals : DenVal *] : ExpVal
+                         (match vals
+                           [`(,val) (exit val)]
+                           [_ (error 'exit "Bad args: ~s" vals)])))
+  (add-primitive-proc! 'raise
+                       (λ [vals : DenVal *] : ExpVal
+                         (match vals
+                           [`(,val) (error "uncaught exception:" (expval->denval val))]
+                           [_ (error 'raise "Bad args: ~s" vals)])))
   (add-primitive-proc! 'eval
                        (λ [vals : DenVal *] : ExpVal
                          (match vals
@@ -247,6 +262,24 @@
                             #:when (s-exp? code)
                             (*eval* code (base-env) (id-cont))]
                            [_ (error 'eval "Bad args: ~s" vals)])))
+  (add-denval! 'apply
+               (proc-val
+                (procedure '(k)
+                           (proc-exp '(func args)
+                                     (call-exp (call-exp (var-exp 'func)
+                                                         (list (var-exp 'k)))
+                                               (var-exp 'args)))
+                           (empty-env))))
+  #;(add-primitive-proc! 'apply
+                         ;; k should be passed to func, so this code won't work.
+                         (λ [vals : DenVal *] : ExpVal
+                           (match vals
+                             [`(,func ,args)
+                              #:when (and (proc? func)
+                                          ((listof? denval?) args))
+                              (apply-procedure/k func args (id-cont))]
+                             [_ (error 'apply "Bad args: ~s" vals)])))
+
 
   (add-primitive-proc! 'identity (unary-func  'identity identity))
 
@@ -280,11 +313,6 @@
   (add-primitive-proc! 'sub1  (unary-arithmetic-func 'sub1  sub1))
   (add-primitive-proc! 'add1  (unary-arithmetic-func 'add1  add1))
 
-  (add-primitive-proc! 'raise
-                       (λ [vals : DenVal *] : ExpVal
-                         (match vals
-                           [`(,val) (error "uncaught exception:" (expval->denval val))]
-                           [_ (error 'raise "Bad args: ~s" vals)])))
 
   (add-primitive-proc! 'reverse
                        (λ [vals : DenVal *] : ExpVal
@@ -462,25 +490,6 @@
                         (base-env))))
 
 
-  (add-denval! 'apply
-               (proc-val
-                (procedure '(k)
-                           (proc-exp '(func args)
-                                     (call-exp (call-exp (var-exp 'func)
-                                                         (list (var-exp 'k)))
-                                               (var-exp 'args)))
-                           (empty-env))))
-  #;(add-primitive-proc! 'apply
-                         ;; k should be passed to func, so this code won't work.
-                         (λ [vals : DenVal *] : ExpVal
-                           (match vals
-                             [`(,func ,args)
-                              #:when (and (proc? func)
-                                          ((listof? denval?) args))
-                              (apply-procedure/k func args (id-cont))]
-                             [_ (error 'apply "Bad args: ~s" vals)])))
-
-
   (add-denval! 'map undefined)
   (add-denval! 'map
                (expval->denval
@@ -649,18 +658,19 @@
    (expval->denval
     (+eval+
      '(λ ()
-        (if (empty-queue? the-ready-queue)
-            the-final-answer
-            (dequeue the-ready-queue
-                     (λ (1st-ready-tid other-ready-tids)
-                       (let ([th (get-thread 1st-ready-tid)])
-                         (set! the-ready-queue other-ready-tids)
-                         (when (thd? th)
-                           (set! the-time-remaining (thd-time-slice th))
-                           (let ([res (apply-thd th)])
-                             (when (= 1 (get-tid))
-                               (set-final-answer! res))))
-                         (run-next-thread))))))
+        (exit
+         (if (empty-queue? the-ready-queue)
+             the-final-answer
+             (dequeue the-ready-queue
+                      (λ (1st-ready-tid other-ready-tids)
+                        (let ([th (get-thread 1st-ready-tid)])
+                          (set! the-ready-queue other-ready-tids)
+                          (when (thd? th)
+                            (set! the-time-remaining (thd-time-slice th))
+                            (let ([res (apply-thd th)])
+                              (when (= 1 (get-tid))
+                                (set-final-answer! res))))
+                          (run-next-thread)))))))
      (base-env))))
 
 
@@ -682,6 +692,23 @@
         (let/cc cc
           (spawn (λ (_) (cc (get-tid))))
           (run-next-thread)))
+     (base-env))))
+
+  (add-denval! '*apply* (apply-env (base-env) 'apply))
+  (add-denval!
+   'apply
+   (expval->denval
+    (+eval+
+     '(λ (func args)
+        (let/cc return
+          (cond [(time-expired?)
+                 (place-on-ready-queue!
+                  (λ () (return (apply func args)))
+                  (get-ptid) (get-tid) (get-mail))
+                 (run-next-thread)]
+                [else
+                 (decrement-timer!)
+                 (return (*apply* func args))])))
      (base-env))))
 
   )

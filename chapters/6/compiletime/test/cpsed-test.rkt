@@ -1,7 +1,8 @@
 #lang racket
 
 (require "../Parse/parse.rkt"
-         "../Modules/thread.rkt")
+         "../Modules/thread.rkt"
+         "../Modules/exit.rkt")
 
 
 (define-namespace-anchor ns-anchor)
@@ -16,7 +17,7 @@
                 (cond [(null? l) 0]
                       [else
                        (displayln (car l))
-                       #;(yield)
+                       (yield)
                        (noisy (cdr l))])))
             (spawn (λ (_) (noisy '(0 1 2 3 4))))
             (spawn (λ (_) (noisy '(5 6 7 8 9))))
@@ -42,7 +43,7 @@
 
   (define insert-thread
     (λ (code)
-      `(begin
+      `(let/cc exit
          (define thd
            (λ (ptid tid mail time-slice thunk)
              (vector-immutable 'thd ptid tid mail time-slice thunk)))
@@ -136,18 +137,19 @@
 
          (define run-next-thread
            (λ ()
-             (if (empty-queue? the-ready-queue)
-                 the-final-answer
-                 (dequeue the-ready-queue
-                          (λ (1st-ready-tid other-ready-tids)
-                            (let ([th (get-thread 1st-ready-tid)])
-                              (set! the-ready-queue other-ready-tids)
-                              (when (thd? th)
-                                (set! the-time-remaining (thd-time-slice th))
-                                (let ([res (apply-thd th)])
-                                  (when (= 1 (get-tid))
-                                    (set-final-answer! res))))
-                              (run-next-thread)))))))
+             (exit
+              (if (empty-queue? the-ready-queue)
+                  the-final-answer
+                  (dequeue the-ready-queue
+                           (λ (1st-ready-tid other-ready-tids)
+                             (let ([th (get-thread 1st-ready-tid)])
+                               (set! the-ready-queue other-ready-tids)
+                               (when (thd? th)
+                                 (set! the-time-remaining (thd-time-slice th))
+                                 (let ([res (apply-thd th)])
+                                   (when (= 1 (get-tid))
+                                     (set-final-answer! res))))
+                               (run-next-thread))))))))
 
          (define set-final-answer! (λ (val) (set! the-final-answer val)))
          (define time-expired?     (λ () (= 0 the-time-remaining)))
@@ -159,6 +161,7 @@
              (let* ([spawn-tid (get-ntid)]
                     [spawn-thk (λ () (ctx spawn-tid))])
                (place-on-ready-queue! spawn-thk (get-tid) spawn-tid (box (empty-queue))))))
+
          (define yield
            (λ ()
              (let/cc cc
@@ -185,7 +188,7 @@
        code))
     (displayln (format "initial ~a:" i))
     (pretty-print m)
-    #;(eval m eval-ns)
+    (eval m eval-ns)
     (newline))
 
   (let ()

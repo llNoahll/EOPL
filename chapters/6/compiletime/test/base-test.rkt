@@ -21,14 +21,7 @@
           (define o (open-output-bytes))
           (set! eval-type 'eval)
           (values (parameterize ([current-output-port o])
-                    (eval
-                     code
-                     #;(desugar
-                        (module/thread
-                         (auto-apply
-                          (desugar
-                           code))))
-                     eval-ns))
+                    (eval code eval-ns))
                   (get-output-bytes o))))
 
       (define-values (*res* *output*)

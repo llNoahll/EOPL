@@ -1,6 +1,8 @@
 #lang typed/racket
 
-(require "../Parse/parse.rkt")
+(require "../Parse/parse.rkt"
+         "../Modules/thread.rkt"
+         "../Modules/exit.rkt")
 
 
 (for ([i (in-naturals)]
