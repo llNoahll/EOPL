@@ -17,12 +17,47 @@
                 (cond [(null? l) 0]
                       [else
                        (displayln (car l))
+                       (noisy (cdr l))])))
+            (spawn (λ (_) (noisy '(0 1 2 3 4))))
+            (spawn (λ (_) (noisy '(5 6 7 8 9))))
+            (displayln 100)
+            33)
+          (begin
+            (define noisy
+              (λ (l)
+                (cond [(null? l) 0]
+                      [else
+                       (displayln (car l))
                        (yield)
                        (noisy (cdr l))])))
             (spawn (λ (_) (noisy '(0 1 2 3 4))))
             (spawn (λ (_) (noisy '(5 6 7 8 9))))
             (displayln 100)
-            33))
+            33)
+          #;(begin
+              (define buffer 0)
+              (define procedure
+                (λ (n)
+                  (define waitloop
+                    (λ (k)
+                      (cond [(zero? k) (set! buffer n)]
+                            [else
+                             (displayln (- k -200))
+                             (waitloop (- k 1))])))
+                  (waitloop 5)))
+              (define consumer
+                (λ (d)
+                  (define busywait
+                    (λ (k)
+                      (cond [(zero? buffer)
+                             (displayln (- k -100))
+                             (busywait (- k -1))]
+                            [else buffer])))
+                  (busywait 0)))
+
+              (spawn (λ (_) (procedure 44)))
+              (displayln 300)
+              (consumer 86)))
         )])
 
   (define insert-dequeue
@@ -137,19 +172,18 @@
 
          (define run-next-thread
            (λ ()
-             (exit
-              (if (empty-queue? the-ready-queue)
-                  the-final-answer
-                  (dequeue the-ready-queue
-                           (λ (1st-ready-tid other-ready-tids)
-                             (let ([th (get-thread 1st-ready-tid)])
-                               (set! the-ready-queue other-ready-tids)
-                               (when (thd? th)
-                                 (set! the-time-remaining (thd-time-slice th))
-                                 (let ([res (apply-thd th)])
-                                   (when (= 1 (get-tid))
-                                     (set-final-answer! res))))
-                               (run-next-thread))))))))
+             (if (empty-queue? the-ready-queue)
+                 the-final-answer
+                 (dequeue the-ready-queue
+                          (λ (1st-ready-tid other-ready-tids)
+                            (let ([th (get-thread 1st-ready-tid)])
+                              (set! the-ready-queue other-ready-tids)
+                              (when (thd? th)
+                                (set! the-time-remaining (thd-time-slice th))
+                                (let ([res (apply-thd th)])
+                                  (when (= 1 (get-tid))
+                                    (set-final-answer! res))))
+                              (run-next-thread)))))))
 
          (define set-final-answer! (λ (val) (set! the-final-answer val)))
          (define time-expired?     (λ () (= 0 the-time-remaining)))
@@ -188,7 +222,19 @@
        code))
     (displayln (format "initial ~a:" i))
     (pretty-print m)
-    (eval m eval-ns)
+    #;(eval m eval-ns)
+    (newline))
+
+  (let ()
+    (define m
+      (insert-module
+       "../types/types.rkt"
+       (auto-apply
+        (desugar
+         code))))
+    (displayln (format "auto-apply ~a:" i))
+    (pretty-print m)
+    #;(eval m eval-ns)
     (newline))
 
   (let ()

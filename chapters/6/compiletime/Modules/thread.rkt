@@ -11,5 +11,5 @@
     `(begin
        (initialize-scheduler! ,timeslice)
        (initialize-thread-identifier!)
-       (apply (λ () (spawn (λ (_) ,code))) '())
-       (run-next-thread))))
+       (spawn (λ (_) ,code))
+       (exit (run-next-thread)))))

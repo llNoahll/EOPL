@@ -262,22 +262,57 @@
                   (fact 3)
                   (fact 4)
                   (fact 5)))
+          (begin
+            (define buffer 0)
+            (define procedure
+              (λ (n)
+                (define waitloop
+                  (λ (k)
+                    (cond [(zero? k) (set! buffer n)]
+                          [else
+                           (displayln (- k -200))
+                           (waitloop (- k 1))])))
+                (waitloop 5)))
+            (define consumer
+              (λ (d)
+                (define busywait
+                  (λ (k)
+                    (cond [(zero? buffer)
+                           (displayln (- k -100))
+                           (busywait (- k -1))]
+                          [else buffer])))
+                (busywait 0)))
+
+            (spawn (λ (_) (procedure 44)))
+            (displayln 300)
+            (consumer 86))
+          (begin
+            (define noisy
+              (λ (l)
+                (cond [(null? l) 0]
+                      [else
+                       (displayln (car l))
+                       (noisy (cdr l))])))
+            (spawn (λ (_) (noisy '(0 1 2 3 4))))
+            (spawn (λ (_) (noisy '(5 6 7 8 9))))
+            (displayln 100)
+            33)
           ))])
   (displayln (format "initial ~a:" i))
   (pretty-print code)
-  ;; (displayln (format "desugar ~a:" i))
-  ;; (pretty-print (desugar
-  ;;                code))
-  ;; (displayln (format "auto-applied ~a:" i))
-  ;; (pretty-print (auto-apply
-  ;;                (desugar
-  ;;                 code)))
+  (displayln (format "desugar ~a:" i))
+  (pretty-print (desugar
+                 code))
+  (displayln (format "auto-applied ~a:" i))
+  (pretty-print (auto-apply
+                 (desugar
+                  code)))
   (displayln (format "auto-cpsed ~a:" i))
   (pretty-print (auto-cps
                  (desugar
                   (auto-apply
                    (desugar
                     code)))))
-  ;; (displayln (format "parse ~a:" i))
-  ;; (pretty-print (parse code))
+  (displayln (format "parse ~a:" i))
+  (pretty-print (parse code))
   (newline))

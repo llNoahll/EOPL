@@ -320,6 +320,9 @@
   (add-primitive-proc! 'zero? (unary-arithmetic-pred 'zero? zero?))
   (add-primitive-proc! 'sub1  (unary-arithmetic-func 'sub1  sub1))
   (add-primitive-proc! 'add1  (unary-arithmetic-func 'add1  add1))
+  (add-primitive-proc! '-1+   (unary-arithmetic-func '-1+   -1+))
+  (add-primitive-proc! '1+    (unary-arithmetic-func '1+    1+))
+  (add-primitive-proc! '1-    (unary-arithmetic-func '1-    1-))
 
 
   (add-primitive-proc! 'reverse
@@ -666,19 +669,18 @@
    (expval->denval
     (+eval+
      '(λ ()
-        (exit
-         (if (empty-queue? the-ready-queue)
-             the-final-answer
-             (dequeue the-ready-queue
-                      (λ (1st-ready-tid other-ready-tids)
-                        (let ([th (get-thread 1st-ready-tid)])
-                          (set! the-ready-queue other-ready-tids)
-                          (when (thd? th)
-                            (set! the-time-remaining (thd-time-slice th))
-                            (let ([res (apply-thd th)])
-                              (when (= 1 (get-tid))
-                                (set-final-answer! res))))
-                          (run-next-thread)))))))
+        (if (empty-queue? the-ready-queue)
+            the-final-answer
+            (dequeue the-ready-queue
+                     (λ (1st-ready-tid other-ready-tids)
+                       (let ([th (get-thread 1st-ready-tid)])
+                         (set! the-ready-queue other-ready-tids)
+                         (when (thd? th)
+                           (set! the-time-remaining (thd-time-slice th))
+                           (let ([res (apply-thd th)])
+                             (when (= 1 (get-tid))
+                               (set-final-answer! res))))
+                         (run-next-thread))))))
      (base-env))))
 
 
