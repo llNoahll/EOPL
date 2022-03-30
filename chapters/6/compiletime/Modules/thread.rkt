@@ -12,4 +12,4 @@
        (initialize-scheduler! ,timeslice)
        (initialize-thread-identifier!)
        (spawn (λ (_) ,code))
-       (exit (run-next-thread)))))
+       (run-next-thread))))

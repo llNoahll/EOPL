@@ -124,30 +124,30 @@
            (displayln "End"))
         (base-env) (end-cont))
 
-#;(displayln "\n----------------------------------------------")
-#;(*eval* '(begin
-             (define x 0)
-             (define mut (mutex))
-             (define incr-x
-               (λ (id)
-                 (λ (tid)
-                   (wait mut)
-                   (displayln (format "ptid = ~a, tid = ~a, before: x = ~a"
-                                      (get-ptid) tid x))
-                   (set! x (- x -1))
-                   (displayln (format "ptid = ~a, tid = ~a, after: x = ~a"
-                                      (get-ptid) tid x))
-                   (signal mut))))
+(displayln "\n----------------------------------------------")
+(*eval* '(begin
+           (define x 0)
+           (define mut (mutex))
+           (define incr-x
+             (λ (id)
+               (λ (tid)
+                 (wait mut)
+                 (displayln (format "ptid = ~a, tid = ~a, before: x = ~a"
+                                    (get-ptid) tid x))
+                 (set! x (- x -1))
+                 (displayln (format "ptid = ~a, tid = ~a, after: x = ~a"
+                                    (get-ptid) tid x))
+                 (signal mut))))
 
-             (displayln (format "main thread: ptid = ~a, tid = ~a"
-                                (get-ptid) (get-tid)))
-             (spawn (incr-x 100))
-             (spawn (incr-x 200))
-             (spawn (incr-x 300))
-             (spawn (incr-x 400))
-             (spawn (incr-x 500))
-             x)
-          (base-env) (end-cont))
+           (displayln (format "main thread: ptid = ~a, tid = ~a"
+                              (get-ptid) (get-tid)))
+           (spawn (incr-x 100))
+           (spawn (incr-x 200))
+           (spawn (incr-x 300))
+           (spawn (incr-x 400))
+           (spawn (incr-x 500))
+           x)
+        (base-env) (end-cont))
 
 #;(parameterize ([thread-share-memory? #t])
     (displayln "\n----------------------------------------------")
@@ -175,83 +175,83 @@
                x)
             (base-env) (end-cont)))
 
-#;(displayln "\n----------------------------------------------")
-#;(*eval* '(begin
-             (define x 0)
-             (define get-x  (λ () x))
-             (define set-x! (λ (v) (set! x v)))
-             (define mut (mutex))
-             (define incr-x
-               (λ (id)
-                 (λ (tid)
-                   (wait mut)
+(displayln "\n----------------------------------------------")
+(*eval* '(begin
+           (define x 0)
+           (define get-x  (λ () x))
+           (define set-x! (λ (v) (set! x v)))
+           (define mut (mutex))
+           (define incr-x
+             (λ (id)
+               (λ (tid)
+                 (wait mut)
+                 (displayln (format "ptid = ~a, tid = ~a, before: x = ~a"
+                                    (get-ptid) tid (get-x)))
+                 (set-x! (- (get-x) -1))
+                 (displayln (format "ptid = ~a, tid = ~a, after: x = ~a"
+                                    (get-ptid) tid (get-x)))
+                 (signal mut))))
+
+           (displayln (format "main thread: ptid = ~a, tid = ~a"
+                              (get-ptid) (get-tid)))
+           (spawn (incr-x 100))
+           (spawn (incr-x 200))
+           (spawn (incr-x 300))
+           (spawn (incr-x 400))
+           (spawn (incr-x 500))
+           (get-x))
+        (base-env) (end-cont))
+
+(displayln "\n----------------------------------------------")
+(*eval* '(begin
+           (define x 0)
+           (define mut (mutex 2))
+           (define incr-x
+             (λ (id)
+               (λ (_)
+                 (with-mutex mut
                    (displayln (format "ptid = ~a, tid = ~a, before: x = ~a"
-                                      (get-ptid) tid (get-x)))
+                                      (get-ptid) (get-tid) x))
+                   (displayln (format "Kill thread ~a: ~a" 5 (kill-thread 5)))
+                   (set! x (- x -1))
+                   (displayln (format "ptid = ~a, tid = ~a, after: x = ~a"
+                                      (get-ptid) (get-tid) x))))))
+
+           (displayln (format "main thread: ptid = ~a, tid = ~a"
+                              (get-ptid) (get-tid)))
+           (spawn (incr-x 100))
+           (spawn (incr-x 200))
+           (spawn (incr-x 300))
+           (spawn (incr-x 400))
+           (spawn (incr-x 500))
+           (displayln (format "Kill thread ~a: ~a" 3 (kill-thread 3)))
+           x)
+        (base-env) (end-cont))
+
+(displayln "\n----------------------------------------------")
+(*eval* '(begin
+           (define x 0)
+           (define get-x  (λ () x))
+           (define set-x! (λ (v) (set! x v)))
+           (define mut (mutex 2))
+           (define incr-x
+             (λ (id)
+               (λ (_)
+                 (with-mutex mut
+                   (displayln (format "ptid = ~a, tid = ~a, before: x = ~a"
+                                      (get-ptid) (get-tid) (get-x)))
+                   (displayln (format "Kill thread ~a: ~a" 5 (kill-thread 5)))
                    (set-x! (- (get-x) -1))
                    (displayln (format "ptid = ~a, tid = ~a, after: x = ~a"
-                                      (get-ptid) tid (get-x)))
-                   (signal mut))))
+                                      (get-ptid) (get-tid) (get-x)))))))
 
-             (displayln (format "main thread: ptid = ~a, tid = ~a"
-                                (get-ptid) (get-tid)))
-             (spawn (incr-x 100))
-             (spawn (incr-x 200))
-             (spawn (incr-x 300))
-             (spawn (incr-x 400))
-             (spawn (incr-x 500))
-             (get-x))
-          (base-env) (end-cont))
-
-#;(displayln "\n----------------------------------------------")
-#;(*eval* '(begin
-             (define x 0)
-             (define mut (mutex 2))
-             (define incr-x
-               (λ (id)
-                 (λ (_)
-                   (with-mutex mut
-                     (displayln (format "ptid = ~a, tid = ~a, before: x = ~a"
-                                        (get-ptid) (get-tid) x))
-                     (displayln (format "Kill thread ~a: ~a" 5 (kill-thread 5)))
-                     (set! x (- x -1))
-                     (displayln (format "ptid = ~a, tid = ~a, after: x = ~a"
-                                        (get-ptid) (get-tid) x))))))
-
-             (displayln (format "main thread: ptid = ~a, tid = ~a"
-                                (get-ptid) (get-tid)))
-             (spawn (incr-x 100))
-             (spawn (incr-x 200))
-             (spawn (incr-x 300))
-             (spawn (incr-x 400))
-             (spawn (incr-x 500))
-             (displayln (format "Kill thread ~a: ~a" 3 (kill-thread 3)))
-             x)
-          (base-env) (end-cont))
-
-#;(displayln "\n----------------------------------------------")
-#;(*eval* '(begin
-             (define x 0)
-             (define get-x  (λ () x))
-             (define set-x! (λ (v) (set! x v)))
-             (define mut (mutex 2))
-             (define incr-x
-               (λ (id)
-                 (λ (_)
-                   (with-mutex mut
-                     (displayln (format "ptid = ~a, tid = ~a, before: x = ~a"
-                                        (get-ptid) (get-tid) (get-x)))
-                     (displayln (format "Kill thread ~a: ~a" 5 (kill-thread 5)))
-                     (set-x! (- (get-x) -1))
-                     (displayln (format "ptid = ~a, tid = ~a, after: x = ~a"
-                                        (get-ptid) (get-tid) (get-x)))))))
-
-             (displayln (format "main thread: ptid = ~a, tid = ~a"
-                                (get-ptid) (get-tid)))
-             (spawn (incr-x 100))
-             (spawn (incr-x 200))
-             (spawn (incr-x 300))
-             (spawn (incr-x 400))
-             (spawn (incr-x 500))
-             (displayln (format "Kill thread ~a: ~a" 3 (kill-thread 3)))
-             (get-x))
-          (base-env) (end-cont))
+           (displayln (format "main thread: ptid = ~a, tid = ~a"
+                              (get-ptid) (get-tid)))
+           (spawn (incr-x 100))
+           (spawn (incr-x 200))
+           (spawn (incr-x 300))
+           (spawn (incr-x 400))
+           (spawn (incr-x 500))
+           (displayln (format "Kill thread ~a: ~a" 3 (kill-thread 3)))
+           (get-x))
+        (base-env) (end-cont))

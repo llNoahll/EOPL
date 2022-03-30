@@ -307,22 +307,48 @@
             (spawn (λ (tid) (thread-send 1 "Hello, World!")))
             (displayln (thread-receive))
             (displayln "End"))
+          (begin
+            (define x 0)
+            (define mut (mutex))
+            (define incr-x
+              (λ (id)
+                (λ (tid)
+                  (wait mut)
+                  (displayln (format "ptid = ~a, tid = ~a, before: x = ~a"
+                                     (get-ptid) tid x))
+                  (set! x (- x -1))
+                  (displayln (format "ptid = ~a, tid = ~a, after: x = ~a"
+                                     (get-ptid) tid x))
+                  (signal mut))))
+
+            (displayln (format "main thread: ptid = ~a, tid = ~a"
+                               (get-ptid) (get-tid)))
+            (spawn (incr-x 100))
+            (spawn (incr-x 200))
+            (spawn (incr-x 300))
+            (spawn (incr-x 400))
+            (spawn (incr-x 500))
+            x)
           ))])
   (displayln (format "initial ~a:" i))
   (pretty-print code)
+
   (displayln (format "desugar ~a:" i))
   (pretty-print (desugar
                  code))
+
   (displayln (format "auto-applied ~a:" i))
   (pretty-print (auto-apply
                  (desugar
                   code)))
-  (displayln (format "auto-cpsed ~a:" i))
-  (pretty-print (auto-cps
-                 (desugar
-                  (auto-apply
+
+  #;(displayln (format "auto-cpsed ~a:" i))
+  #;(pretty-print (auto-cps
                    (desugar
-                    code)))))
-  (displayln (format "parse ~a:" i))
-  (pretty-print (parse code))
+                    (auto-apply
+                     (desugar
+                      code)))))
+
+  #;(displayln (format "parse ~a:" i))
+  #;(pretty-print (parse code))
   (newline))

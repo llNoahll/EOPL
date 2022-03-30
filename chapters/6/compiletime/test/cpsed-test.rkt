@@ -35,6 +35,7 @@
             (displayln 100)
             33)
           #;(begin
+              ;; TODO
               (define buffer 0)
               (define procedure
                 (λ (n)
@@ -57,7 +58,29 @@
 
               (spawn (λ (_) (procedure 44)))
               (displayln 300)
-              (consumer 86)))
+              (consumer 86))
+          (begin
+            (define x 0)
+            (define mut (mutex))
+            (define incr-x
+              (λ (id)
+                (λ (tid)
+                  (wait mut)
+                  (displayln (format "ptid = ~a, tid = ~a, before: x = ~a"
+                                     (get-ptid) tid x))
+                  (set! x (- x -1))
+                  (displayln (format "ptid = ~a, tid = ~a, after: x = ~a"
+                                     (get-ptid) tid x))
+                  (signal mut))))
+
+            (displayln (format "main thread: ptid = ~a, tid = ~a"
+                               (get-ptid) (get-tid)))
+            (spawn (incr-x 100))
+            (spawn (incr-x 200))
+            (spawn (incr-x 300))
+            (spawn (incr-x 400))
+            (spawn (incr-x 500))
+            x))
         )])
 
   (define insert-dequeue
@@ -79,7 +102,7 @@
   (define insert-thread
     (λ (code)
       `(let/cc exit
-         (define thd
+         (define make-thd
            (λ (ptid tid mail time-slice thunk)
              (vector-immutable 'thd ptid tid mail time-slice thunk)))
 
@@ -147,12 +170,12 @@
          (define place-on-thread-queue
            (λ (thds thk ptid tid mail)
              (add-thread! tid
-                          (thd ptid tid mail
-                               (let ([the-time the-time-remaining])
-                                 (if (exact-positive-integer? the-time)
-                                     the-time
-                                     the-max-time-slice))
-                               thk))
+                          (make-thd ptid tid mail
+                                    (let ([the-time the-time-remaining])
+                                      (if (exact-positive-integer? the-time)
+                                          the-time
+                                          the-max-time-slice))
+                                    thk))
              (enqueue thds tid)))
 
          (define place-on-ready-queue!
@@ -169,18 +192,19 @@
 
          (define run-next-thread
            (λ ()
-             (if (empty-queue? the-ready-queue)
-                 the-final-answer
-                 (dequeue the-ready-queue
-                          (λ (1st-ready-tid other-ready-tids)
-                            (let ([th (get-thread 1st-ready-tid)])
-                              (set! the-ready-queue other-ready-tids)
-                              (when (thd? th)
-                                (set! the-time-remaining (thd-time-slice th))
-                                (let ([res (apply-thd th)])
-                                  (when (= 1 (get-tid))
-                                    (set-final-answer! res))))
-                              (run-next-thread)))))))
+             (exit
+              (if (empty-queue? the-ready-queue)
+                  the-final-answer
+                  (dequeue the-ready-queue
+                           (λ (1st-ready-tid other-ready-tids)
+                             (let ([th (get-thread 1st-ready-tid)])
+                               (set! the-ready-queue other-ready-tids)
+                               (when (thd? th)
+                                 (set! the-time-remaining (thd-time-slice th))
+                                 (let ([res (apply-thd th)])
+                                   (when (= 1 (get-tid))
+                                     (set-final-answer! res))))
+                               (run-next-thread))))))))
 
 
          (define kill-thread
@@ -233,6 +257,56 @@
                (run-next-thread))))
 
 
+         (define make-mutex
+           (λ (keys wait-queue)
+             (vector 'mutex keys wait-queue)))
+
+         (define mutex?
+           (λ (arg)
+             (and (vector? arg)
+                  (not (immutable? arg))
+                  (eqv? 'mutex (vector-ref arg 0)))))
+
+         (define mutex-keys       (λ (mut) (if (mutex? mut) (vector-ref mut 1) #f)))
+         (define mutex-wait-queue (λ (mut) (if (mutex? mut) (vector-ref mut 2) #f)))
+
+         (define set-mutex-keys!       (λ (mut keys) (if (mutex? mut) (vector-set! mut 1 keys) #f)))
+         (define set-mutex-wait-queue! (λ (mut waqu) (if (mutex? mut) (vector-set! mut 2 waqu) #f)))
+
+         (define mutex (λ (keys) (make-mutex keys (empty-queue))))
+
+
+         (define wait
+           (λ (mut)
+             (let/cc cc
+               (let ([thk (λ () (cc (void)))]
+                     [keys (mutex-keys mut)]
+                     [wait-queue (mutex-wait-queue mut)])
+                 (cond [(zero? keys)
+                        (set-mutex-wait-queue!
+                         mut
+                         (place-on-thread-queue
+                          wait-queue
+                          thk (get-ptid) (get-tid) (get-mail)))
+                        (run-next-thread)]
+                       [else
+                        (set-mutex-keys! mut (sub1 keys))
+                        (thk)])))))
+
+         (define signal
+           (λ (mut)
+             (let/cc cc
+               (let ([thk (λ () (cc (void)))]
+                     [keys (mutex-keys mut)]
+                     [wait-queue (mutex-wait-queue mut)])
+                 (if (empty-queue? wait-queue)
+                     (set-mutex-keys! mut (add1 keys))
+                     (dequeue wait-queue
+                              (λ (1st-waiting-tid other-waiting-tids)
+                                (set! the-ready-queue (enqueue the-ready-queue 1st-waiting-tid))
+                                (set-mutex-wait-queue! mut other-waiting-tids))))))))
+
+
          ,code)))
 
   (define insert-module
@@ -273,51 +347,52 @@
        "../types/types.rkt"
        (insert-dequeue
         (insert-thread
-         (module/thread
-          (auto-apply
-           (desugar
-            code)))))))
+         (module/exit
+          (module/thread
+           (auto-apply
+            (desugar
+             code))))))))
     (displayln (format "module/thread ~a:" i))
     (pretty-print m)
     (eval m eval-ns)
     (newline))
 
-  (let ()
-    (define m
-      (insert-module
-       "../base/cpsed.rkt"
-       (desugar
-        (auto-cps
+  #;(let ()
+      (define m
+        (insert-module
+         "../base/cpsed.rkt"
          (desugar
-          (insert-dequeue
-           (insert-thread
-            (module/thread
-             (auto-apply
-              (desugar
-               code))))))))))
-    (displayln (format "auto-cpsed ~a:" i))
-    (pretty-print m)
-    (eval m eval-ns)
-    (newline))
+          (auto-cps
+           (desugar
+            (insert-dequeue
+             (insert-thread
+              (module/thread
+               (auto-apply
+                (desugar
+                 code))))))))))
+      (displayln (format "auto-cpsed ~a:" i))
+      (pretty-print m)
+      #;(eval m eval-ns)
+      (newline))
 
-  (let ()
-    (define m
-      (insert-module
-       "../base/cpsed.rkt"
-       (parser
-        (desugar
-         (auto-cps
+  #;(let ()
+      (define m
+        (insert-module
+         "../base/cpsed.rkt"
+         (parser
           (desugar
-           (insert-dequeue
-            (insert-thread
-             (module/thread
-              (auto-apply
-               (desugar
-                code))
-              1)))))))))
-    (displayln (format "auto-cpsed ~a:" i))
-    (pretty-print m)
-    #;(eval m eval-ns)
-    (newline))
+           (auto-cps
+            (desugar
+             (insert-dequeue
+              (insert-thread
+               (module/thread
+                (auto-apply
+                 (desugar
+                  code))
+                1)))))))))
+      (displayln (format "auto-cpsed ~a:" i))
+      (pretty-print m)
+      #;(eval m eval-ns)
+      (newline))
 
   (newline))

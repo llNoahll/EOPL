@@ -440,6 +440,15 @@
                            [`(,val-1 ,val-2) #:when (denbox? val-1) (set-box! val-1 val-2)]
                            [_ (error 'set-box! "Bad args: ~s" vals)])))
 
+  (add-primitive-proc! 'vector-set!
+                       (λ [vals : DenVal *] : ExpVal
+                         (match vals
+                           [`(,val-1 ,val-2 ,val-3)
+                            #:when (and (denvector? val-1)
+                                        (index? val-2))
+                            (vector-set! val-1 val-2 val-3)]
+                           [_ (error 'vector-set! "Bad args: ~s" vals)])))
+
 
   (add-primitive-proc! '+ (n-ary-arithmetic-func '+ +))
   (add-primitive-proc! '* (n-ary-arithmetic-func '* *))
@@ -568,7 +577,7 @@
 
   ;; ------------------------------
   ;; Thread
-  (add-denval! 'thd
+  (add-denval! 'make-thd
                (expval->denval
                 (+eval+ '(λ (ptid tid mail time-slice thunk)
                            (vector-immutable 'thd ptid tid mail time-slice thunk))
@@ -655,12 +664,12 @@
     (+eval+
      '(λ (thds thk ptid tid mail)
         (add-thread! tid
-                     (thd ptid tid mail
-                          (let ([the-time the-time-remaining])
-                            (if (exact-positive-integer? the-time)
-                                the-time
-                                the-max-time-slice))
-                          thk))
+                     (make-thd ptid tid mail
+                               (let ([the-time the-time-remaining])
+                                 (if (exact-positive-integer? the-time)
+                                     the-time
+                                     the-max-time-slice))
+                               thk))
         (enqueue thds tid))
      (base-env))))
 
@@ -686,18 +695,19 @@
    (expval->denval
     (+eval+
      '(λ ()
-        (if (empty-queue? the-ready-queue)
-            the-final-answer
-            (dequeue the-ready-queue
-                     (λ (1st-ready-tid other-ready-tids)
-                       (let ([th (get-thread 1st-ready-tid)])
-                         (set! the-ready-queue other-ready-tids)
-                         (when (thd? th)
-                           (set! the-time-remaining (thd-time-slice th))
-                           (let ([res (apply-thd th)])
-                             (when (= 1 (get-tid))
-                               (set-final-answer! res))))
-                         (run-next-thread))))))
+        (exit
+         (if (empty-queue? the-ready-queue)
+             the-final-answer
+             (dequeue the-ready-queue
+                      (λ (1st-ready-tid other-ready-tids)
+                        (let ([th (get-thread 1st-ready-tid)])
+                          (set! the-ready-queue other-ready-tids)
+                          (when (thd? th)
+                            (set! the-time-remaining (thd-time-slice th))
+                            (let ([res (apply-thd th)])
+                              (when (= 1 (get-tid))
+                                (set-final-answer! res))))
+                          (run-next-thread)))))))
      (base-env))))
 
 
@@ -774,6 +784,72 @@
           (spawn (λ (_) (cc (get-tid))))
           (run-next-thread)))
      (base-env))))
+
+
+  (add-denval!
+   'make-mutex
+   (expval->denval
+    (+eval+
+     '(λ (keys wait-queue)
+        (vector 'mutex keys wait-queue))
+     (base-env))))
+
+  (add-denval!
+   'mutex?
+   (expval->denval
+    (+eval+
+     '(λ (arg)
+        (and (vector? arg)
+             (not (immutable? arg))
+             (eqv? 'mutex (vector-ref arg 0))))
+     (base-env))))
+
+  (add-denval! 'mutex-keys       (expval->denval (+eval+ '(λ (mut) (if (mutex? mut) (vector-ref mut 1) #f)) (base-env))))
+  (add-denval! 'mutex-wait-queue (expval->denval (+eval+ '(λ (mut) (if (mutex? mut) (vector-ref mut 2) #f)) (base-env))))
+
+  (add-denval! 'set-mutex-keys!       (expval->denval (+eval+ '(λ (mut keys) (if (mutex? mut) (vector-set! mut 1 keys) #f)) (base-env))))
+  (add-denval! 'set-mutex-wait-queue! (expval->denval (+eval+ '(λ (mut waqu) (if (mutex? mut) (vector-set! mut 2 waqu) #f)) (base-env))))
+
+  (add-denval! 'mutex (expval->denval (+eval+ '(λ (keys) (make-mutex keys (empty-queue))) (base-env))))
+
+  (add-denval!
+   'wait
+   (expval->denval
+    (+eval+
+     '(λ (mut)
+        (let/cc cc
+          (let ([thk (λ () (cc (void)))]
+                [keys (mutex-keys mut)]
+                [wait-queue (mutex-wait-queue mut)])
+            (cond [(zero? keys)
+                   (set-mutex-wait-queue!
+                    mut
+                    (place-on-thread-queue
+                     wait-queue
+                     thk (get-ptid) (get-tid) (get-mail)))
+                   (run-next-thread)]
+                  [else
+                   (set-mutex-keys! mut (sub1 keys))
+                   (thk)]))))
+     (base-env))))
+
+  (add-denval!
+   'signal
+   (expval->denval
+    (+eval+
+     '(λ (mut)
+        (let/cc cc
+          (let ([thk (λ () (cc (void)))]
+                [keys (mutex-keys mut)]
+                [wait-queue (mutex-wait-queue mut)])
+            (if (empty-queue? wait-queue)
+                (set-mutex-keys! mut (add1 keys))
+                (dequeue wait-queue
+                         (λ (1st-waiting-tid other-waiting-tids)
+                           (set! the-ready-queue (enqueue the-ready-queue 1st-waiting-tid))
+                           (set-mutex-wait-queue! mut other-waiting-tids)))))))
+     (base-env))))
+
 
   (add-denval!
    'apply
