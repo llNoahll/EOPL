@@ -72,7 +72,15 @@
       (: exp Exp)
       (define exp
         (assert (call-with-values
-                 (λ () (eval (parse code) eval-ns))
+                 (λ ()
+                   (eval
+                    (parser
+                     (desugar
+                      (auto-cps
+                       (desugar
+                        ;; To define `apply`, we can't use `auto-apply' pass.
+                        code))))
+                    eval-ns))
                  (λ args (car args)))
                 exp?))
 
