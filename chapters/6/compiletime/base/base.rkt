@@ -74,11 +74,34 @@
         (assert (call-with-values
                  (λ ()
                    (eval
+                    #;(parse code)
                     (parser
                      (desugar
                       (auto-cps
                        (desugar
-                        ;; To define `apply`, we can't use `auto-apply' pass.
+                        ;; To define `mul-thread`, we can't use `auto-apply' pass.
+                        code))))
+                    eval-ns))
+                 (λ args (car args)))
+                exp?))
+
+      #;(pretty-print code)
+      #;(pretty-print exp)
+      (value-of/k exp env (id-cont))))
+
+  (: ~eval~ [-> S-Exp Env ExpVal])
+  (define ~eval~
+    (λ (code env)
+      (: exp Exp)
+      (define exp
+        (assert (call-with-values
+                 (λ ()
+                   (eval
+                    (parser
+                     (desugar
+                      (auto-cps
+                       (desugar
+                        ;; To define `mul-thread`, we can't use `auto-apply' pass.
                         code))))
                     eval-ns))
                  (λ args (car args)))
@@ -375,7 +398,8 @@
          now))))
 
 
-  (add-primitive-proc! 'read (nullary-func 'read read))
+  (add-primitive-proc! 'read    (nullary-func 'read    read))
+  (add-primitive-proc! 'newline (nullary-func 'newline newline))
 
   (add-primitive-proc! 'display (unary-func 'display display))
   (add-primitive-proc! 'print   (unary-func 'print   print))
@@ -384,6 +408,10 @@
   (add-primitive-proc! 'displayln (unary-func 'displayln displayln))
   (add-primitive-proc! 'println   (unary-func 'println   println))
   (add-primitive-proc! 'writeln   (unary-func 'writeln   writeln))
+
+  (add-primitive-proc! 'pretty-display (unary-func 'pretty-display pretty-display))
+  (add-primitive-proc! 'pretty-print   (unary-func 'pretty-print   pretty-print))
+  (add-primitive-proc! 'pretty-write   (unary-func 'pretty-write   pretty-write))
 
 
   (add-primitive-proc! '=  (binary-arithmetic-relation '=  =))
@@ -707,7 +735,7 @@
   (add-denval!
    'apply
    (expval->denval
-    (+eval+
+    (~eval~
      '(λ (func args)
         (let/cc return
           (cond [(time-expired?)
@@ -717,7 +745,7 @@
                  (run-next-thread)]
                 [else
                  (decrement-timer!)
-                 (return (*apply* func args))])))
-     (extend-env '*apply* (apply-env (base-env) 'apply) (base-env)))))
+                 (return (~apply~ func args))])))
+     (extend-env '~apply~ (apply-env (base-env) 'apply) (base-env)))))
 
   )
