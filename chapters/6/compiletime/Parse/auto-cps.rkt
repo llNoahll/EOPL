@@ -20,17 +20,8 @@
                                    CPS-Exp)))
 (define-predicate simple-λ? Simple-λ)
 
-(define-type Thread-Exp (U (List 'mutex       Simple-Exp)
-                           (List 'wait        Simple-Exp)
-                           (List 'signal      Simple-Exp)
-                           (List 'kill-thread Simple-Exp)
-                           (List 'thread-send Simple-Exp Simple-Exp)
-                           (List 'thread-receive)
-                           (List 'thread-try-receive)))
-
 (define-type Simple-Exp (U Literal Symbol (List 'quote S-Exp) Simple-λ
-                           (List 'set! Symbol Simple-Exp)
-                           Thread-Exp))
+                           (List 'set! Symbol Simple-Exp)))
 (define-predicate simple-exp? Simple-Exp)
 
 (define-type K-Exp (List Lambda (List Symbol) CPS-Exp))
@@ -113,20 +104,6 @@
                       (let ([v0 (fv)])
                         `(let ([,k (λ (,v0) ,(ctx v0))])
                            (if ,p ,(cps true-exp ctx0) ,(cps false-exp ctx0)))))))]
-
-          [`(mutex       ,(? s-exp? exp)) (cps exp (λ (val) (ctx `(mutex       ,val))))]
-          [`(wait        ,(? s-exp? exp)) (cps exp (λ (val) (ctx `(wait        ,val))))]
-          [`(signal      ,(? s-exp? exp)) (cps exp (λ (val) (ctx `(signal      ,val))))]
-          [`(kill-thread ,(? s-exp? exp)) (cps exp (λ (val) (ctx `(kill-thread ,val))))]
-
-          [`(thread-send ,(? s-exp? tid-exp) ,(? s-exp? value-exp))
-           (cps tid-exp
-                (λ (tid)
-                  (cps value-exp
-                       (λ (val)
-                         (ctx `(thread-send ,tid ,val))))))]
-          ['(thread-receive)     (ctx code)]
-          ['(thread-try-receive) (ctx code)]
 
 
           [`(let/cc ,cc-var ,body-exp)

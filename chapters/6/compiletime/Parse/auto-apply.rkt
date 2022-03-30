@@ -14,10 +14,7 @@
            (? real?)
            (? string?)
            (? char?)
-           (? symbol?)
-           `(,(or (? λ?) (? trace-λ?))
-             ,(? (or/c symbol? (listof? symbol?)))
-             ,(? s-exp?)))
+           (? symbol?))
        code]
 
       [`(set! ,var ,exp)
@@ -37,6 +34,15 @@
                      ,(auto-apply false-exp)))
                '())]
 
+
+      [`(,(? λ?) ,args ,body-exp)
+       #:when (and ((or/c symbol? (listof? symbol?)) args)
+                   (s-exp? body-exp))
+       `(λ ,args ,(auto-apply body-exp))]
+      [`(,(? trace-λ?) ,args ,body-exp)
+       #:when (and ((or/c symbol? (listof? symbol?)) args)
+                   (s-exp? body-exp))
+       `(trace-lambda ,args ,(auto-apply body-exp))]
 
       [`(apply ,op ,exps)
        #:when (and (s-exp? op) (s-exp? exps))
