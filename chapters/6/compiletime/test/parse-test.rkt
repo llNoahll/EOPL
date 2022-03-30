@@ -297,6 +297,16 @@
             (spawn (λ (_) (noisy '(5 6 7 8 9))))
             (displayln 100)
             33)
+          (begin
+            (displayln "Start")
+            (spawn (λ (tid) (thread-send 1 "Hello, World!")))
+            (displayln (thread-try-receive))
+            (displayln "End"))
+          (begin
+            (displayln "Start")
+            (spawn (λ (tid) (thread-send 1 "Hello, World!")))
+            (displayln (thread-receive))
+            (displayln "End"))
           ))])
   (displayln (format "initial ~a:" i))
   (pretty-print code)

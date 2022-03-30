@@ -628,17 +628,6 @@
   (add-denval! 'get-thread  (+eval+ '(λ (tid) (hash-ref thread-table tid #f))     (base-env)))
   (add-denval! 'add-thread! (+eval+ '(λ (tid th) (hash-set! thread-table tid th)) (base-env)))
 
-  (add-denval!
-   'kill-thread
-   (expval->denval
-    (+eval+
-     '(λ (tid)
-        (let ([th (get-thread tid)])
-          (cond [(false? th) #f]
-                [else
-                 (hash-remove! thread-table tid)
-                 (if (thd? th) #t (void))])))
-     (base-env))))
 
   (add-denval! 'apply-thd (+eval+ '(λ (th) (update-thread-identifier! th) ((thd-thunk th))) (base-env)))
 
@@ -709,6 +698,60 @@
                              (when (= 1 (get-tid))
                                (set-final-answer! res))))
                          (run-next-thread))))))
+     (base-env))))
+
+
+  (add-denval!
+   'kill-thread
+   (expval->denval
+    (+eval+
+     '(λ (tid)
+        (let ([th (get-thread tid)])
+          (cond [(false? th) #f]
+                [else
+                 (hash-remove! thread-table tid)
+                 (if (thd? th) #t (void))])))
+     (base-env))))
+
+  (add-denval!
+   'thread-send
+   (expval->denval
+    (+eval+
+     '(λ (tid v)
+        (if (has-thread? tid)
+            (let* ([th (get-thread tid)]
+                   [mail (if (thd? th) (thd-mail th) (get-mail))])
+              (set-box! mail (enqueue (unbox mail) v)))
+            (get-tid)))
+     (base-env))))
+
+  (add-denval!
+   'thread-try-receive
+   (expval->denval
+    (+eval+
+     '(λ ()
+        (let* ([mail (get-mail)]
+               [valq (unbox mail)])
+          (if (empty-queue? valq)
+              #f
+              (dequeue valq
+                       (λ (1st-v other-vs)
+                         (set-box! mail other-vs)
+                         1st-v)))))
+     (base-env))))
+
+  (add-denval! 'thread-receive undefined)
+  (add-denval!
+   'thread-receive
+   (expval->denval
+    (+eval+
+     '(λ ()
+        (cond [(empty-queue? (unbox (get-mail)))
+               (place-on-ready-queue!
+                (λ () (thread-receive))
+                (get-ptid) (get-tid) (get-mail))
+               (run-next-thread)]
+              [else (thread-try-receive)]))
      (base-env))))
 
 

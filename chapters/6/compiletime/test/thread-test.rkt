@@ -108,21 +108,21 @@
            x)
         (base-env) (end-cont))
 
-#;(displayln "\n----------------------------------------------")
-#;(*eval* '(begin
-             (displayln "Start")
-             (spawn (λ (tid) (thread-send 1 "Hello, World!")))
-             (displayln (thread-try-receive))
-             (displayln "End"))
-          (base-env) (end-cont) 10)
+(displayln "\n----------------------------------------------")
+(*eval* '(begin
+           (displayln "Start")
+           (spawn (λ (tid) (thread-send 1 "Hello, World!")))
+           (displayln (thread-try-receive))
+           (displayln "End"))
+        (base-env) (end-cont) 10)
 
-#;(displayln "\n----------------------------------------------")
-#;(*eval* '(begin
-             (displayln "Start")
-             (spawn (λ (tid) (thread-send 1 "Hello, World!")))
-             (displayln (thread-receive))
-             (displayln "End"))
-          (base-env) (end-cont))
+(displayln "\n----------------------------------------------")
+(*eval* '(begin
+           (displayln "Start")
+           (spawn (λ (tid) (thread-send 1 "Hello, World!")))
+           (displayln (thread-receive))
+           (displayln "End"))
+        (base-env) (end-cont))
 
 #;(displayln "\n----------------------------------------------")
 #;(*eval* '(begin
