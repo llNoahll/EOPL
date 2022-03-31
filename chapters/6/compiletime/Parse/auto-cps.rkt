@@ -21,7 +21,8 @@
 (define-predicate simple-λ? Simple-λ)
 
 (define-type Simple-Exp (U Literal Symbol (List 'quote S-Exp) Simple-λ
-                           (List 'set! Symbol Simple-Exp)))
+                           (List 'set! Symbol Simple-Exp)
+                           (List 'new-closure Simple-Exp)))
 (define-predicate simple-exp? Simple-Exp)
 
 (define-type K-Exp (List Lambda (List Symbol) CPS-Exp))
@@ -80,6 +81,10 @@
                        (s-exp? body-exp))
            (ctx `(λ (,k) (trace-lambda ,args ,(cps body-exp ctx0))))]
 
+          [`(new-closure ,exp)
+           #:when (s-exp? exp)
+           (cps exp (λ (val) (ctx `(new-closure ,val))))]
+
           [`(set! ,var ,exp)
            #:when (and (symbol? var) (s-exp? exp))
            (cps exp (λ (val) (ctx `(set! ,var ,val))))
@@ -94,9 +99,10 @@
                       (ctx val)
                       `(begin ,val ,(cps `(begin ,@exps) ctx)))))]
 
-          [`(if ,(? s-exp? pred-exp)
-                ,(? s-exp? true-exp)
-                ,(? s-exp? false-exp))
+          [`(if ,pred-exp ,true-exp ,false-exp)
+           #:when (and (s-exp? pred-exp)
+                       (s-exp? true-exp)
+                       (s-exp? false-exp))
            (cps pred-exp
                 (λ (p)
                   (if (or (eq? ctx ctx0) (eq? ctx id))

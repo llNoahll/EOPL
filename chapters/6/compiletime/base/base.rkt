@@ -770,9 +770,10 @@
    (expval->denval
     (+eval+
      '(λ (ctx)
-        (let* ([spawn-tid (get-ntid)]
-               [spawn-thk (λ () (ctx spawn-tid))])
-          (place-on-ready-queue! spawn-thk (get-tid) spawn-tid (box (empty-queue)))))
+        (let ([ctx (new-closure ctx)]
+              [spawn-tid (get-ntid)])
+          (let ([spawn-thk (λ () (ctx spawn-tid))])
+            (place-on-ready-queue! spawn-thk (get-tid) spawn-tid (box (empty-queue))))))
      (base-env))))
 
   (add-denval!

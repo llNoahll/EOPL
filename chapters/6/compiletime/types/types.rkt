@@ -271,6 +271,11 @@
     #:type-name Begin-Exp)
 
 
+  (define-struct (new-closure-exp exp)
+    ([exp : Exp])
+    #:transparent
+    #:type-name New-Closure-Exp)
+
   (define-struct (proc-exp exp)
     ([vars : (U Symbol (Listof Symbol))]
      [body : Exp])

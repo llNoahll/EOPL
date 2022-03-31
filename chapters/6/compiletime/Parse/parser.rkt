@@ -28,13 +28,18 @@
        #:when ((listof? s-exp?) exps)
        `(begin-exp (list ,@(map parser exps)))]
 
-      [`(if ,(? s-exp? pred-exp)
-            ,(? s-exp? true-exp)
-            ,(? s-exp? false-exp))
+      [`(if ,pred-exp ,true-exp ,false-exp)
+       #:when (and (s-exp? pred-exp)
+                   (s-exp? true-exp)
+                   (s-exp? false-exp))
        `(if-exp ,(parser pred-exp)
                 ,(parser true-exp)
                 ,(parser false-exp))]
 
+
+      [`(new-closure ,exp)
+       #:when (s-exp? exp)
+       `(new-closure-exp ,(parser exp))]
 
       [`(,(? λ?) ,args ,body-exp)
        #:when (and ((or/c symbol? (listof? symbol?)) args)

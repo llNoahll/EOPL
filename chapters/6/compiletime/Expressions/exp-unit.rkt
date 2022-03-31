@@ -71,6 +71,23 @@
                  [-> Cont [-> ExpVal FinalAnswer]]))
            cont))]
 
+        [(new-closure-exp exp)
+         (value-of/k
+          exp env
+          (cons
+           (frame
+            'new-closure-frame
+            (ann (λ (cont)
+                   (λ (op)
+                     (cond [(proc? op)
+                            (apply-cont cont
+                                        (proc (proc-vars op)
+                                              (proc-body op)
+                                              (copy-env (proc-saved-env op))))]
+                           [(primitive-proc? op) (apply-cont cont op)]
+                           [else (raise-argument-error 'value-of/k "operator?" op)])))
+                 [-> Cont [-> ExpVal FinalAnswer]]))
+           cont))]
         [(trace-proc-exp vars body)
          (apply-cont cont (proc-val (trace-procedure vars body env)))]
         [(proc-exp vars body)

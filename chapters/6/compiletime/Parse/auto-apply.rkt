@@ -25,15 +25,20 @@
        #:when ((listof? s-exp?) exps)
        `(begin ,@(map auto-apply exps))]
 
-      [`(if ,(? s-exp? pred-exp)
-            ,(? s-exp? true-exp)
-            ,(? s-exp? false-exp))
+      [`(if ,pred-exp ,true-exp ,false-exp)
+       #:when (and (s-exp? pred-exp)
+                   (s-exp? true-exp)
+                   (s-exp? false-exp))
        `(apply (λ ()
                  (if ,(auto-apply pred-exp)
                      ,(auto-apply true-exp)
                      ,(auto-apply false-exp)))
                '())]
 
+
+      [`(new-closure ,exp)
+       #:when (s-exp? exp)
+       `(apply (λ () (new-closure ,(auto-apply exp))) '())]
 
       [`(,(? λ?) ,args ,body-exp)
        #:when (and ((or/c symbol? (listof? symbol?)) args)

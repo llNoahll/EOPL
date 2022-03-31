@@ -101,10 +101,10 @@
                                  env)))]
 
         [(if-exp pred-exp true-exp false-exp)
-         (free-binds vars
-                     (begin-exp (list pred-exp true-exp false-exp))
-                     env)]
+         (free-binds vars (begin-exp (list pred-exp true-exp false-exp)) env)]
 
+        [(new-closure-exp exp)
+         (free-binds vars exp env)]
         [(proc-exp proc-vars body)
          (free-binds (if (symbol? proc-vars)
                          (cons proc-vars vars)
