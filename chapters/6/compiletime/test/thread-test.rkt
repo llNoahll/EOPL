@@ -149,31 +149,31 @@
            x)
         (base-env) (end-cont))
 
-#;(parameterize ([thread-share-memory? #t])
-    (displayln "\n----------------------------------------------")
-    (*eval* '(begin
-               (define x 0)
-               (define mut (mutex))
-               (define incr-x
-                 (λ (id)
-                   (λ (tid)
-                     (wait mut)
-                     (displayln (format "ptid = ~a, tid = ~a, before: x = ~a"
-                                        (get-ptid) tid x))
-                     (set! x (- x -1))
-                     (displayln (format "ptid = ~a, tid = ~a, after: x = ~a"
-                                        (get-ptid) tid x))
-                     (signal mut))))
+(parameterize ([thread-share-memory? #t])
+  (displayln "\n----------------------------------------------")
+  (*eval* '(begin
+             (define x 0)
+             (define mut (mutex))
+             (define incr-x
+               (λ (id)
+                 (λ (tid)
+                   (wait mut)
+                   (displayln (format "ptid = ~a, tid = ~a, before: x = ~a"
+                                      (get-ptid) tid x))
+                   (set! x (- x -1))
+                   (displayln (format "ptid = ~a, tid = ~a, after: x = ~a"
+                                      (get-ptid) tid x))
+                   (signal mut))))
 
-               (displayln (format "main thread: ptid = ~a, tid = ~a"
-                                  (get-ptid) (get-tid)))
-               (spawn (incr-x 100))
-               (spawn (incr-x 200))
-               (spawn (incr-x 300))
-               (spawn (incr-x 400))
-               (spawn (incr-x 500))
-               x)
-            (base-env) (end-cont)))
+             (displayln (format "main thread: ptid = ~a, tid = ~a"
+                                (get-ptid) (get-tid)))
+             (spawn (incr-x 100))
+             (spawn (incr-x 200))
+             (spawn (incr-x 300))
+             (spawn (incr-x 400))
+             (spawn (incr-x 500))
+             x)
+          (base-env) (end-cont)))
 
 (displayln "\n----------------------------------------------")
 (*eval* '(begin

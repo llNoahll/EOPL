@@ -81,9 +81,11 @@
                    (λ (op)
                      (cond [(proc? op)
                             (apply-cont cont
-                                        (proc (proc-vars op)
-                                              (proc-body op)
-                                              (copy-env (proc-saved-env op))))]
+                                        (if (thread-share-memory?)
+                                            op
+                                            (proc (proc-vars op)
+                                                  (proc-body op)
+                                                  (copy-env (proc-saved-env op)))))]
                            [(primitive-proc? op) (apply-cont cont op)]
                            [else (raise-argument-error 'value-of/k "operator?" op)])))
                  [-> Cont [-> ExpVal FinalAnswer]]))

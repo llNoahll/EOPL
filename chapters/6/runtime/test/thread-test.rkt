@@ -42,22 +42,6 @@
 
 (displayln "\n----------------------------------------------")
 (*eval* '(begin
-           (displayln "Start")
-           (spawn (λ (tid) (thread-send 1 "Hello, World!")))
-           (displayln (thread-try-receive))
-           (displayln "End"))
-        (base-env) (end-main-thread-cont) 10)
-
-(displayln "\n----------------------------------------------")
-(*eval* '(begin
-           (displayln "Start")
-           (spawn (λ (tid) (thread-send 1 "Hello, World!")))
-           (displayln (thread-receive))
-           (displayln "End"))
-        (base-env) (end-main-thread-cont))
-
-(displayln "\n----------------------------------------------")
-(*eval* '(begin
            (define buffer 0)
            (define procedure
              (λ (n)
@@ -122,6 +106,22 @@
            (spawn (incr-x 400))
            (spawn (incr-x 500))
            x)
+        (base-env) (end-main-thread-cont))
+
+(displayln "\n----------------------------------------------")
+(*eval* '(begin
+           (displayln "Start")
+           (spawn (λ (tid) (thread-send 1 "Hello, World!")))
+           (displayln (thread-try-receive))
+           (displayln "End"))
+        (base-env) (end-main-thread-cont) 10)
+
+(displayln "\n----------------------------------------------")
+(*eval* '(begin
+           (displayln "Start")
+           (spawn (λ (tid) (thread-send 1 "Hello, World!")))
+           (displayln (thread-receive))
+           (displayln "End"))
         (base-env) (end-main-thread-cont))
 
 (displayln "\n----------------------------------------------")

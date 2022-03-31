@@ -155,6 +155,9 @@
 
   (define-struct (trace-proc proc) () #:type-name Trace-Proc)
 
+  (: thread-share-memory? (Parameter Boolean))
+  (define thread-share-memory? (make-parameter #f))
+
 
   (: denval? [-> Any Boolean])
   (define denval?
