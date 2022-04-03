@@ -37,6 +37,7 @@
         [(bool-exp   bool)  (apply-cont cont (bool-val   bool))]
         [(char-exp   char)  (apply-cont cont (char-val   char))]
         [(string-exp str)   (apply-cont cont (string-val str))]
+        [(bytes-exp   bs)   (apply-cont cont (bytes-val bs))]
 
         [(var-exp    var)   (apply-cont cont (apply-env env var))]
 

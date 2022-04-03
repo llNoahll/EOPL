@@ -13,6 +13,7 @@
            (? boolean?)
            (? real?)
            (? string?)
+           (? bytes?)
            (? char?)
            (? symbol?))
        code]

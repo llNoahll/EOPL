@@ -25,6 +25,9 @@
   (: string-val [-> String DenVal])
   (define string-val (λ (str) str))
 
+  (: bytes-val [-> Bytes DenVal])
+  (define bytes-val (λ (bs) bs))
+
   (: proc-val [-> Proc DenVal])
   (define proc-val (λ (proc) proc))
 
@@ -64,6 +67,9 @@
 
   (: expval->string [-> ExpVal String])
   (define expval->string (λ (val) (assert val string?)))
+
+  (: expval->bytes [-> ExpVal Bytes])
+  (define expval->bytes (λ (val) (assert val bytes?)))
 
   (: expval->proc [-> ExpVal Proc])
   (define expval->proc (λ (val) (assert val proc?)))

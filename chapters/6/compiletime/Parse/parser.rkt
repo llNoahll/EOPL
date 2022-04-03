@@ -16,6 +16,7 @@
       [(? boolean? bool) `(bool-exp ,bool)]
       [(? real? num)     `(real-exp ,num)]
       [(? string? str)   `(string-exp ,str)]
+      [(? bytes? bs)     `(bytes-exp ,bs)]
       [(? char? ch)      `(char-exp ,ch)]
 
       [(? symbol? var)   `(var-exp ',var)]

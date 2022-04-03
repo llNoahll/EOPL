@@ -321,6 +321,7 @@
   (add-primitive-proc! 'real?      (unary-pred 'real?      real?))
   (add-primitive-proc! 'char?      (unary-pred 'char?      char?))
   (add-primitive-proc! 'string?    (unary-pred 'string?    string?))
+  (add-primitive-proc! 'bytes?     (unary-pred 'bytes?     bytes?))
   (add-primitive-proc! 'symbol?    (unary-pred 'symbol?    symbol?))
   (add-primitive-proc! 'undefined? (unary-pred 'undefined? undefined?))
   (add-primitive-proc! 'void?      (unary-pred 'void?      void?))
@@ -356,10 +357,12 @@
 
 
   (add-primitive-proc! 'string-length (unary-length 'string-length string?           string-length))
+  (add-primitive-proc! 'bytes-length  (unary-length 'bytes-length  bytes?            bytes-length))
   (add-primitive-proc! 'length        (unary-length 'length        (listof? denval?) (inst length DenVal)))
   (add-primitive-proc! 'vector-length (unary-length 'vector-length denvector?        vector-length))
 
   (add-primitive-proc! 'string-ref (binary-ref 'string-ref string?           index? string-ref))
+  (add-primitive-proc! 'bytes-ref  (binary-ref 'bytes-ref  bytes?            index? bytes-ref))
   (add-primitive-proc! 'list-ref   (binary-ref 'list-ref   (listof? denval?) index? (inst list-ref   DenVal)))
   (add-primitive-proc! 'vector-ref (binary-ref 'vector-ref denvector?        index? (inst vector-ref DenVal)))
   (add-primitive-proc! 'hash-ref

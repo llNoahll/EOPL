@@ -45,7 +45,7 @@
   (define-predicate undefined? Undefined)
   (define-predicate true? True)
 
-  (define-type Literal (U Boolean Real Char String))
+  (define-type Literal (U Boolean Real Char String Bytes))
   (define-predicate literal? Literal)
 
 
@@ -252,6 +252,11 @@
     ([str : String])
     #:transparent
     #:type-name String-Exp)
+
+  (define-struct (bytes-exp exp)
+    ([bs : Bytes])
+    #:transparent
+    #:type-name Bytes-Exp)
 
 
   (define-struct (if-exp exp)
