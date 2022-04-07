@@ -114,7 +114,7 @@
 
           [`(let/cc ,cc-var ,body-exp)
            #:when (and (symbol? cc-var) (s-exp? body-exp))
-           (if (or (eq? ctx ctx0))
+           (if (eq? ctx ctx0)
                `(let ([,cc-var (λ (_) ,k)])
                   ,(cps body-exp ctx))
                (let ([v0 (fv)])
