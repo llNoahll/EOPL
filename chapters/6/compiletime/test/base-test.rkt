@@ -248,6 +248,8 @@
             (displayln (odd? 1))
             (displayln (odd? 3))
             (displayln (odd? 5)))
+          (begin0 #t
+            (displayln "hello world"))
           (begin
             (define odd?
               (λ (num)

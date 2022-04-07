@@ -98,6 +98,16 @@
                   (if (null? exps)
                       (ctx val)
                       `(begin ,val ,(cps `(begin ,@exps) ctx)))))]
+          [`(begin0 ,exp ,exps ...)
+           #:when (and (s-exp? exp)
+                       ((listof? s-exp?) exps))
+           (cps exp
+                (λ (val)
+                  (if (null? exps)
+                      (ctx val)
+                      (cps `(begin ,@exps)
+                           (λ (_) `(begin ,_ ,(ctx val)))))))]
+
 
           [`(if ,pred-exp ,true-exp ,false-exp)
            #:when (and (s-exp? pred-exp)
