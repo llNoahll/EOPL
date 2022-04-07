@@ -15,9 +15,7 @@
 (define-type K Symbol)
 (define k (gensym 'k-))
 
-(define-type Simple-λ (List Lambda (List K)
-                             (List (U Lambda Trace-Lambda) (U Symbol (Listof Symbol))
-                                   CPS-Exp)))
+(define-type Simple-λ (List Lambda (List K) K-Exp))
 (define-predicate simple-λ? Simple-λ)
 
 (define-type Simple-Exp (U Literal Symbol (List 'quote S-Exp) Simple-λ
@@ -25,12 +23,15 @@
                            (List 'new-closure Simple-Exp)))
 (define-predicate simple-exp? Simple-Exp)
 
-(define-type K-Exp (List Lambda (List Symbol) CPS-Exp))
+(define-type K-Exp (List (U Lambda Trace-Lambda)
+                         (U Symbol (Listof Symbol))
+                         CPS-Exp))
 (define-predicate k-exp? K-Exp)
 
-(define-type Top-Exp (U (List K Simple-Exp)
-                        (List* (List (U Symbol Simple-λ) (U K K-Exp))
-                               (Listof Simple-Exp))))
+(define-type Top-Exp (List* (U K K-Exp
+                               (List (U Symbol Simple-λ)
+                                     (U K K-Exp)))
+                            (Listof Simple-Exp)))
 (define-predicate top-exp? Top-Exp)
 
 (define-type CPS-Exp (U Simple-Exp
@@ -141,7 +142,8 @@
                                [exps exps])
                       (if (null? exps)
                           (if (eq? ctx ctx0)
-                              `((,op ,k) ,@(reverse args))
+                              `(,(if (symbol? op) `(,op ,k) (caddr op))
+                                ,@(reverse args))
                               (let ([vn (fv)])
                                 `((,op (λ (,vn) ,(ctx vn))) ,@(reverse args))))
                           (cps (car exps)
