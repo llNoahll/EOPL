@@ -497,7 +497,7 @@
                             ([rand (in-list rands)])
                     (type-of rand tenv #f))
                   (match (type-of rands tenv #f)
-                    [`(List ,(? type? #{ts : (Listof Type)}) ...) ts])))
+                    [`(List ,ts ...) #:when (types? ts) ts])))
 
             (type-of body
                      (if (list? vars)
@@ -515,29 +515,7 @@
                   (if (list? rands)
                       (append ts (build-list (- (length rands) (length ts)) (const t*)))
                       (match (type-of rands tenv #f)
-                        [`(List ,ts0 ...)
-                         #:when (types? ts0)
-                         (begin0 ts0
-                           (let loop ([ts0 ts0] [ts ts])
-                             (cond
-                               [(null? ts0) (assert (null? ts))]
-                               [(null? ts)
-                                (define t0 (car ts0))
-                                (if (<=: t0 t*)
-                                    (loop (cdr ts0) ts)
-                                    (raise-arguments-error 'type-of "type mismatch"
-                                                           "expected" t*
-                                                           "given"    t0
-                                                           "in"       exp))]
-                               [else
-                                (define t0 (car ts0))
-                                (define t  (car ts))
-                                (if (<=: t0 t)
-                                    (loop (cdr ts0) (cdr ts))
-                                    (raise-arguments-error 'type-of "type mismatch"
-                                                           "expected" t
-                                                           "given"    t0
-                                                           "in"       exp))])))]))
+                        [`(List ,ts0 ...) #:when (types? ts0) ts0]))
                   (check t1))]
                 [`[-> ,ts ... ,t1]
                  #:when (and (types? ts) (type? t1))

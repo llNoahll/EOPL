@@ -53,13 +53,13 @@
                                          (if (false? type)
                                              `[,var ,val]
                                              `[,var : ,type ,val]))
-                                       (case-> [-> Symbol False S-Exp
-                                                   (List Symbol S-Exp)]
-                                               [-> Symbol Type  S-Exp
-                                                   (List Symbol ': Type S-Exp)]
-                                               [-> Symbol (Option Type) S-Exp
-                                                   (U (List Symbol S-Exp)
-                                                      (List Symbol ': Type S-Exp))]))
+                                       [-> Symbol (Option Type) S-Exp
+                                           (U (List Symbol S-Exp)
+                                              (List Symbol ': Type S-Exp))]
+                                       #;(case-> [-> Symbol False S-Exp
+                                                     (List Symbol S-Exp)]
+                                                 [-> Symbol Type  S-Exp
+                                                     (List Symbol ': Type S-Exp)]))
                                   (reverse vars)
                                   (reverse types)
                                   (reverse vals))
@@ -151,13 +151,12 @@
                                    (if (false? type)
                                        `[,var ,exp]
                                        `[,var (ann ,exp ,type)]))
-                                 (case-> [-> Symbol False S-Exp
-                                             (List Symbol S-Exp)]
-                                         [-> Symbol Type S-Exp
-                                             (List Symbol (List 'ann S-Exp Type))]
-                                         [-> Symbol (Option Type) S-Exp
-                                             (U (List Symbol S-Exp)
-                                                (List Symbol (List 'ann S-Exp Type)))]))
+                                 [-> Symbol (Option Type) S-Exp
+                                     (List Symbol (U S-Exp Ann-S-Exp))]
+                                 #;(case-> [-> Symbol False S-Exp
+                                               (List Symbol S-Exp)]
+                                           [-> Symbol Type S-Exp
+                                               (List Symbol Ann-S-Exp)]))
                             (reverse bind-vars)
                             (reverse bind-types)
                             (reverse bind-exps))
