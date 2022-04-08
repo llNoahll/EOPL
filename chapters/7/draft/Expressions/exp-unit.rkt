@@ -418,7 +418,7 @@
              (let loop ([exp (car exps)] [next (cdr exps)])
                (cond [(null? next) (type-of exp tenv t0)]
                      [else
-                      (type-of exp tenv 'Void)
+                      (type-of exp tenv #f)
                       (loop (car next) (cdr next))]))
              (type-of (car (last-pair exps))
                       tenv t0 #:safe? safe?))]

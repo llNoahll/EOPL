@@ -165,7 +165,7 @@
   #:type-name Mutex)
 
 
-(define-type Type (U Symbol Poly-Type λ-Type Pair-Type List-Type Listof-Type))
+(define-type Type (U Symbol Poly-Type λ-Type Opt-Type Pair-Type List-Type Listof-Type))
 (define-predicate type? Type)
 
 (define-type Types (Listof Type))
@@ -176,6 +176,9 @@
 
 (define-type λ-Type (List* '-> Type (Listof Type) #;(Rec End (U (List Type) (List Type '* Type) (Pair Type End)))))
 (define-predicate λ-type? λ-Type)
+
+(define-type Opt-Type (List 'Option Type))
+(define-predicate opt-type? Opt-Type)
 
 (define-type Pair-Type (List 'Pair Type Type))
 (define-predicate pair-type? Pair-Type)

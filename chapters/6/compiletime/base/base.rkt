@@ -217,8 +217,7 @@
       (λ vals
         (match vals
           [`(,val-1 ,val-2)
-           (bool-val (relation (expval->num val-1)
-                               (expval->num val-2)))]
+           (bool-val (relation (expval->num val-1) (expval->num val-2)))]
           [_ (error name "Bad args: ~s" vals)]))))
 
 

@@ -3,42 +3,54 @@
 (require "../Parse/auto-ann.rkt")
 
 
-(pretty-print (auto-ann '2))
-(pretty-print (auto-ann '-9))
-(pretty-print (auto-ann 'x))
-(pretty-print (auto-ann 'i))
+(displayln "Start auto-ann test.\n")
 
-(pretty-print (auto-ann '#\a))
-(pretty-print (auto-ann '"b"))
 
-(pretty-print (auto-ann ''(1 3 4 5 6)))
-(pretty-print (auto-ann '(ann '(1 3 4 5 6) (Listof Natural))))
+(for ([code
+       (in-list
+        '(2
+          -9
+          x
+          i
+          #\a
+          "b"
+          '(1 2 3 4 5)
+          (ann '(1 3 4 5 6) (Listof Natural))
+          (set! noah "Noah Ma")
+          (set! noah (ann "Noah Ma" String))
+          (begin
+            (: noah String)
+            (define noah "")
 
-(pretty-print (auto-ann '(set! noah "Noah Ma")))
-(pretty-print (auto-ann '(set! noah (ann "Noah Ma" String))))
+            (define dio #f)
 
-(pretty-print (auto-ann '(begin
-                           (define dio #f)
+            (set! noah "Noah Ma"))
+          (begin
+            (define dio #f)
 
-                           (: noah String)
-                           (define noah "")
+            (: noah String)
+            (define noah "")
 
-                           (set! noah "Noah Ma"))))
+            (set! noah "Noah Ma"))
+          (begin
+            (: noah (Option String))
+            (define noah #f)
 
-(pretty-print (auto-ann '(begin
-                           (: noah (Option String))
-                           (define noah #f)
+            (define dio #f)
 
-                           (define dio #f)
+            (: jojo (Option Symbol))
+            (define jojo #f)
 
-                           (: jojo (Option Symbol))
-                           (define jojo #f)
+            (set! noah "Noah Ma")
 
-                           (set! noah "Noah Ma")
-
-                           (if jojo
-                               (set! jojo 'jojo)
-                               ((ann (λ (arg) arg) [-> Any Any])
-                                (cond
-                                  [noah "Dummy" (displayln noah)]
-                                  [else "Dummy" (displayln "Noah isn't named")]))))))
+            (if jojo
+                (set! jojo 'jojo)
+                ((ann (λ (arg) arg) [-> Any Any])
+                 (cond
+                   [noah "Dummy" (displayln noah)]
+                   [else "Dummy" (displayln "Noah isn't named")]))))
+          ))])
+  (displayln "-----------------------------------")
+  (pretty-print code)
+  (pretty-print (auto-ann code))
+  (newline))
