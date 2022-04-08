@@ -358,7 +358,7 @@
                   (fact 3)
                   (fact 4)
                   (fact 5)))
-          (+ 10 (call/cc (λ (cc) (+ 1 (cc 2)))) )
+          (+ 10 (call/cc (λ (cc) (+ 1 (cc 2)))))
           (let ()
             (displayln
              (call/cc
