@@ -221,8 +221,17 @@
           [_ (error name "Bad args: ~s" vals)]))))
 
 
-  (: n-ary-arithmetic-func [-> Symbol [-> Real Real * Real] [-> DenVal * ExpVal]])
-  (define n-ary-arithmetic-func
+  (: n-ary-arithmetic-func0 [-> Symbol [-> Real * Real] [-> DenVal * ExpVal]])
+  (define n-ary-arithmetic-func0
+    (λ (name func)
+      (λ vals
+        (num-val (apply func
+                        (map (λ ([val : DenVal]) : Real
+                               (expval->num val))
+                             vals))))))
+
+  (: n-ary-arithmetic-func1 [-> Symbol [-> Real Real * Real] [-> DenVal * ExpVal]])
+  (define n-ary-arithmetic-func1
     (λ (name func)
       (λ vals
         (match vals
@@ -452,10 +461,10 @@
                            [_ (error 'vector-set! "Bad args: ~s" vals)])))
 
 
-  (add-primitive-proc! '+ (n-ary-arithmetic-func '+ +))
-  (add-primitive-proc! '* (n-ary-arithmetic-func '* *))
-  (add-primitive-proc! '- (n-ary-arithmetic-func '- -))
-  (add-primitive-proc! '/ (n-ary-arithmetic-func '/ /))
+  (add-primitive-proc! '+ (n-ary-arithmetic-func0 '+ +))
+  (add-primitive-proc! '* (n-ary-arithmetic-func0 '* *))
+  (add-primitive-proc! '- (n-ary-arithmetic-func1 '- -))
+  (add-primitive-proc! '/ (n-ary-arithmetic-func1 '/ /))
 
   (add-primitive-proc! 'void             (λ [vals : DenVal *] : ExpVal (void)))
   (add-primitive-proc! 'list             (λ [vals : DenVal *] : ExpVal (list-val vals)))
