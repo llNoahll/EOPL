@@ -26,10 +26,12 @@
   (export env^)
 
 
+  (: base-env (Parameter Env))
   (: empty-env [-> Env])
-  (define empty-env
+  (define-values (base-env empty-env)
     (let ([empty-environment (make-env 'empty-env #hasheq())])
-      (λ () empty-environment)))
+      (values (make-parameter empty-environment)
+              (λ () empty-environment))))
 
   (: empty-env? [-> Env Boolean])
   (define empty-env? (λ (env) (eqv? (env-type env) 'empty-env)))
@@ -43,6 +45,12 @@
   (: extend-env* [-> (Listof Symbol) (Listof DenVal) Env Env])
   (define extend-env*
     (λ (vars vals saved-env)
+      (unless (= (length vars) (length vals))
+        (raise-arguments-error 'extend-env*
+                               "The number of formal arguments and actual arguments is not equal."
+                               "formal arguments" vars
+                               "actual arguments" vals))
+
       (make-env 'extend-env
                 (for/fold ([res : (Immutable-HashTable Symbol Ref)
                                 (env-binds saved-env)])
@@ -67,6 +75,12 @@
   (: extend-env-bind* [-> (Listof Symbol) (Listof Ref) Env Env])
   (define extend-env-bind*
     (λ (vars refs saved-env)
+      (unless (= (length vars) (length refs))
+        (raise-arguments-error 'extend-env-bind*
+                               "The number of formal arguments and actual arguments is not equal."
+                               "formal arguments" vars
+                               "actual arguments" refs))
+
       (make-env 'extend-env
                 (for/fold ([res : (Immutable-HashTable Symbol Ref)
                                 (env-binds saved-env)])

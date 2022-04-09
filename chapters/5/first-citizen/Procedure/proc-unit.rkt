@@ -79,7 +79,7 @@
          (free-binds vars (begin-exp (list (var-exp var) exp)) env)]
 
         [(or (symbol-exp _)
-             (const-exp _)
+             (real-exp _)
              (bool-exp _)
              (char-exp _)
              (string-exp _))
@@ -150,13 +150,7 @@
         [(try-receive-exp) '()]
         [(yield-exp)       '()]
 
-        [(primitive-proc-exp _ exps)
-         (if (null? exps)
-             '()
-             (free-binds vars (begin-exp exps) env))]
-        [(or (trace-proc-exp proc-vars body)
-             (proc-exp proc-vars body))
-         #:when (not (false? body))
+        [(proc-exp proc-vars body)
          (free-binds (if (symbol? proc-vars)
                          (cons proc-vars vars)
                          (append proc-vars vars))
